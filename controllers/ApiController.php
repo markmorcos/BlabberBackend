@@ -1135,6 +1135,74 @@ class ApiController extends Controller
 	}
 
 	/**
+	 * @api {post} /api/add-flag Add new flag
+	 * @apiName AddFlag
+	 * @apiGroup Business
+	 *
+	 * @apiParam {String} user_id User's id.
+	 * @apiParam {String} auth_key User's auth key.
+	 * @apiParam {String} name Flags's name.
+	 * @apiParam {File} Media[file] Flag's icon file (optional).
+	 *
+	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+	 * @apiSuccess {String} errors errors details if status = 1.
+	 */
+	public function actionAddFlag()
+	{
+		$parameters = array('user_id', 'auth_key', 'name');
+		$output = array('status' => null, 'errors' => null);
+
+		// collect user input data
+		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
+			return;
+		}
+
+		$flag = new Flag;
+		$flag->name = $_POST['name'];
+
+		if(!$flag->save()){
+			$output['status'] = 1;
+			$output['errors'] = $this->_getErrors($flag); //saving problem
+			echo json_encode($output);
+			return;
+		}
+
+		if( !empty($_FILES['Media']) ){
+			$media = new Media;
+			$media->file = UploadedFile::getInstance($media,'file');
+			if( isset($media->file) ){
+				$media_type = 'flag_icon';
+				$file_path = 'uploads/'.$media_type.'/'.$flag->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
+				$media->url = $file_path;
+				$media->type = $media_type;
+				$media->user_id = $_POST['user_id'];
+				$media->object_id = $flag->id;
+				$media->object_type = 'Flag';
+
+				if($media->save()){
+					$media->file->saveAs($file_path);
+					$flag->icon = $file_path;
+
+					if(!$flag->save()){
+						$output['status'] = 1;
+						$output['errors'] = $this->_getErrors($flag); //saving problem
+				        echo json_encode($output);
+						return;
+					}
+				}else{
+					$output['status'] = 1;
+					$output['errors'] = $this->_getErrors($media); //saving problem
+			        echo json_encode($output);
+					return;
+				}
+			}
+		}
+
+		$output['status'] = 0; //ok
+        echo json_encode($output);
+	}
+
+	/**
 	 * @api {post} /api/get-interests Get all interests
 	 * @apiName GetInterests
 	 * @apiGroup Business
