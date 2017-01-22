@@ -60,6 +60,7 @@
 		"GetMedia",
 		"GetHomescreenImages",
 
-		"Sponsor"
+		"Sponsors",
+		"GetSponsors"
 	]
 }

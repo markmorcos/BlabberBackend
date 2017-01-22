@@ -1341,7 +1341,7 @@ class ApiController extends Controller
 				$file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
 				$media->url = $file_path;
 				$media->type = $media_type;
-				$media->user_id = $user->id;
+				$media->user_id = $_POST['user_id'];
 				$media->object_id = $business->id;
 				$media->object_type = 'Business';
 
@@ -1352,11 +1352,13 @@ class ApiController extends Controller
 					if(!$business->save()){
 						$output['status'] = 1;
 						$output['errors'] = $this->_getErrors($business); //saving problem
+				        echo json_encode($output);
 						return;
 					}
 				}else{
 					$output['status'] = 1;
 					$output['errors'] = $this->_getErrors($media); //saving problem
+			        echo json_encode($output);
 					return;
 				}
 			}
@@ -1412,6 +1414,7 @@ class ApiController extends Controller
 	    if( $business == null ){
 			$output['status'] = 1;			
 			$output['errors'] = "no business with this id";
+	        echo json_encode($output);
 			return;
 		}
 
@@ -1479,7 +1482,7 @@ class ApiController extends Controller
 				$file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
 				$media->url = $file_path;
 				$media->type = $media_type;
-				$media->user_id = $user->id;
+				$media->user_id = $_POST['user_id'];
 				$media->object_id = $business->id;
 				$media->object_type = 'Business';
 
@@ -1490,11 +1493,13 @@ class ApiController extends Controller
 					if(!$business->save()){
 						$output['status'] = 1;
 						$output['errors'] = $this->_getErrors($business); //saving problem
+				        echo json_encode($output);
 						return;
 					}
 				}else{
 					$output['status'] = 1;
 					$output['errors'] = $this->_getErrors($media); //saving problem
+			        echo json_encode($output);
 					return;
 				}
 			}
@@ -2317,7 +2322,7 @@ class ApiController extends Controller
 	public function actionGetSponsors()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'countries' => null);
+		$output = array('status' => null, 'errors' => null, 'sponsors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
