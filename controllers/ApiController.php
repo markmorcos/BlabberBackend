@@ -27,7 +27,6 @@ use app\models\BusinessView;
 use app\models\Sponsor;
 use yii\helpers\ArrayHelper;
 
-
 class ApiController extends Controller
 {
 	var $no_per_page = 20;
@@ -84,8 +83,8 @@ class ApiController extends Controller
 	 * @apiParam {String} name User's full name.
 	 * @apiParam {String} email User's unique email.
 	 * @apiParam {String} username User's unique username.
-	 * @apiParam {String} mobile User's unique mobile number.
 	 * @apiParam {String} password User's password.
+	 * @apiParam {String} mobile User's unique mobile number (optional).
 	 * @apiParam {String} image User's new image url (optional).
 	 * @apiParam {File} Media[file] User's new image file (optional).
 	 *
@@ -96,7 +95,7 @@ class ApiController extends Controller
 	 */
 	public function actionSignUp()
 	{
-		$parameters = array('name', 'email', 'username', 'mobile', 'password');
+		$parameters = array('name', 'email', 'username', 'password');
 		$output = array('status' => null, 'errors' => null, 'user_data' => null, 'auth_key' => null);
 
 		// collect user input data
@@ -109,8 +108,10 @@ class ApiController extends Controller
 		$user->name = $_POST['name'];
 		$user->email = $_POST['email'];
 		$user->username = $_POST['username'];
-		$user->mobile = $_POST['mobile'];
 		$user->password = Yii::$app->security->generatePasswordHash($_POST['password']);
+		if( !empty($_POST['mobile']) ){
+			$user->mobile = $_POST['mobile'];
+		}
 
 		if(!$user->save()){
 			$output['status'] = 1;
