@@ -489,7 +489,8 @@ class ApiController extends Controller
 	 *
 	 * @apiParam {String} user_id User's id.
 	 * @apiParam {String} auth_key User's auth key.
-	 * @apiParam {String} user_to_get User's id of User profile you want to get.
+	 * @apiParam {String} user_id_to_get User's id of User profile you want to get (optional).
+	 * @apiParam {String} user_username_to_get User's usernam of User profile you want to get (optional).
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -497,7 +498,7 @@ class ApiController extends Controller
 	 */
 	public function actionGetProfile()
 	{
-		$parameters = array('user_id', 'auth_key', 'user_to_get');
+		$parameters = array('user_id', 'auth_key');
 		$output = array('status' => null, 'errors' => null, 'user_data' => null);
 
 		// collect user input data
@@ -505,13 +506,18 @@ class ApiController extends Controller
 			return;
 		}
 
-		$user = User::findOne($_POST['user_to_get']);
+		if (!empty($_POST['user_id_to_get'])) {
+			$user = User::findOne($_POST['user_id_to_get']);
+		}elseif (!empty($_POST['user_username_to_get'])) {
+			$user = User::findOne(['username' => $_POST['user_username_to_get']]);
+		}
+		
 		if( $user != null ){
 			$output['user_data'] = $this->_getUserData($user);
 			$output['status'] = 0; //ok
 		}else{
 			$output['status'] = 1;			
-			$output['errors'] = "no user with this id";
+			$output['errors'] = "no user with this id or username";
 		}
 
         echo json_encode($output);
