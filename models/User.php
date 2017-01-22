@@ -18,6 +18,7 @@ namespace app\models;
  * @property string $profile_photo
  * @property string $cover_photo
  * @property string $facebook_id
+ * @property string $firebase_token
  * @property string $created
  * @property string $updated
  */
@@ -43,7 +44,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['password'], 'required', 'on' => 'create'],
             [['role', 'gender'], 'string'],
             [['birthdate', 'created', 'updated'], 'safe'],
-            [['name', 'password', 'email', 'username', 'facebook_id'], 'string', 'max' => 255],
+            [['name', 'password', 'email', 'username', 'facebook_id', 'firebase_token'], 'string', 'max' => 255],
             [['auth_key'], 'string', 'max' => 16],
             [['email', 'mobile'], 'unique'],
             [['email'], 'email'],
@@ -72,6 +73,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'profile_photo' => 'Profile Photo',
             'cover_photo' => 'Cover Photo',
             'facebook_id' => 'Facebook ID',
+            'firebase_token' => 'Firebase Token',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -144,14 +146,18 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      *
      * @param string $email
      * @param string $password
+     * @param string $firebase_token
      * @return static|null
      */
-    public static function login($email, $password)
+    public static function login($email, $password, $firebase_token)
     {
         $user = static::findByEmail($email);
 
         if( isset($user) && $user->validatePassword($password) ){
             $user->auth_key = \Yii::$app->security->generateRandomString(16);
+            if (!empty($firebase_token)) {
+                $user->firebase_token = $firebase_token;
+            }
             if( $user->save() ){
                 return $user;
             }

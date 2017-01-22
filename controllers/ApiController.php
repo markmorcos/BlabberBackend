@@ -87,6 +87,7 @@ class ApiController extends Controller
 	 * @apiParam {String} mobile User's unique mobile number (optional).
 	 * @apiParam {String} image User's new image url (optional).
 	 * @apiParam {File} Media[file] User's new image file (optional).
+	 * @apiParam {String} firebase_token User's firebase token (optional).
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -164,7 +165,7 @@ class ApiController extends Controller
 		}
 
 		//login
-		$user = User::login($_POST['email'], $_POST['password']);
+		$user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
 		if( $user != null ){
 			$output['user_data'] = $this->_getUserData($user);
 			$output['auth_key'] = $user->auth_key;
@@ -186,6 +187,7 @@ class ApiController extends Controller
 	 * @apiParam {String} facebook_token User's facebook token.
 	 * @apiParam {String} name User's full name.
 	 * @apiParam {String} image User's new image url (optional).
+	 * @apiParam {String} firebase_token User's firebase token (optional).
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -245,7 +247,7 @@ class ApiController extends Controller
 		}
 
 		//login
-		$user = User::login($email, $password);
+		$user = User::login($email, $password, $_POST['firebase_token']);
 		if( $user != null ){
 			$output['user_data'] = $this->_getUserData($user);
 			$output['auth_key'] = $user->auth_key;
@@ -265,6 +267,7 @@ class ApiController extends Controller
 	 *
 	 * @apiParam {String} email User's unique email.
 	 * @apiParam {String} password User's password.
+	 * @apiParam {String} firebase_token User's firebase token (optional).
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -281,7 +284,7 @@ class ApiController extends Controller
 			return;
 		}
 
-		$user = User::login($_POST['email'], $_POST['password']);
+		$user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
 		if( $user != null ){
 			$output['user_data'] = $this->_getUserData($user);
 			$output['auth_key'] = $user->auth_key;
@@ -535,6 +538,7 @@ class ApiController extends Controller
 	 * @apiParam {String} mobile user mobile (optional).
 	 * @apiParam {String} gender user gender (optional).
 	 * @apiParam {String} birthdate user birthdate (optional).
+	 * @apiParam {String} firebase_token user firebase_token (optional).
 	 * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -562,6 +566,7 @@ class ApiController extends Controller
 		if ( !empty($_POST['mobile']) ) $user->mobile = $_POST['mobile'];
 		if ( !empty($_POST['gender']) ) $user->gender = $_POST['gender'];
 		if ( !empty($_POST['birthdate']) ) $user->birthdate = $_POST['birthdate'];
+		if ( !empty($_POST['firebase_token']) ) $user->firebase_token = $_POST['firebase_token'];
 
 		if(!$user->save()){
 			$output['status'] = 1;
@@ -666,6 +671,15 @@ class ApiController extends Controller
 			if($model->save()){
 				$output['status'] = 0; //ok
 				$output['request'] = $model->attributes;
+
+				// send notification
+				$title = 'New Friend Request';
+				$body = $model->user->name .' wants to add you as a friend';
+				$data = [
+					'request_id' => $model->id,
+					'friend_id' => $model->user_id,
+				];
+				$this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
 			}else{
 				$output['status'] = 1;
 				$output['errors'] = $this->_getErrors($model); //saving problem
@@ -828,6 +842,15 @@ class ApiController extends Controller
 
 		if( $output['status'] == null ){
 			$output['status'] = 0; //ok
+
+			// send notification
+			$title = 'Friend Request Accepted';
+			$body = $request->friend->name .' accepted your friend request';
+			$data = [
+				'request_id' => $request->id,
+				'friend_id' => $request->friend_id,
+			];
+			$this->_sendNotification($request->user->firebase_token, $title, $body, $data);
 		}
 
         echo json_encode($output);
@@ -2040,6 +2063,27 @@ class ApiController extends Controller
 				}else{
 					$output['status'] = 0; //ok
 					$output['review_id'] = $review->id;
+
+					// send notifications
+				    if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches))
+				    {
+				        $users = $matches[1];
+				        foreach ($users as $username)
+				        {
+							$user = User::findOne(['username' => $username]);
+							if (empty($user)) {
+								continue;
+							}
+
+							$title = 'New Review Tag';
+							$body = $review->user->name .' has tagged you in review for '. $review->business->name;
+							$data = [
+  								'review_id' => $review->id,
+								'business_id' => $review->business_id,
+							];
+							$this->_sendNotification($user->firebase_token, $title, $body, $data);
+				        }
+				    }
 				}
 			}
 	    }else{
@@ -2347,6 +2391,47 @@ class ApiController extends Controller
         echo json_encode($output);
 	}
 
+	/***************************************/
+	/************ Notifications ************/
+	/***************************************/
+
+	/**
+	 * @api {post} /api/send-notification Send Notification
+	 * @apiName SendNotification
+	 * @apiGroup Notifications
+	 *
+	 * @apiParam {String} user_id User's id.
+	 * @apiParam {String} auth_key User's auth key.
+	 * @apiParam {Array} users_ids Array list of users' id to send the notification to.
+	 * @apiParam {String} title Notification's title.
+	 * @apiParam {String} body Notification's body.
+	 *
+	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+	 * @apiSuccess {String} errors errors details if status = 1.
+	 */
+	public function actionSendNotification()
+	{
+		$parameters = array('user_id', 'auth_key', 'users_ids', 'title', 'body');
+		$output = array('status' => null, 'errors' => null);
+
+		// collect user input data
+		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
+			return;
+		}
+
+		$users_ids = explode(',', $_POST['users_ids']);
+		foreach ($users_ids as $users_id) {
+			$user = User::findOne($users_id);
+			if( !empty($user->firebase_token)){
+				$this->_sendNotification($user->firebase_token, $_POST['title'], $_POST['body']);
+			}
+		}
+
+		$output['status'] = 0; //ok
+
+		echo json_encode($output);
+	}
+
 	/****************************************/
 	/****************************************/
 	/****************************************/
@@ -2637,5 +2722,37 @@ class ApiController extends Controller
 		}
 
 		return $media;
+	}
+
+	private function _sendNotification($firebase_token, $title, $body, $data = null){
+		$server_key = 'AAAAqGzljtM:APA91bGRz5hiS-IyHW6HPnK-yrIJRFkzqP85PzByvWlI0YYCfLF_NH94Rybgg31bDs2d0EfxzD_zYmb4fNwSH1x6HOXFY_a-solzKgn7xiSi336sUYQjrXZuCWrk29ioaHBZLL7p0LfO';
+		$postData = [
+			'to' => $firebase_token,
+			'priority' => 'high',
+		    'notification' => [
+				'title' => $title,
+				'body' => $body,
+				'tag' => $data
+			],
+		];
+
+		$ch = curl_init('https://fcm.googleapis.com/fcm/send');
+		curl_setopt_array($ch, array(
+		    CURLOPT_POST => TRUE,
+		    CURLOPT_RETURNTRANSFER => TRUE,
+		    CURLOPT_HTTPHEADER => array(
+		        'Authorization: Key='.$server_key,
+		        'Content-Type: application/json'
+		    ),
+		    CURLOPT_POSTFIELDS => json_encode($postData)
+		));
+
+		$response = curl_exec($ch);
+		if($response === FALSE){
+		    echo curl_error($ch);
+		}
+		
+		// var_dump($firebase_token, $title, $body, $data, $response);
+		return json_decode($response, TRUE);
 	}
 }
