@@ -678,6 +678,7 @@ class ApiController extends Controller
 				$data = [
 					'request_id' => $model->id,
 					'friend_id' => $model->user_id,
+					'type' => 1,
 				];
 				$this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
 			}else{
@@ -849,6 +850,7 @@ class ApiController extends Controller
 			$data = [
 				'request_id' => $request->id,
 				'friend_id' => $request->friend_id,
+				'type' => 2,
 			];
 			$this->_sendNotification($request->user->firebase_token, $title, $body, $data);
 		}
@@ -2080,6 +2082,7 @@ class ApiController extends Controller
 							$data = [
   								'review_id' => $review->id,
 								'business_id' => $review->business_id,
+								'type' => 3,
 							];
 							$this->_sendNotification($user->firebase_token, $title, $body, $data);
 				        }
@@ -2423,7 +2426,10 @@ class ApiController extends Controller
 		foreach ($users_ids as $users_id) {
 			$user = User::findOne($users_id);
 			if( !empty($user->firebase_token)){
-				$this->_sendNotification($user->firebase_token, $_POST['title'], $_POST['body']);
+				$data = [
+					'type' => 0,
+				];
+				$this->_sendNotification($user->firebase_token, $_POST['title'], $_POST['body'], $data);
 			}
 		}
 
