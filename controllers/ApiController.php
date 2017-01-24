@@ -621,7 +621,7 @@ class ApiController extends Controller
 
 		$model = User::find()
 			    ->where(['like', 'name', $_POST['name']])
-			    ->where(['!=', 'id', $_POST['user_id']])
+			    ->andWhere(['!=', 'id', $_POST['user_id']])
 			    ->orderBy(['id' => SORT_DESC])
 			    ->all();
 
