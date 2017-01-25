@@ -1541,6 +1541,7 @@ class ApiController extends Controller
 	 *
 	 * @apiParam {String} user_id User's id.
 	 * @apiParam {String} auth_key User's auth key.
+	 * @apiParam {String} country_id Country's id.
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -1548,7 +1549,7 @@ class ApiController extends Controller
 	 */
 	public function actionGetHomescreenBusinesses()
 	{
-		$parameters = array('user_id', 'auth_key');
+		$parameters = array('user_id', 'auth_key', 'country_id');
 		$output = array('status' => null, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
@@ -1557,7 +1558,7 @@ class ApiController extends Controller
 		}
 
 		// $conditions = ['show_in_home' => true]; //TODO uncomment this later
-		$conditions = [];
+		$conditions['country_id'] = $_POST['country_id'];
 		$output['businesses'] = $this->_getBusinesses($conditions);
 		$output['status'] = 0; //ok
 
@@ -1572,6 +1573,7 @@ class ApiController extends Controller
 	 * @apiParam {String} user_id User's id.
 	 * @apiParam {String} auth_key User's auth key.
 	 * @apiParam {String} category_id Category's id to get businesses inside.
+	 * @apiParam {String} country_id Country's id.
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -1579,7 +1581,7 @@ class ApiController extends Controller
 	 */
 	public function actionGetBusinesses()
 	{
-		$parameters = array('user_id', 'auth_key', 'category_id');
+		$parameters = array('user_id', 'auth_key', 'category_id', 'country_id');
 		$output = array('status' => null, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
@@ -1588,6 +1590,7 @@ class ApiController extends Controller
 		}
 
 		$conditions = ['category_id' => $_POST['category_id']];
+		$conditions['country_id'] = $_POST['country_id'];
 		$output['businesses'] = $this->_getBusinesses($conditions);
 		$output['status'] = 0; //ok
 
@@ -1601,9 +1604,8 @@ class ApiController extends Controller
 	 *
 	 * @apiParam {String} user_id User's id.
 	 * @apiParam {String} auth_key User's auth key.
+	 * @apiParam {String} country_id Country's id.
 	 * @apiParam {String} name the search keyword for business name (optional).
-	 * @apiParam {String} country the search keyword for business country (optional).
-	 * @apiParam {String} country_id the business country_id (optional).
 	 * @apiParam {String} city the search keyword for business city (optional).
 	 * @apiParam {String} city_id the business city_id (optional).
 	 * @apiParam {String} category the search keyword for business category (optional).
@@ -1620,7 +1622,7 @@ class ApiController extends Controller
 	 */
 	public function actionSearchBusinesses()
 	{
-		$parameters = array('user_id', 'auth_key');
+		$parameters = array('user_id', 'auth_key', 'country_id');
 		$output = array('status' => null, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
@@ -1633,14 +1635,6 @@ class ApiController extends Controller
 		
 		if( !empty($_POST['name']) ){
 			$conditions[] = ['like', 'name', $_POST['name']];
-		}
-		if( !empty($_POST['country']) ){
-			$model = Country::find()->where(['like', 'name', $_POST['country']])->all();
-			$search_keyword = ArrayHelper::getColumn($model, 'id');
-			$conditions[] = ['country_id' => $search_keyword];
-		}
-		if( !empty($_POST['country_id']) ){
-			$conditions[] = ['country_id' => $_POST['country_id']];
 		}
 		if( !empty($_POST['city']) ){
 			$model = City::find()->where(['like', 'name', $_POST['city']])->all();
@@ -1684,6 +1678,7 @@ class ApiController extends Controller
 		}
 			
 		$lat_lng = empty($_POST['nearby']) ? null : explode('-', $_POST['nearby']);
+		$conditions['country_id'] = $_POST['country_id'];
 		$output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
 		$output['status'] = 0; //ok
 		
@@ -1698,6 +1693,7 @@ class ApiController extends Controller
 	 * @apiParam {String} user_id User's id.
 	 * @apiParam {String} auth_key User's auth key.
 	 * @apiParam {String} type Search by (recently_added, recently_viewed).
+	 * @apiParam {String} country_id Country's id.
 	 *
 	 * @apiSuccess {String} status status code: 0 for OK, 1 for error.
 	 * @apiSuccess {String} errors errors details if status = 1.
@@ -1705,7 +1701,7 @@ class ApiController extends Controller
 	 */
 	public function actionSearchBusinessesByType()
 	{
-		$parameters = array('user_id', 'auth_key', 'type');
+		$parameters = array('user_id', 'auth_key', 'type', 'country_id');
 		$output = array('status' => null, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
@@ -1715,7 +1711,8 @@ class ApiController extends Controller
 
 		$search_type = $_POST['type'];
 		if( $search_type == 'recently_added' ){
-			$output['businesses'] = $this->_getBusinesses(null, $this->no_per_page, ['created' => SORT_DESC]);
+			$conditions['country_id'] = $_POST['country_id'];
+			$output['businesses'] = $this->_getBusinesses($conditions, $this->no_per_page, ['created' => SORT_DESC]);
 			$output['status'] = 0; //ok
 		}else if( $search_type == 'recently_viewed' ){
 			$model = BusinessView::find()
@@ -1729,6 +1726,7 @@ class ApiController extends Controller
 		    	$ids_list[] = $business->business_id;
 		    }
 			$conditions = ['id' => $ids_list];
+			$conditions['country_id'] = $_POST['country_id'];
 			$output['businesses'] = $this->_getBusinesses($conditions);
 			$output['status'] = 0; //ok
 		}else{
