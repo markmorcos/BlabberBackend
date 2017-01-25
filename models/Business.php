@@ -34,7 +34,7 @@ use yii\helpers\Url;
  */
 class Business extends \yii\db\ActiveRecord
 {
-    // public $interests;
+    public $distance;
 
     /**
      * @inheritdoc

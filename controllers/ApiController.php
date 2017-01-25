@@ -1682,24 +1682,9 @@ class ApiController extends Controller
 			$ids = ArrayHelper::getColumn($model, 'business_id');
 			$conditions[] = ['id' => $ids];
 		}
-
-		if( !empty($_POST['nearby']) ){
-			$lat_lng = explode('-', $_POST['nearby']);
-			$lat = $lat_lng[0];
-			$lng = $lat_lng[1];
-
-			$model = (new Query())
-			    ->select(['id', '( 6371 * acos( cos( radians('.$lat.') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians('.$lng.') ) + sin( radians('.$lat.') ) * sin( radians( lat ) ) ) ) AS distance'])
-			    ->from('business')
-			    ->having('distance < 5')
-			    ->orderBy(['distance' => SORT_ASC])
-			    ->limit($this->no_per_page)
-			    ->all();
-			$ids = ArrayHelper::getColumn($model, 'id');
-			$and_conditions[] = ['id' => $ids];
-		}
 			
-		$output['businesses'] = $this->_getBusinesses($conditions, null, null, $and_conditions);
+		$lat_lng = empty($_POST['nearby']) ? null : explode('-', $_POST['nearby']);
+		$output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
 		$output['status'] = 0; //ok
 		
         echo json_encode($output);
@@ -2546,7 +2531,7 @@ class ApiController extends Controller
 		return $categories;
 	}
 
-	private function _getBusinesses($conditions, $limit = null, $order = null, $and_conditions = null){
+	private function _getBusinesses($conditions, $limit = null, $order = null, $lat_lng = null){
 		$query = Business::find()
 					->where($conditions)
 				    ->with('category');
@@ -2558,9 +2543,15 @@ class ApiController extends Controller
 			$query->orderBy($order);
 		}
 
-	    if (!empty($and_conditions)) {
-		    $query->andWhere($and_conditions);
-	    }
+		if (!empty($lat_lng)) {
+			$lat = $lat_lng[0];
+			$lng = $lat_lng[1];
+
+			$query
+				->select(['*', '( 6371 * acos( cos( radians('.$lat.') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians('.$lng.') ) + sin( radians('.$lat.') ) * sin( radians( lat ) ) ) ) AS distance'])
+				->having('distance < 100')
+				->orderBy(['distance' => SORT_ASC]);
+		}
 
 		$model = $query->all();
 
@@ -2609,6 +2600,7 @@ class ApiController extends Controller
 			$business['last_checkin'] = $last_checkin;
 		}
 		$business['is_favorite'] = $this->_isSavedBusiness($_POST['user_id'], $business['id']);
+		$business['distance'] = $model['distance'];
 		$business['created'] = $model['created'];
 		$business['updated'] = $model['updated'];
 
