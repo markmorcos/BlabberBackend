@@ -30,11 +30,18 @@ use yii\helpers\ArrayHelper;
 class ApiController extends Controller
 {
 	var $no_per_page = 20;
+	var $output = ['status' => 0, 'errors' => null];
 
 	// TODO check if this needed on live server
 	public function beforeAction($action) {
 	    $this->enableCsrfValidation = false;
 	    return parent::beforeAction($action);
+	}
+
+	public function afterAction($action) {
+		echo json_encode($this->output);
+
+	    return parent::afterAction($action);
 	}
 
 	/***************************************/
@@ -54,7 +61,6 @@ class ApiController extends Controller
 	public function actionIsUniqueUsername()
 	{
 		$parameters = array('username');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) ){
@@ -66,13 +72,9 @@ class ApiController extends Controller
 			    ->one();
 
 		if (!empty($model)) {
-			$output['status'] = 1;
-			$output['errors'] = 'this username already taken';
-		}else{
-	    	$output['status'] = 0; //ok
+			$this->output['status'] = 1;
+			$this->output['errors'] = 'this username already taken';
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -97,7 +99,7 @@ class ApiController extends Controller
 	public function actionSignUp()
 	{
 		$parameters = array('name', 'email', 'username', 'password');
-		$output = array('status' => null, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) ){
@@ -115,20 +117,17 @@ class ApiController extends Controller
 		}
 
 		if(!$user->save()){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($user); //saving problem
-			echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($user); //saving problem
 			return;
 		}
 
 		// save url if image coming from external source like Facebook
 		if( !empty($_POST['image']) ){
 			$user->profile_photo = $_POST['image'];
-			if($user->save()){
-				$output['status'] = 0; //ok
-			}else{
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($user); //saving problem
+			if(!$user->save()){
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($user); //saving problem
 				return;
 			}
 
@@ -149,16 +148,14 @@ class ApiController extends Controller
 					$media->file->saveAs($file_path);
 					$user->profile_photo = $file_path;
 
-					if($user->save()){
-						$output['status'] = 0; //ok
-					}else{
-						$output['status'] = 1;
-						$output['errors'] = $this->_getErrors($user); //saving problem
+					if(!$user->save()){
+						$this->output['status'] = 1;
+						$this->output['errors'] = $this->_getErrors($user); //saving problem
 						return;
 					}
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 					return;
 				}
 			}
@@ -167,15 +164,12 @@ class ApiController extends Controller
 		//login
 		$user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
 		if( $user != null ){
-			$output['user_data'] = $this->_getUserData($user);
-			$output['auth_key'] = $user->auth_key;
-			$output['status'] = 0; //ok
+			$this->output['user_data'] = $this->_getUserData($user);
+			$this->output['auth_key'] = $user->auth_key;
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "login problem";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "login problem";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -197,7 +191,7 @@ class ApiController extends Controller
 	public function actionSignInFb()
 	{
 		$parameters = array('facebook_id', 'facebook_token', 'name');
-		$output = array('status' => null, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) ){
@@ -209,8 +203,8 @@ class ApiController extends Controller
 		$response = file_get_contents($user_details);
 		$response = json_decode($response);
 		if( !isset($response) || !isset($response->id)|| $response->id != $_POST['facebook_id'] ){
-			$output['status'] = 1;
-			$output['errors'] = "invalid facebook token";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "invalid facebook token";
 			return;
 		}
 
@@ -227,20 +221,17 @@ class ApiController extends Controller
 			$user->facebook_id = $_POST['facebook_id'];
 
 			if(!$user->save()){
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($user); //saving problem
-				echo json_encode($output);
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($user); //saving problem
 				return;
 			}
 
 			// save url if image coming from external source like Facebook
 			if( !empty($_POST['image']) ){
 				$user->profile_photo = $_POST['image'];
-				if($user->save()){
-					$output['status'] = 0; //ok
-				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($user); //saving problem
+				if(!$user->save()){
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($user); //saving problem
 					return;
 				}
 			}
@@ -249,15 +240,12 @@ class ApiController extends Controller
 		//login
 		$user = User::login($email, $password, $_POST['firebase_token']);
 		if( $user != null ){
-			$output['user_data'] = $this->_getUserData($user);
-			$output['auth_key'] = $user->auth_key;
-			$output['status'] = 0; //ok
+			$this->output['user_data'] = $this->_getUserData($user);
+			$this->output['auth_key'] = $user->auth_key;
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "login problem";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "login problem";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -277,7 +265,7 @@ class ApiController extends Controller
 	public function actionSignIn()
 	{
 		$parameters = array('email', 'password');
-		$output = array('status' => null, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) ){
@@ -286,15 +274,12 @@ class ApiController extends Controller
 
 		$user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
 		if( $user != null ){
-			$output['user_data'] = $this->_getUserData($user);
-			$output['auth_key'] = $user->auth_key;
-			$output['status'] = 0; //ok
+			$this->output['user_data'] = $this->_getUserData($user);
+			$this->output['auth_key'] = $user->auth_key;
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "login problem";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "login problem";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -310,7 +295,6 @@ class ApiController extends Controller
 	public function actionRecoverPassword()
 	{
 		$parameters = array('email');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) ){
@@ -329,23 +313,19 @@ class ApiController extends Controller
 				    ->setSubject('Blabber Password Recovery')
 				    ->setTextBody('your password changed to: '.$new_password)
 				    ->send();
-				if ($result) {
-				    $output['status'] = 0; //ok
-				} else {
-					$output['status'] = 1;
-					$output['errors'] = 'Password changed but errors while sending email'; //sending email problem
-					// $output['errors'] = 'Password changed but errors while sending email: '.$mail->getError(); //sending email problem
+				if (!$result) {
+					$this->output['status'] = 1;
+					$this->output['errors'] = 'Password changed but errors while sending email'; //sending email problem
+					// $this->output['errors'] = 'Password changed but errors while sending email: '.$mail->getError(); //sending email problem
 				}
 			}else{
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($user); //saving problem
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($user); //saving problem
 			}
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "no user with this email";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "no user with this email";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -363,7 +343,6 @@ class ApiController extends Controller
 	public function actionChangePassword()
 	{
 		$parameters = array('user_id', 'auth_key', 'new_password');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -372,14 +351,10 @@ class ApiController extends Controller
 
 		$model = User::findOne($_POST['user_id']);
 		$model->password = Yii::$app->security->generatePasswordHash($_POST['new_password']);
-		if($model->save()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->save()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -398,7 +373,6 @@ class ApiController extends Controller
 	public function actionChangeProfilePhoto()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null);
 
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
 			return;
@@ -409,11 +383,9 @@ class ApiController extends Controller
 		// save url if image coming from external source like Facebook
 		if( !empty($_POST['image']) ){
 			$user->profile_photo = $_POST['image'];
-			if($user->save()){
-				$output['status'] = 0; //ok
-			}else{
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($user); //saving problem
+			if(!$user->save()){
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($user); //saving problem
 			}
 
 		// upload image then save it 
@@ -433,23 +405,19 @@ class ApiController extends Controller
 					$media->file->saveAs($file_path);
 					$user->profile_photo = $file_path;
 
-					if($user->save()){
-						$output['status'] = 0; //ok
-					}else{
-						$output['status'] = 1;
-						$output['errors'] = $this->_getErrors($user); //saving problem
+					if(!$user->save()){
+						$this->output['status'] = 1;
+						$this->output['errors'] = $this->_getErrors($user); //saving problem
 					}
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 				}
 			}
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = 'no url or file input';
-		}
-
-    	echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = 'no url or file input';
+        }  
 	}
 
 	/**
@@ -466,7 +434,6 @@ class ApiController extends Controller
 	public function actionLogout()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -475,14 +442,10 @@ class ApiController extends Controller
 
 		$user = User::findOne($_POST['user_id']);
     	$user->auth_key = "";
-    	if( $user->save() ){
-        	$output['status'] = 0; //ok
-        }else{
-			$output['status'] = 1;
-			$output['errors'] = "logout problem";
+    	if( !$user->save() ){
+			$this->output['status'] = 1;
+			$this->output['errors'] = "logout problem";
         }
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -502,7 +465,7 @@ class ApiController extends Controller
 	public function actionGetProfile()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'user_data' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'user_data' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -516,14 +479,11 @@ class ApiController extends Controller
 		}
 		
 		if( $user != null ){
-			$output['user_data'] = $this->_getUserData($user);
-			$output['status'] = 0; //ok
+			$this->output['user_data'] = $this->_getUserData($user);
 		}else{
-			$output['status'] = 1;			
-			$output['errors'] = "no user with this id or username";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no user with this id or username";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -547,7 +507,6 @@ class ApiController extends Controller
 	public function actionEditProfile()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -556,8 +515,8 @@ class ApiController extends Controller
 		
 		$user = User::findOne($_POST['user_id']);
 		if( $user == null ){
-			$output['status'] = 1;			
-			$output['errors'] = "no user with this id";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no user with this id";
 			return;
 		}
 
@@ -569,9 +528,8 @@ class ApiController extends Controller
 		if ( !empty($_POST['firebase_token']) ) $user->firebase_token = $_POST['firebase_token'];
 
 		if(!$user->save()){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($user); //saving problem
-			echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($user); //saving problem
 			return;
 		}
 
@@ -587,9 +545,6 @@ class ApiController extends Controller
 	            $user_interest->save();
 	        }
 		}
-
-		$output['status'] = 0; //ok
-		echo json_encode($output);
 	}
 
 	/***************************************/
@@ -612,7 +567,7 @@ class ApiController extends Controller
 	public function actionSearchForUser()
 	{
 		$parameters = array('user_id', 'auth_key', 'name');
-		$output = array('status' => null, 'errors' => null, 'users' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'users' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -630,10 +585,7 @@ class ApiController extends Controller
 			$users[] = $this->_getUserData($user);
 		}
 
-    	$output['status'] = 0; //ok
-    	$output['users'] = $users;
-
-        echo json_encode($output);
+    	$this->output['users'] = $users;
 	}
 
 	/**
@@ -652,7 +604,7 @@ class ApiController extends Controller
 	public function actionAddFriend()
 	{
 		$parameters = array('user_id', 'auth_key', 'friend_id');
-		$output = array('status' => null, 'errors' => null, 'request' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'request' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -669,8 +621,7 @@ class ApiController extends Controller
 			$model->status = 0;
 
 			if($model->save()){
-				$output['status'] = 0; //ok
-				$output['request'] = $model->attributes;
+				$this->output['request'] = $model->attributes;
 
 				// send notification
 				$title = 'New Friend Request';
@@ -682,15 +633,13 @@ class ApiController extends Controller
 				];
 				$this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
 			}else{
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($model); //saving problem
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($model); //saving problem
 			}
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "you can't send new friend request";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "you can't send new friend request";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -708,7 +657,7 @@ class ApiController extends Controller
 	public function actionGetFriendRequestsSent()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'requests' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'requests' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -724,10 +673,7 @@ class ApiController extends Controller
 			$requests[] = array('id' => $request->id, 'friend_data' => $this->_getUserData($request->friend));
 		}
 
-    	$output['status'] = 0; //ok
-    	$output['requests'] = $requests;
-
-        echo json_encode($output);
+    	$this->output['requests'] = $requests;
 	}
 
 	/**
@@ -745,7 +691,6 @@ class ApiController extends Controller
 	public function actionCancelFriendRequest()
 	{
 		$parameters = array('user_id', 'auth_key', 'request_id');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -754,14 +699,10 @@ class ApiController extends Controller
 
 		$model = Friendship::findOne($_POST['request_id']);
 		$model->status = 3;
-		if($model->save()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->save()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -779,7 +720,7 @@ class ApiController extends Controller
 	public function actionGetFriendRequestsReceived()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'requests' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'requests' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -795,10 +736,7 @@ class ApiController extends Controller
 			$requests[] = array('id' => $request->id, 'user_data' => $this->_getUserData($request->user));
 		}
 
-    	$output['status'] = 0; //ok
-    	$output['requests'] = $requests;
-
-        echo json_encode($output);
+    	$this->output['requests'] = $requests;
 	}
 
 	/**
@@ -816,7 +754,6 @@ class ApiController extends Controller
 	public function actionAcceptFriendRequest()
 	{
 		$parameters = array('user_id', 'auth_key', 'request_id');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -827,8 +764,9 @@ class ApiController extends Controller
 		$request = Friendship::findOne($_POST['request_id']);
 		$request->status = 1;
 		if( !$request->save() ){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($request);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($request);
+			return;
 		}
 
 		// add as a friend in the other user list
@@ -837,25 +775,20 @@ class ApiController extends Controller
 		$friendship_model->friend_id = $request->user_id;
 		$friendship_model->status = 1;
 		if( !$friendship_model->save() ){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($friendship_model);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($friendship_model);
+			return;
 		}
 
-		if( $output['status'] == null ){
-			$output['status'] = 0; //ok
-
-			// send notification
-			$title = 'Friend Request Accepted';
-			$body = $request->friend->name .' accepted your friend request';
-			$data = [
-				'request_id' => $request->id,
-				'friend_id' => $request->friend_id,
-				'type' => 2,
-			];
-			$this->_sendNotification($request->user->firebase_token, $title, $body, $data);
-		}
-
-        echo json_encode($output);
+		// send notification
+		$title = 'Friend Request Accepted';
+		$body = $request->friend->name .' accepted your friend request';
+		$data = [
+			'request_id' => $request->id,
+			'friend_id' => $request->friend_id,
+			'type' => 2,
+		];
+		$this->_sendNotification($request->user->firebase_token, $title, $body, $data);
 	}
 
 	/**
@@ -873,7 +806,6 @@ class ApiController extends Controller
 	public function actionRejectFriendRequest()
 	{
 		$parameters = array('user_id', 'auth_key', 'request_id');
-		$output = array('status' => null, 'errors' => null);
 
 				// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -882,14 +814,10 @@ class ApiController extends Controller
 
 		$model = Friendship::findOne($_POST['request_id']);
 		$model->status = 2;
-		if($model->save()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->save()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -907,7 +835,6 @@ class ApiController extends Controller
 	public function actionRemoveFriend()
 	{
 		$parameters = array('user_id', 'auth_key', 'friend_id');
-		$output = array('status' => null, 'errors' => null);
 
 				// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -928,18 +855,14 @@ class ApiController extends Controller
 	    	$friendship1->status = 4;
 	    	$friendship2->status = 4;
 
-		    if( $friendship1->save() && $friendship2->save() ){
-				$output['status'] = 0; //ok
-		    }else{
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($friendship1) + $this->_getErrors($friendship2); //saving problem
+		    if( !$friendship1->save() || !$friendship2->save() ){
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($friendship1) + $this->_getErrors($friendship2); //saving problem
 			}
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = "problem occured";
+			$this->output['status'] = 1;
+			$this->output['errors'] = "problem occured";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -957,7 +880,7 @@ class ApiController extends Controller
 	public function actionGetFriends()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'friends' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'friends' => null);
 
 				// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -973,10 +896,7 @@ class ApiController extends Controller
 			$friends[] = $this->_getUserData($friendship->friend);
 		}
 
-		$output['status'] = 0; //ok
-		$output['friends'] = $friends;
-
-        echo json_encode($output);
+		$this->output['friends'] = $friends;
 	}
 
 	/***************************************/
@@ -998,17 +918,14 @@ class ApiController extends Controller
 	public function actionGetCategories()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'categories' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'categories' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
 			return;
 		}
 
-		$output['categories'] = $this->_getCategories();
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['categories'] = $this->_getCategories();
 	}
 
 	/**
@@ -1027,17 +944,14 @@ class ApiController extends Controller
 	public function actionGetSubCategories()
 	{
 		$parameters = array('user_id', 'auth_key', 'category_id');
-		$output = array('status' => null, 'errors' => null, 'categories' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'categories' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
 			return;
 		}
 
-		$output['categories'] = $this->_getCategories($_POST['category_id']);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['categories'] = $this->_getCategories($_POST['category_id']);
 	}
 
 	/***************************************/
@@ -1059,7 +973,7 @@ class ApiController extends Controller
 	public function actionGetCountries()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'countries' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'countries' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1075,10 +989,7 @@ class ApiController extends Controller
 			$countries[] = $temp;
 		}
 
-		$output['countries'] = $countries;
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['countries'] = $countries;
 	}
 
 	/**
@@ -1097,7 +1008,7 @@ class ApiController extends Controller
 	public function actionGetCities()
 	{
 		$parameters = array('user_id', 'auth_key', 'country_id');
-		$output = array('status' => null, 'errors' => null, 'cities' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'cities' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1115,10 +1026,7 @@ class ApiController extends Controller
 			$cities[] = $temp;
 		}
 
-		$output['cities'] = $cities;
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['cities'] = $cities;
 	}
 
 	/**
@@ -1136,7 +1044,7 @@ class ApiController extends Controller
 	public function actionGetFlags()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'flags' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'flags' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1153,10 +1061,7 @@ class ApiController extends Controller
 			$flags[] = $temp;
 		}
 
-		$output['flags'] = $flags;
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['flags'] = $flags;
 	}
 
 	/**
@@ -1175,7 +1080,6 @@ class ApiController extends Controller
 	public function actionAddFlag()
 	{
 		$parameters = array('user_id', 'auth_key', 'name');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1186,9 +1090,8 @@ class ApiController extends Controller
 		$flag->name = $_POST['name'];
 
 		if(!$flag->save()){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($flag); //saving problem
-			echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($flag); //saving problem
 			return;
 		}
 
@@ -1209,22 +1112,17 @@ class ApiController extends Controller
 					$flag->icon = $file_path;
 
 					if(!$flag->save()){
-						$output['status'] = 1;
-						$output['errors'] = $this->_getErrors($flag); //saving problem
-				        echo json_encode($output);
+						$this->output['status'] = 1;
+						$this->output['errors'] = $this->_getErrors($flag); //saving problem
 						return;
 					}
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
-			        echo json_encode($output);
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 					return;
 				}
 			}
 		}
-
-		$output['status'] = 0; //ok
-        echo json_encode($output);
 	}
 
 	/**
@@ -1242,7 +1140,7 @@ class ApiController extends Controller
 	public function actionGetInterests()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'interests' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'interests' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1258,10 +1156,7 @@ class ApiController extends Controller
 			$interests[] = $temp;
 		}
 
-		$output['interests'] = $interests;
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['interests'] = $interests;
 	}
 
 	/**
@@ -1296,7 +1191,6 @@ class ApiController extends Controller
 	public function actionAddBusiness()
 	{
 		$parameters = array('user_id', 'auth_key', 'name', 'address', 'country_id', 'city_id', 'phone', 'open_from', 'open_to', 'lat', 'lng', 'price', 'description', 'category_id');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1325,9 +1219,8 @@ class ApiController extends Controller
 		$business->admin_id = $_POST['user_id'];
 
 		if(!$business->save()){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($business); //saving problem
-			echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($business); //saving problem
 			return;
 		}
 
@@ -1375,22 +1268,17 @@ class ApiController extends Controller
 					$business->main_image = $file_path;
 
 					if(!$business->save()){
-						$output['status'] = 1;
-						$output['errors'] = $this->_getErrors($business); //saving problem
-				        echo json_encode($output);
+						$this->output['status'] = 1;
+						$this->output['errors'] = $this->_getErrors($business); //saving problem
 						return;
 					}
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
-			        echo json_encode($output);
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 					return;
 				}
 			}
 		}
-
-		$output['status'] = 0; //ok
-        echo json_encode($output);
 	}
 
 	/**
@@ -1426,7 +1314,6 @@ class ApiController extends Controller
 	public function actionEditBusiness()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1437,9 +1324,8 @@ class ApiController extends Controller
 					    ->where(['id' => $_POST['business_id']])
 					    ->one();
 	    if( $business == null ){
-			$output['status'] = 1;			
-			$output['errors'] = "no business with this id";
-	        echo json_encode($output);
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no business with this id";
 			return;
 		}
 
@@ -1460,9 +1346,8 @@ class ApiController extends Controller
 		// $business->admin_id = $_POST['user_id']; //TODO check permissions
 
 		if(!$business->save()){
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($business); //saving problem
-			echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($business); //saving problem
 			return;
 		}
 
@@ -1516,22 +1401,17 @@ class ApiController extends Controller
 					$business->main_image = $file_path;
 
 					if(!$business->save()){
-						$output['status'] = 1;
-						$output['errors'] = $this->_getErrors($business); //saving problem
-				        echo json_encode($output);
+						$this->output['status'] = 1;
+						$this->output['errors'] = $this->_getErrors($business); //saving problem
 						return;
 					}
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
-			        echo json_encode($output);
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 					return;
 				}
 			}
 		}
-
-		$output['status'] = 0; //ok
-		echo json_encode($output);
 	}
 
 	/**
@@ -1550,7 +1430,7 @@ class ApiController extends Controller
 	public function actionGetHomescreenBusinesses()
 	{
 		$parameters = array('user_id', 'auth_key', 'country_id');
-		$output = array('status' => null, 'errors' => null, 'businesses' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1559,10 +1439,7 @@ class ApiController extends Controller
 
 		// $conditions = ['show_in_home' => true]; //TODO uncomment this later
 		$conditions['country_id'] = $_POST['country_id'];
-		$output['businesses'] = $this->_getBusinesses($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['businesses'] = $this->_getBusinesses($conditions);
 	}
 
 	/**
@@ -1582,7 +1459,7 @@ class ApiController extends Controller
 	public function actionGetBusinesses()
 	{
 		$parameters = array('user_id', 'auth_key', 'category_id', 'country_id');
-		$output = array('status' => null, 'errors' => null, 'businesses' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1591,10 +1468,7 @@ class ApiController extends Controller
 
 		$conditions = ['category_id' => $_POST['category_id']];
 		$conditions['country_id'] = $_POST['country_id'];
-		$output['businesses'] = $this->_getBusinesses($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['businesses'] = $this->_getBusinesses($conditions);
 	}
 
 	/**
@@ -1623,7 +1497,7 @@ class ApiController extends Controller
 	public function actionSearchBusinesses()
 	{
 		$parameters = array('user_id', 'auth_key', 'country_id');
-		$output = array('status' => null, 'errors' => null, 'businesses' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1679,10 +1553,7 @@ class ApiController extends Controller
 			
 		$lat_lng = empty($_POST['nearby']) ? null : explode('-', $_POST['nearby']);
 		$conditions['country_id'] = $_POST['country_id'];
-		$output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
-		$output['status'] = 0; //ok
-		
-        echo json_encode($output);
+		$this->output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
 	}
 
 	/**
@@ -1702,7 +1573,7 @@ class ApiController extends Controller
 	public function actionSearchBusinessesByType()
 	{
 		$parameters = array('user_id', 'auth_key', 'type', 'country_id');
-		$output = array('status' => null, 'errors' => null, 'businesses' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1712,8 +1583,7 @@ class ApiController extends Controller
 		$search_type = $_POST['type'];
 		if( $search_type == 'recently_added' ){
 			$conditions['country_id'] = $_POST['country_id'];
-			$output['businesses'] = $this->_getBusinesses($conditions, $this->no_per_page, ['created' => SORT_DESC]);
-			$output['status'] = 0; //ok
+			$this->output['businesses'] = $this->_getBusinesses($conditions, $this->no_per_page, ['created' => SORT_DESC]);
 		}else if( $search_type == 'recently_viewed' ){
 			$model = BusinessView::find()
 				->select(['business_id', 'created'])
@@ -1727,14 +1597,11 @@ class ApiController extends Controller
 		    }
 			$conditions = ['id' => $ids_list];
 			$conditions['country_id'] = $_POST['country_id'];
-			$output['businesses'] = $this->_getBusinesses($conditions);
-			$output['status'] = 0; //ok
+			$this->output['businesses'] = $this->_getBusinesses($conditions);
 		}else{
-			$output['status'] = 1;			
-			$output['errors'] = "not supported search type or keyword is empty";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "not supported search type or keyword is empty";
 		}
-		
-        echo json_encode($output);
 	}
 
 	/**
@@ -1753,7 +1620,7 @@ class ApiController extends Controller
 	public function actionGetBusinessData()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id');
-		$output = array('status' => null, 'errors' => null, 'business_data' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'business_data' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1767,18 +1634,15 @@ class ApiController extends Controller
 	    	$result = $this->_addBusinessView($_POST['business_id'], $_POST['user_id']);
 
 	    	if( $result == 'done' ){
-				$output['business_data'] = $this->_getBusinessesDataObject($model);
-				$output['status'] = 0; //ok
+				$this->output['business_data'] = $this->_getBusinessesDataObject($model);
 			}else{
-				$output['status'] = 1;			
-				$output['errors'] = $result;
+				$this->output['status'] = 1;			
+				$this->output['errors'] = $result;
 			}
 	    }else{
-			$output['status'] = 1;			
-			$output['errors'] = "no business with this id";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no business with this id";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -1796,7 +1660,6 @@ class ApiController extends Controller
 	public function actionSaveBusiness()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id');
-		$output = array('status' => null, 'errors' => null);
 
 		$model = Business::find()
 					    ->where(['id' => $_POST['business_id']])
@@ -1807,17 +1670,13 @@ class ApiController extends Controller
 			$savedBusiness->business_id = $_POST['business_id'];
 
 			if(!$savedBusiness->save()){
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($savedBusiness); //saving problem
-			}else{
-				$output['status'] = 0; //ok
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($savedBusiness); //saving problem
 			}
 	    }else{
-			$output['status'] = 1;			
-			$output['errors'] = "no business with this id";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no business with this id";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -1835,18 +1694,13 @@ class ApiController extends Controller
 	public function actionDeleteSavedBusiness()
 	{
 		$parameters = array('user_id', 'auth_key', 'saved_business_id');
-		$output = array('status' => null, 'errors' => null);
 
 		$model = SavedBusiness::findOne(['user_id' => $_POST['user_id'], 'business_id' => $_POST['saved_business_id']]);
 
-		if($model->delete()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->delete()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -1865,7 +1719,7 @@ class ApiController extends Controller
 	public function actionGetSavedBusinesses()
 	{
 		$parameters = array('user_id', 'auth_key', 'user_to_get');
-		$output = array('status' => null, 'errors' => null, 'businesses' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1882,10 +1736,7 @@ class ApiController extends Controller
 	    }
 
 		$conditions = ['id' => $ids_list];
-		$output['businesses'] = $this->_getBusinesses($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['businesses'] = $this->_getBusinesses($conditions);
 	}
 
 	/**
@@ -1906,7 +1757,7 @@ class ApiController extends Controller
 	public function actionCheckin()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
-		$output = array('status' => null, 'errors' => null, 'checkin_id' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'checkin_id' => null);
 
 		$model = Business::find()
 					    ->where(['id' => $_POST['business_id']])
@@ -1919,25 +1770,22 @@ class ApiController extends Controller
 			$checkin->rating = $_POST['rating'];
 
 			if(!$checkin->save()){
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($checkin); //saving problem
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($checkin); //saving problem
 			}else{
 				$model->rating = $this->_calcRating($_POST['business_id']);
 
 				if(!$model->save()){
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($model); //saving problem
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($model); //saving problem
 				}else{
-					$output['status'] = 0; //ok
-					$output['checkin_id'] = $checkin->id;
+					$this->output['checkin_id'] = $checkin->id;
 				}
 			}
 	    }else{
-			$output['status'] = 1;			
-			$output['errors'] = "no business with this id";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no business with this id";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -1955,18 +1803,13 @@ class ApiController extends Controller
 	public function actionDeleteCheckin()
 	{
 		$parameters = array('user_id', 'auth_key', 'checkin_id');
-		$output = array('status' => null, 'errors' => null);
 
 		$model = Checkin::findOne($_POST['checkin_id']);
 
-		if($model->delete()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->delete()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -1986,7 +1829,7 @@ class ApiController extends Controller
 	public function actionGetCheckins()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'checkins' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'checkins' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2000,10 +1843,7 @@ class ApiController extends Controller
 		if ( !empty($_POST['user_id_to_get']) ) {
 			$conditions['user_id'] = $_POST['user_id_to_get'];
 		}
-		$output['checkins'] = $this->_getCheckins($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['checkins'] = $this->_getCheckins($conditions);
 	}
 
 	/**
@@ -2024,7 +1864,7 @@ class ApiController extends Controller
 	public function actionReview()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
-		$output = array('status' => null, 'errors' => null, 'review_id' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'review_id' => null);
 
 		$model = Business::find()
 					    ->where(['id' => $_POST['business_id']])
@@ -2037,17 +1877,16 @@ class ApiController extends Controller
 			$review->rating = $_POST['rating'];
 
 			if(!$review->save()){
-				$output['status'] = 1;
-				$output['errors'] = $this->_getErrors($review); //saving problem
+				$this->output['status'] = 1;
+				$this->output['errors'] = $this->_getErrors($review); //saving problem
 			}else{
 				$model->rating = $this->_calcRating($_POST['business_id']);
 
 				if(!$model->save()){
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($model); //saving problem
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($model); //saving problem
 				}else{
-					$output['status'] = 0; //ok
-					$output['review_id'] = $review->id;
+					$this->output['review_id'] = $review->id;
 
 					// send notifications
 				    if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches))
@@ -2073,11 +1912,9 @@ class ApiController extends Controller
 				}
 			}
 	    }else{
-			$output['status'] = 1;			
-			$output['errors'] = "no business with this id";
+			$this->output['status'] = 1;			
+			$this->output['errors'] = "no business with this id";
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -2095,18 +1932,13 @@ class ApiController extends Controller
 	public function actionDeleteReview()
 	{
 		$parameters = array('user_id', 'auth_key', 'review_id');
-		$output = array('status' => null, 'errors' => null);
 
 		$model = Review::findOne($_POST['review_id']);
 
-		if($model->delete()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!$model->delete()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -2126,7 +1958,7 @@ class ApiController extends Controller
 	public function actionGetReviews()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'reviews' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'reviews' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2140,10 +1972,7 @@ class ApiController extends Controller
 		if ( !empty($_POST['user_id_to_get']) ) {
 			$conditions['user_id'] = $_POST['user_id_to_get'];
 		}
-		$output['reviews'] = $this->_getReviews($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['reviews'] = $this->_getReviews($conditions);
 	}
 
 	/**
@@ -2161,7 +1990,7 @@ class ApiController extends Controller
 	public function actionGetHomescreenReviews()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'reviews' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'reviews' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2170,10 +1999,7 @@ class ApiController extends Controller
 
 		// TODO set condition for this one
 		$conditions = [];
-		$output['reviews'] = $this->_getReviews($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['reviews'] = $this->_getReviews($conditions);
 	}
 
 	/**
@@ -2193,7 +2019,6 @@ class ApiController extends Controller
 	public function actionAddMedia()
 	{
 		$parameters = array('user_id', 'auth_key', 'business_id', 'type');
-		$output = array('status' => null, 'errors' => null);
 
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
 			return;
@@ -2221,18 +2046,15 @@ class ApiController extends Controller
 
 				if($media->save()){
 					$media->file->saveAs($file_path);
-					$output['status'] = 0; //ok
 				}else{
-					$output['status'] = 1;
-					$output['errors'] = $this->_getErrors($media); //saving problem
+					$this->output['status'] = 1;
+					$this->output['errors'] = $this->_getErrors($media); //saving problem
 				}
 			}
 		}else{
-			$output['status'] = 1;
-			$output['errors'] = 'no file input';
-		}
-
-    	echo json_encode($output);
+			$this->output['status'] = 1;
+			$this->output['errors'] = 'no file input';
+		}  
 	}
 
 	/**
@@ -2250,18 +2072,13 @@ class ApiController extends Controller
 	public function actionDeleteMedia()
 	{
 		$parameters = array('user_id', 'auth_key', 'media_id');
-		$output = array('status' => null, 'errors' => null);
 
 		$model = Media::findOne($_POST['media_id']);
 
-		if(unlink($model->url) && $model->delete()){
-			$output['status'] = 0; //ok
-		}else{
-			$output['status'] = 1;
-			$output['errors'] = $this->_getErrors($model); //saving problem
+		if(!unlink($model->url) || !$model->delete()){
+			$this->output['status'] = 1;
+			$this->output['errors'] = $this->_getErrors($model); //saving problem
 		}
-
-        echo json_encode($output);
 	}
 
 	/**
@@ -2281,7 +2098,7 @@ class ApiController extends Controller
 	public function actionGetMedia()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'media' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'media' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2297,10 +2114,7 @@ class ApiController extends Controller
 			$conditions .= "user_id = '".$_POST['user_id_to_get']."' AND ";
 			$conditions .= "type != 'profile_photo'";
 		}
-		$output['media'] = $this->_getMedia($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['media'] = $this->_getMedia($conditions);
 	}
 
 	/**
@@ -2318,7 +2132,7 @@ class ApiController extends Controller
 	public function actionGetHomescreenImages()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'images' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'images' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2327,10 +2141,7 @@ class ApiController extends Controller
 
 		$conditions['type'] = 'image';
 		$conditions['object_type'] = 'business';
-		$output['images'] = $this->_getMedia($conditions);
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['images'] = $this->_getMedia($conditions);
 	}
 
 	/***************************************/
@@ -2352,7 +2163,7 @@ class ApiController extends Controller
 	public function actionGetSponsors()
 	{
 		$parameters = array('user_id', 'auth_key');
-		$output = array('status' => null, 'errors' => null, 'sponsors' => null);
+		$this->output = array('status' => 0, 'errors' => null, 'sponsors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2371,10 +2182,7 @@ class ApiController extends Controller
 			$sponsors[] = $temp;
 		}
 
-		$output['sponsors'] = $sponsors;
-		$output['status'] = 0; //ok
-
-        echo json_encode($output);
+		$this->output['sponsors'] = $sponsors;
 	}
 
 	/***************************************/
@@ -2398,7 +2206,6 @@ class ApiController extends Controller
 	public function actionSendNotification()
 	{
 		$parameters = array('user_id', 'auth_key', 'users_ids', 'title', 'body');
-		$output = array('status' => null, 'errors' => null);
 
 		// collect user input data
 		if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2415,10 +2222,6 @@ class ApiController extends Controller
 				$this->_sendNotification($user->firebase_token, $_POST['title'], $_POST['body'], $data);
 			}
 		}
-
-		$output['status'] = 0; //ok
-
-		echo json_encode($output);
 	}
 
 	/****************************************/
@@ -2429,17 +2232,15 @@ class ApiController extends Controller
 	 * This is the action to handle external exceptions.
 	 */
 	public function actionError(){
-		$output = array('status' => null, 'errors' => null);
 
 	    $exception = Yii::$app->errorHandler->exception;
 
     	if ($exception !== null)
 		{
-			$output['status'] = $exception->statusCode;
-	        $output['errors'] = $exception->getName() .' - '. $exception->getMessage();
+			$this->output['status'] = $exception->statusCode;
+	        $this->output['errors'] = $exception->getName() .' - '. $exception->getMessage();
 		}
 
-		echo json_encode($output);
 	}
 
 	private function _checkParameters($parameters){
