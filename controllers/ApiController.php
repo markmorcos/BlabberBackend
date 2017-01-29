@@ -47,6 +47,13 @@ class ApiController extends Controller
         return parent::beforeAction($action);
     }
 
+    public function runAction($id, $params = [])
+    {
+        // Extract the params from the request and bind them to params
+        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+        return parent::runAction($id, $params);
+    }
+
     public function afterAction($action, $result)
     {
         echo json_encode($this->output);
@@ -54,19 +61,21 @@ class ApiController extends Controller
         return parent::afterAction($action, $result);
     }
 
-    private function _addOutputs($variables)
-    {
-        foreach ($variables as $variable) {
-            $this->output[$variable] = null;
-        }
-    }
+    /**
+     * This is the action to handle external exceptions.
+     */
+    public function actionError(){
 
-    public function runAction($id, $params = [])
-    {
-        // Extract the params from the request and bind them to params
-        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
-        return parent::runAction($id, $params);
+        $exception = Yii::$app->errorHandler->exception;
+
+        if ($exception !== null)
+        {
+            $this->output['status'] = $exception->statusCode;
+            $this->output['errors'] = $exception->getName() .' - '. $exception->getMessage();
+        }
+
     }
+    
 
     /***************************************/
     /**************** Users ****************/
@@ -1972,19 +1981,11 @@ class ApiController extends Controller
     /****************************************/
     /****************************************/
 
-    /**
-     * This is the action to handle external exceptions.
-     */
-    public function actionError(){
-
-        $exception = Yii::$app->errorHandler->exception;
-
-        if ($exception !== null)
-        {
-            $this->output['status'] = $exception->statusCode;
-            $this->output['errors'] = $exception->getName() .' - '. $exception->getMessage();
+    private function _addOutputs($variables)
+    {
+        foreach ($variables as $variable) {
+            $this->output[$variable] = null;
         }
-
     }
 
     private function _getErrors($model){
