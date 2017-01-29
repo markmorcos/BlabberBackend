@@ -2728,8 +2728,10 @@ class ApiController extends Controller
 		    'notification' => [
 				'title' => $title,
 				'body' => $body,
-				'tag' => $data
+				'sound' => 'default',
+				'tag' => $data,
 			],
+			'data' => $data,
 		];
 
 		$ch = curl_init('https://fcm.googleapis.com/fcm/send');
