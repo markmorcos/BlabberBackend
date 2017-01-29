@@ -44,6 +44,12 @@ class ApiController extends Controller
         return parent::afterAction($action);
     }
 
+    private function _addOutputs($variables) {
+        foreach ($variables as $variable) {
+            $this->output[$variable] = null;
+        }
+    }
+
     /***************************************/
     /**************** Users ****************/
     /***************************************/
@@ -99,7 +105,7 @@ class ApiController extends Controller
     public function actionSignUp()
     {
         $parameters = array('name', 'email', 'username', 'password');
-        $this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+        $this->_addOutputs(['user_data', 'auth_key']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) ){
@@ -191,7 +197,7 @@ class ApiController extends Controller
     public function actionSignInFb()
     {
         $parameters = array('facebook_id', 'facebook_token', 'name');
-        $this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+        $this->_addOutputs(['user_data', 'auth_key']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) ){
@@ -265,7 +271,7 @@ class ApiController extends Controller
     public function actionSignIn()
     {
         $parameters = array('email', 'password');
-        $this->output = array('status' => 0, 'errors' => null, 'user_data' => null, 'auth_key' => null);
+        $this->_addOutputs(['user_data', 'auth_key']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) ){
@@ -465,7 +471,7 @@ class ApiController extends Controller
     public function actionGetProfile()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'user_data' => null);
+        $this->_addOutputs(['user_data']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -567,7 +573,7 @@ class ApiController extends Controller
     public function actionSearchForUser()
     {
         $parameters = array('user_id', 'auth_key', 'name');
-        $this->output = array('status' => 0, 'errors' => null, 'users' => null);
+        $this->_addOutputs(['users']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -604,7 +610,7 @@ class ApiController extends Controller
     public function actionAddFriend()
     {
         $parameters = array('user_id', 'auth_key', 'friend_id');
-        $this->output = array('status' => 0, 'errors' => null, 'request' => null);
+        $this->_addOutputs(['request']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -657,7 +663,7 @@ class ApiController extends Controller
     public function actionGetFriendRequestsSent()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'requests' => null);
+        $this->_addOutputs(['requests']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -720,7 +726,7 @@ class ApiController extends Controller
     public function actionGetFriendRequestsReceived()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'requests' => null);
+        $this->_addOutputs(['requests']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -807,7 +813,7 @@ class ApiController extends Controller
     {
         $parameters = array('user_id', 'auth_key', 'request_id');
 
-                // collect user input data
+        // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
             return;
         }
@@ -836,7 +842,7 @@ class ApiController extends Controller
     {
         $parameters = array('user_id', 'auth_key', 'friend_id');
 
-                // collect user input data
+        // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
             return;
         }
@@ -880,9 +886,9 @@ class ApiController extends Controller
     public function actionGetFriends()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'friends' => null);
+        $this->_addOutputs(['friends']);
 
-                // collect user input data
+        // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
             return;
         }
@@ -918,7 +924,7 @@ class ApiController extends Controller
     public function actionGetCategories()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'categories' => null);
+        $this->_addOutputs(['categories']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -944,7 +950,7 @@ class ApiController extends Controller
     public function actionGetSubCategories()
     {
         $parameters = array('user_id', 'auth_key', 'category_id');
-        $this->output = array('status' => 0, 'errors' => null, 'categories' => null);
+        $this->_addOutputs(['categories']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -973,7 +979,7 @@ class ApiController extends Controller
     public function actionGetCountries()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'countries' => null);
+        $this->_addOutputs(['countries']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1008,7 +1014,7 @@ class ApiController extends Controller
     public function actionGetCities()
     {
         $parameters = array('user_id', 'auth_key', 'country_id');
-        $this->output = array('status' => 0, 'errors' => null, 'cities' => null);
+        $this->_addOutputs(['cities']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1044,7 +1050,7 @@ class ApiController extends Controller
     public function actionGetFlags()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'flags' => null);
+        $this->_addOutputs(['flags']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1140,7 +1146,7 @@ class ApiController extends Controller
     public function actionGetInterests()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'interests' => null);
+        $this->_addOutputs(['interests']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1430,7 +1436,7 @@ class ApiController extends Controller
     public function actionGetHomescreenBusinesses()
     {
         $parameters = array('user_id', 'auth_key', 'country_id');
-        $this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
+        $this->_addOutputs(['businesses']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1459,7 +1465,7 @@ class ApiController extends Controller
     public function actionGetBusinesses()
     {
         $parameters = array('user_id', 'auth_key', 'category_id', 'country_id');
-        $this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
+        $this->_addOutputs(['businesses']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1497,7 +1503,7 @@ class ApiController extends Controller
     public function actionSearchBusinesses()
     {
         $parameters = array('user_id', 'auth_key', 'country_id');
-        $this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
+        $this->_addOutputs(['businesses']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1573,7 +1579,7 @@ class ApiController extends Controller
     public function actionSearchBusinessesByType()
     {
         $parameters = array('user_id', 'auth_key', 'type', 'country_id');
-        $this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
+        $this->_addOutputs(['businesses']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1620,7 +1626,7 @@ class ApiController extends Controller
     public function actionGetBusinessData()
     {
         $parameters = array('user_id', 'auth_key', 'business_id');
-        $this->output = array('status' => 0, 'errors' => null, 'business_data' => null);
+        $this->_addOutputs(['business_data']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1719,7 +1725,7 @@ class ApiController extends Controller
     public function actionGetSavedBusinesses()
     {
         $parameters = array('user_id', 'auth_key', 'user_to_get');
-        $this->output = array('status' => 0, 'errors' => null, 'businesses' => null);
+        $this->_addOutputs(['businesses']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1757,7 +1763,7 @@ class ApiController extends Controller
     public function actionCheckin()
     {
         $parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
-        $this->output = array('status' => 0, 'errors' => null, 'checkin_id' => null);
+        $this->_addOutputs(['checkin_id']);
 
         $model = Business::find()
                         ->where(['id' => $_POST['business_id']])
@@ -1829,7 +1835,7 @@ class ApiController extends Controller
     public function actionGetCheckins()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'checkins' => null);
+        $this->_addOutputs(['checkins']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1864,7 +1870,7 @@ class ApiController extends Controller
     public function actionReview()
     {
         $parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
-        $this->output = array('status' => 0, 'errors' => null, 'review_id' => null);
+        $this->_addOutputs(['review_id']);
 
         $model = Business::find()
                         ->where(['id' => $_POST['business_id']])
@@ -1958,7 +1964,7 @@ class ApiController extends Controller
     public function actionGetReviews()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'reviews' => null);
+        $this->_addOutputs(['reviews']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -1990,7 +1996,7 @@ class ApiController extends Controller
     public function actionGetHomescreenReviews()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'reviews' => null);
+        $this->_addOutputs(['reviews']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2098,7 +2104,7 @@ class ApiController extends Controller
     public function actionGetMedia()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'media' => null);
+        $this->_addOutputs(['media']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2132,7 +2138,7 @@ class ApiController extends Controller
     public function actionGetHomescreenImages()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'images' => null);
+        $this->_addOutputs(['images']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
@@ -2163,7 +2169,7 @@ class ApiController extends Controller
     public function actionGetSponsors()
     {
         $parameters = array('user_id', 'auth_key');
-        $this->output = array('status' => 0, 'errors' => null, 'sponsors' => null);
+        $this->_addOutputs(['sponsors']);
 
         // collect user input data
         if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
