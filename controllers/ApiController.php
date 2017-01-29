@@ -38,10 +38,10 @@ class ApiController extends Controller
         return parent::beforeAction($action);
     }
 
-    public function afterAction($action) {
+    public function afterAction($action, $result) {
         echo json_encode($this->output);
 
-        return parent::afterAction($action);
+        return parent::afterAction($action, $result);
     }
 
     private function _addOutputs($variables) {
