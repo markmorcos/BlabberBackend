@@ -33,18 +33,21 @@ class ApiController extends Controller
     var $output = ['status' => 0, 'errors' => null];
 
     // TODO check if this needed on live server
-    public function beforeAction($action) {
+    public function beforeAction($action)
+    {
         $this->enableCsrfValidation = false;
         return parent::beforeAction($action);
     }
 
-    public function afterAction($action, $result) {
+    public function afterAction($action, $result)
+    {
         echo json_encode($this->output);
 
         return parent::afterAction($action, $result);
     }
 
-    private function _addOutputs($variables) {
+    private function _addOutputs($variables)
+    {
         foreach ($variables as $variable) {
             $this->output[$variable] = null;
         }
