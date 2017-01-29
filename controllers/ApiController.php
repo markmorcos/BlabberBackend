@@ -67,7 +67,7 @@ class ApiController extends Controller
 
         if ($exception !== null)
         {
-            $this->output['status'] = $exception->statusCode;
+            $this->output['status'] = 1;
             $this->output['errors'] = $exception->getMessage();
         }
     }
@@ -93,7 +93,7 @@ class ApiController extends Controller
                 ->one();
 
         if (!empty($model)) {
-            throw new HttpException(400, 'this username already taken');
+            throw new HttpException(200, 'this username already taken');
         }
     }
 
@@ -131,14 +131,14 @@ class ApiController extends Controller
         }
 
         if(!$user->save()){
-            throw new HttpException(400, $this->_getErrors($user));
+            throw new HttpException(200, $this->_getErrors($user));
         }
 
         // save url if image coming from external source like Facebook
         if( !empty($image) ){
             $user->profile_photo = $image;
             if(!$user->save()){
-                throw new HttpException(400, $this->_getErrors($user));
+                throw new HttpException(200, $this->_getErrors($user));
             }
 
         // upload image then save it 
@@ -159,10 +159,10 @@ class ApiController extends Controller
                     $user->profile_photo = $file_path;
 
                     if(!$user->save()){
-                        throw new HttpException(400, $this->_getErrors($user));
+                        throw new HttpException(200, $this->_getErrors($user));
                     }
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }
@@ -173,7 +173,7 @@ class ApiController extends Controller
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
-            throw new HttpException(400, 'login problem');
+            throw new HttpException(200, 'login problem');
         }
     }
 
@@ -202,7 +202,7 @@ class ApiController extends Controller
         $response = file_get_contents($user_details);
         $response = json_decode($response);
         if( !isset($response) || !isset($response->id)|| $response->id != $facebook_id ){
-            throw new HttpException(400, 'invalid facebook token');
+            throw new HttpException(200, 'invalid facebook token');
         }
 
         // check if user not saved before, to add it
@@ -218,14 +218,14 @@ class ApiController extends Controller
             $user->facebook_id = $facebook_id;
 
             if(!$user->save()){
-                throw new HttpException(400, $this->_getErrors($user));
+                throw new HttpException(200, $this->_getErrors($user));
             }
 
             // save url if image coming from external source like Facebook
             if( !empty($image) ){
                 $user->profile_photo = $image;
                 if(!$user->save()){
-                    throw new HttpException(400, $this->_getErrors($user));
+                    throw new HttpException(200, $this->_getErrors($user));
                 }
             }
         }
@@ -236,7 +236,7 @@ class ApiController extends Controller
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
-            throw new HttpException(400, 'login problem');
+            throw new HttpException(200, 'login problem');
         }
     }
 
@@ -263,7 +263,7 @@ class ApiController extends Controller
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
-            throw new HttpException(400, 'login problem');
+            throw new HttpException(200, 'login problem');
         }
     }
 
@@ -292,13 +292,13 @@ class ApiController extends Controller
                     ->setTextBody('your password changed to: '.$new_password)
                     ->send();
                 if (!$result) {
-                    throw new HttpException(400, 'Password changed but errors while sending email: '.$mail->getError());
+                    throw new HttpException(200, 'Password changed but errors while sending email: '.$mail->getError());
                 }
             }else{
-                throw new HttpException(400, $this->_getErrors($user));
+                throw new HttpException(200, $this->_getErrors($user));
             }
         }else{
-            throw new HttpException(400, 'no user with this email');
+            throw new HttpException(200, 'no user with this email');
         }
     }
 
@@ -319,7 +319,7 @@ class ApiController extends Controller
         $model = User::findOne($this->logged_user_id);
         $model->password = Yii::$app->security->generatePasswordHash($new_password);
         if(!$model->save()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -344,7 +344,7 @@ class ApiController extends Controller
         if( !empty($image) ){
             $user->profile_photo = $image;
             if(!$user->save()){
-                throw new HttpException(400, $this->_getErrors($user));
+                throw new HttpException(200, $this->_getErrors($user));
             }
 
         // upload image then save it 
@@ -365,14 +365,14 @@ class ApiController extends Controller
                     $user->profile_photo = $file_path;
 
                     if(!$user->save()){
-                        throw new HttpException(400, $this->_getErrors($user));
+                        throw new HttpException(200, $this->_getErrors($user));
                     }
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }else{
-            throw new HttpException(400, 'no url or file input');
+            throw new HttpException(200, 'no url or file input');
         }  
     }
 
@@ -392,7 +392,7 @@ class ApiController extends Controller
         $user = User::findOne($this->logged_user_id);
         $user->auth_key = "";
         if( !$user->save() ){
-            throw new HttpException(400, 'logout problem');
+            throw new HttpException(200, 'logout problem');
         }
     }
 
@@ -423,7 +423,7 @@ class ApiController extends Controller
         if( $user != null ){
             $this->output['user_data'] = $this->_getUserData($user);
         }else{
-            throw new HttpException(400, 'no user with this id or username');
+            throw new HttpException(200, 'no user with this id or username');
         }
     }
 
@@ -449,7 +449,7 @@ class ApiController extends Controller
     {
         $user = User::findOne($this->logged_user_id);
         if( $user == null ){
-            throw new HttpException(400, 'no user with this id');
+            throw new HttpException(200, 'no user with this id');
         }
 
         if ( !empty($name) ) $user->name = $name;
@@ -460,7 +460,7 @@ class ApiController extends Controller
         if ( !empty($firebase_token) ) $user->firebase_token = $firebase_token;
 
         if(!$user->save()){
-            throw new HttpException(400, $this->_getErrors($user));
+            throw new HttpException(200, $this->_getErrors($user));
         }
 
         if( !empty($interests_ids) ){
@@ -551,10 +551,10 @@ class ApiController extends Controller
                 ];
                 $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
             }else{
-                throw new HttpException(400, $this->_getErrors($model));
+                throw new HttpException(200, $this->_getErrors($model));
             }
         }else{
-            throw new HttpException(400, 'you can\'t send new friend request');
+            throw new HttpException(200, 'you can\'t send new friend request');
         }
     }
 
@@ -603,7 +603,7 @@ class ApiController extends Controller
         $model = Friendship::findOne($request_id);
         $model->status = 3;
         if(!$model->save()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -653,7 +653,7 @@ class ApiController extends Controller
         $request = Friendship::findOne($request_id);
         $request->status = 1;
         if( !$request->save() ){
-            throw new HttpException(400, $this->_getErrors($request));
+            throw new HttpException(200, $this->_getErrors($request));
         }
 
         // add as a friend in the other user list
@@ -662,7 +662,7 @@ class ApiController extends Controller
         $friendship_model->friend_id = $request->user_id;
         $friendship_model->status = 1;
         if( !$friendship_model->save() ){
-            throw new HttpException(400, $this->_getErrors($friendship_model));
+            throw new HttpException(200, $this->_getErrors($friendship_model));
         }
 
         // send notification
@@ -693,7 +693,7 @@ class ApiController extends Controller
         $model = Friendship::findOne($request_id);
         $model->status = 2;
         if(!$model->save()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -723,10 +723,10 @@ class ApiController extends Controller
             $friendship2->status = 4;
 
             if( !$friendship1->save() || !$friendship2->save() ){
-                throw new HttpException(400, $this->_getErrors($friendship1) + $this->_getErrors($friendship2));
+                throw new HttpException(200, $this->_getErrors($friendship1) + $this->_getErrors($friendship2));
             }
         }else{
-            throw new HttpException(400, 'problem occured');
+            throw new HttpException(200, 'problem occured');
         }
     }
 
@@ -912,7 +912,7 @@ class ApiController extends Controller
         $flag->name = $name;
 
         if(!$flag->save()){
-            throw new HttpException(400, $this->_getErrors($flag));
+            throw new HttpException(200, $this->_getErrors($flag));
         }
 
         if( !empty($_FILES['Media']) ){
@@ -932,10 +932,10 @@ class ApiController extends Controller
                     $flag->icon = $file_path;
 
                     if(!$flag->save()){
-                        throw new HttpException(400, $this->_getErrors($flag));
+                        throw new HttpException(200, $this->_getErrors($flag));
                     }
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }
@@ -1022,7 +1022,7 @@ class ApiController extends Controller
         $business->admin_id = $this->logged_user_id;
 
         if(!$business->save()){
-            throw new HttpException(400, $this->_getErrors($business));
+            throw new HttpException(200, $this->_getErrors($business));
         }
 
         if( !empty($flags_ids) ){
@@ -1069,10 +1069,10 @@ class ApiController extends Controller
                     $business->main_image = $file_path;
 
                     if(!$business->save()){
-                        throw new HttpException(400, $this->_getErrors($business));
+                        throw new HttpException(200, $this->_getErrors($business));
                     }
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }
@@ -1114,7 +1114,7 @@ class ApiController extends Controller
                         ->where(['id' => $business_id])
                         ->one();
         if( $business == null ){
-            throw new HttpException(400, 'no business with this id');
+            throw new HttpException(200, 'no business with this id');
         }
 
         if ( !empty($name) ) $business->name = $name;
@@ -1134,7 +1134,7 @@ class ApiController extends Controller
         // $business->admin_id = $this->logged_user_id; //TODO check permissions
 
         if(!$business->save()){
-            throw new HttpException(400, $this->_getErrors($business));
+            throw new HttpException(200, $this->_getErrors($business));
         }
 
         if( !empty($flags_ids) ){
@@ -1187,10 +1187,10 @@ class ApiController extends Controller
                     $business->main_image = $file_path;
 
                     if(!$business->save()){
-                        throw new HttpException(400, $this->_getErrors($business));
+                        throw new HttpException(200, $this->_getErrors($business));
                     }
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }
@@ -1357,7 +1357,7 @@ class ApiController extends Controller
             $conditions['country_id'] = $country_id;
             $this->output['businesses'] = $this->_getBusinesses($conditions);
         }else{
-            throw new HttpException(400, 'not supported search type or keyword is empty');
+            throw new HttpException(200, 'not supported search type or keyword is empty');
         }
     }
 
@@ -1387,10 +1387,10 @@ class ApiController extends Controller
             if( $result == 'done' ){
                 $this->output['business_data'] = $this->_getBusinessesDataObject($model);
             }else{
-                throw new HttpException(400, $result);
+                throw new HttpException(200, $result);
             }
         }else{
-            throw new HttpException(400, 'no business with this id');
+            throw new HttpException(200, 'no business with this id');
         }
     }
 
@@ -1417,10 +1417,10 @@ class ApiController extends Controller
             $savedBusiness->business_id = $business_id;
 
             if(!$savedBusiness->save()){
-                throw new HttpException(400, $this->_getErrors($savedBusiness));
+                throw new HttpException(200, $this->_getErrors($savedBusiness));
             }
         }else{
-            throw new HttpException(400, 'no business with this id');
+            throw new HttpException(200, 'no business with this id');
         }
     }
 
@@ -1441,7 +1441,7 @@ class ApiController extends Controller
         $model = SavedBusiness::findOne(['user_id' => $this->logged_user_id, 'business_id' => $saved_business_id]);
 
         if(!$model->delete()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -1505,18 +1505,18 @@ class ApiController extends Controller
             $checkin->rating = $rating;
 
             if(!$checkin->save()){
-                throw new HttpException(400, $this->_getErrors($checkin));
+                throw new HttpException(200, $this->_getErrors($checkin));
             }else{
                 $model->rating = $this->_calcRating($business_id);
 
                 if(!$model->save()){
-                    throw new HttpException(400, $this->_getErrors($model));
+                    throw new HttpException(200, $this->_getErrors($model));
                 }else{
                     $this->output['checkin_id'] = $checkin->id;
                 }
             }
         }else{
-            throw new HttpException(400, 'no business with this id');
+            throw new HttpException(200, 'no business with this id');
         }
     }
 
@@ -1537,7 +1537,7 @@ class ApiController extends Controller
         $model = Checkin::findOne($checkin_id);
 
         if(!$model->delete()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -1599,12 +1599,12 @@ class ApiController extends Controller
             $review->rating = $rating;
 
             if(!$review->save()){
-                throw new HttpException(400, $this->_getErrors($review));
+                throw new HttpException(200, $this->_getErrors($review));
             }else{
                 $model->rating = $this->_calcRating($business_id);
 
                 if(!$model->save()){
-                    throw new HttpException(400, $this->_getErrors($model));
+                    throw new HttpException(200, $this->_getErrors($model));
                 }else{
                     $this->output['review_id'] = $review->id;
 
@@ -1632,7 +1632,7 @@ class ApiController extends Controller
                 }
             }
         }else{
-            throw new HttpException(400, 'no business with this id');
+            throw new HttpException(200, 'no business with this id');
         }
     }
 
@@ -1653,7 +1653,7 @@ class ApiController extends Controller
         $model = Review::findOne($review_id);
 
         if(!$model->delete()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -1745,11 +1745,11 @@ class ApiController extends Controller
                 if($media->save()){
                     $media->file->saveAs($file_path);
                 }else{
-                    throw new HttpException(400, $this->_getErrors($media));
+                    throw new HttpException(200, $this->_getErrors($media));
                 }
             }
         }else{
-            throw new HttpException(400, 'no file input');
+            throw new HttpException(200, 'no file input');
         }  
     }
 
@@ -1770,7 +1770,7 @@ class ApiController extends Controller
         $model = Media::findOne($media_id);
 
         if(!unlink($model->url) || !$model->delete()){
-            throw new HttpException(400, $this->_getErrors($model));
+            throw new HttpException(200, $this->_getErrors($model));
         }
     }
 
@@ -1920,7 +1920,7 @@ class ApiController extends Controller
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
             $this->logged_user_id = $user->id;
         }else{
-            throw new HttpException(401, 'user not verified');
+            throw new HttpException(200, 'user not verified');
         }
     }
 
