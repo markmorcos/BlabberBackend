@@ -31,11 +31,19 @@ class ApiController extends Controller
 {
     var $no_per_page = 20;
     var $output = ['status' => 0, 'errors' => null];
+    var $logged_user_id = null;
 
     // TODO check if this needed on live server
     public function beforeAction($action)
     {
         $this->enableCsrfValidation = false;
+
+        if( !in_array($action->id, ['is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password']) ){
+            if( !$this->_verifyUserAndSetID() ){
+                return;
+            }
+        }
+
         return parent::beforeAction($action);
     }
 
@@ -53,6 +61,13 @@ class ApiController extends Controller
         }
     }
 
+    public function runAction($id, $params = [])
+    {
+        // Extract the params from the request and bind them to params
+        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+        return parent::runAction($id, $params);
+    }
+
     /***************************************/
     /**************** Users ****************/
     /***************************************/
@@ -67,17 +82,10 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionIsUniqueUsername()
+    public function actionIsUniqueUsername($username)
     {
-        $parameters = array('username');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) ){
-            return;
-        }
-
         $model = User::find()
-                ->where(['username' => $_POST['username']])
+                ->where(['username' => $username])
                 ->one();
 
         if (!empty($model)) {
@@ -105,24 +113,18 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignUp()
+    public function actionSignUp($name, $email, $username, $password)
     {
-        $parameters = array('name', 'email', 'username', 'password');
         $this->_addOutputs(['user_data', 'auth_key']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) ){
-            return;
-        }
 
         // sign up
         $user = new User;
-        $user->name = $_POST['name'];
-        $user->email = $_POST['email'];
-        $user->username = $_POST['username'];
-        $user->password = Yii::$app->security->generatePasswordHash($_POST['password']);
-        if( !empty($_POST['mobile']) ){
-            $user->mobile = $_POST['mobile'];
+        $user->name = $name;
+        $user->email = $email;
+        $user->username = $username;
+        $user->password = Yii::$app->security->generatePasswordHash($password);
+        if( !empty($mobile) ){
+            $user->mobile = $mobile;
         }
 
         if(!$user->save()){
@@ -132,8 +134,8 @@ class ApiController extends Controller
         }
 
         // save url if image coming from external source like Facebook
-        if( !empty($_POST['image']) ){
-            $user->profile_photo = $_POST['image'];
+        if( !empty($image) ){
+            $user->profile_photo = $image;
             if(!$user->save()){
                 $this->output['status'] = 1;
                 $this->output['errors'] = $this->_getErrors($user); //saving problem
@@ -171,7 +173,7 @@ class ApiController extends Controller
         }
 
         //login
-        $user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
+        $user = User::login($email, $password, $firebase_token);
         if( $user != null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
@@ -197,37 +199,31 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignInFb()
+    public function actionSignInFb($facebook_id, $facebook_token, $name)
     {
-        $parameters = array('facebook_id', 'facebook_token', 'name');
         $this->_addOutputs(['user_data', 'auth_key']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) ){
-            return;
-        }
-
         // verify facebook token & facebook id
-        $user_details = "https://graph.facebook.com/me?access_token=" .$_POST['facebook_token'];
+        $user_details = "https://graph.facebook.com/me?access_token=" .$facebook_token;
         $response = file_get_contents($user_details);
         $response = json_decode($response);
-        if( !isset($response) || !isset($response->id)|| $response->id != $_POST['facebook_id'] ){
+        if( !isset($response) || !isset($response->id)|| $response->id != $facebook_id ){
             $this->output['status'] = 1;
             $this->output['errors'] = "invalid facebook token";
             return;
         }
 
         // check if user not saved before, to add it
-        $email = $_POST['facebook_id'].'@facebook.com';
-        $password = md5($_POST['facebook_id']);
+        $email = $facebook_id.'@facebook.com';
+        $password = md5($facebook_id);
         $user = User::findByEmail($email);
         if( $user == null ){
             // sign up
             $user = new User;
-            $user->name = $_POST['name'];
+            $user->name = $name;
             $user->email = $email;
             $user->password = Yii::$app->security->generatePasswordHash($password);
-            $user->facebook_id = $_POST['facebook_id'];
+            $user->facebook_id = $facebook_id;
 
             if(!$user->save()){
                 $this->output['status'] = 1;
@@ -236,8 +232,8 @@ class ApiController extends Controller
             }
 
             // save url if image coming from external source like Facebook
-            if( !empty($_POST['image']) ){
-                $user->profile_photo = $_POST['image'];
+            if( !empty($image) ){
+                $user->profile_photo = $image;
                 if(!$user->save()){
                     $this->output['status'] = 1;
                     $this->output['errors'] = $this->_getErrors($user); //saving problem
@@ -247,7 +243,7 @@ class ApiController extends Controller
         }
 
         //login
-        $user = User::login($email, $password, $_POST['firebase_token']);
+        $user = User::login($email, $password, $firebase_token);
         if( $user != null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
@@ -271,17 +267,11 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignIn()
+    public function actionSignIn($email, $password)
     {
-        $parameters = array('email', 'password');
         $this->_addOutputs(['user_data', 'auth_key']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) ){
-            return;
-        }
-
-        $user = User::login($_POST['email'], $_POST['password'], $_POST['firebase_token']);
+        $user = User::login($email, $password, $firebase_token);
         if( $user != null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
@@ -301,24 +291,17 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionRecoverPassword()
+    public function actionRecoverPassword($email)
     {
-        $parameters = array('email');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) ){
-            return;
-        }
-
         $new_password = substr(md5(uniqid(rand(), true)), 6, 6);
 
-        $user = User::findByEmail($_POST['email']);
+        $user = User::findByEmail($email);
         if( $user != null ){
             $user->password = Yii::$app->security->generatePasswordHash($new_password);
             if($user->save()){
                 $result = Yii::$app->mailer->compose()
                     ->setFrom('recovery@blabber.com', 'Blabber support')
-                    ->setTo($_POST['email'])
+                    ->setTo($email)
                     ->setSubject('Blabber Password Recovery')
                     ->setTextBody('your password changed to: '.$new_password)
                     ->send();
@@ -349,17 +332,10 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionChangePassword()
+    public function actionChangePassword($new_password)
     {
-        $parameters = array('user_id', 'auth_key', 'new_password');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $model = User::findOne($_POST['user_id']);
-        $model->password = Yii::$app->security->generatePasswordHash($_POST['new_password']);
+        $model = User::findOne($this->logged_user_id);
+        $model->password = Yii::$app->security->generatePasswordHash($new_password);
         if(!$model->save()){
             $this->output['status'] = 1;
             $this->output['errors'] = $this->_getErrors($model); //saving problem
@@ -379,19 +355,13 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionChangeProfilePhoto()
+    public function actionChangeProfilePhoto($image = null)
     {
-        $parameters = array('user_id', 'auth_key');
-
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $user = User::findOne($_POST['user_id']);
+        $user = User::findOne($this->logged_user_id);
 
         // save url if image coming from external source like Facebook
-        if( !empty($_POST['image']) ){
-            $user->profile_photo = $_POST['image'];
+        if( !empty($image) ){
+            $user->profile_photo = $image;
             if(!$user->save()){
                 $this->output['status'] = 1;
                 $this->output['errors'] = $this->_getErrors($user); //saving problem
@@ -442,14 +412,7 @@ class ApiController extends Controller
      */
     public function actionLogout()
     {
-        $parameters = array('user_id', 'auth_key');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $user = User::findOne($_POST['user_id']);
+        $user = User::findOne($this->logged_user_id);
         $user->auth_key = "";
         if( !$user->save() ){
             $this->output['status'] = 1;
@@ -471,20 +434,14 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      */
-    public function actionGetProfile()
+    public function actionGetProfile($user_id_to_get = null, $user_username_to_get = null)
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['user_data']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        if (!empty($_POST['user_id_to_get'])) {
-            $user = User::findOne($_POST['user_id_to_get']);
-        }elseif (!empty($_POST['user_username_to_get'])) {
-            $user = User::findOne(['username' => $_POST['user_username_to_get']]);
+        if (!empty($user_id_to_get)) {
+            $user = User::findOne($user_id_to_get);
+        }elseif (!empty($user_username_to_get)) {
+            $user = User::findOne(['username' => $user_username_to_get]);
         }
         
         if( $user != null ){
@@ -513,28 +470,21 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditProfile()
+    public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $interests_ids = null)
     {
-        $parameters = array('user_id', 'auth_key');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-        
-        $user = User::findOne($_POST['user_id']);
+        $user = User::findOne($this->logged_user_id);
         if( $user == null ){
             $this->output['status'] = 1;            
             $this->output['errors'] = "no user with this id";
             return;
         }
 
-        if ( !empty($_POST['name']) ) $user->name = $_POST['name'];
-        if ( !empty($_POST['username']) ) $user->username = $_POST['username'];
-        if ( !empty($_POST['mobile']) ) $user->mobile = $_POST['mobile'];
-        if ( !empty($_POST['gender']) ) $user->gender = $_POST['gender'];
-        if ( !empty($_POST['birthdate']) ) $user->birthdate = $_POST['birthdate'];
-        if ( !empty($_POST['firebase_token']) ) $user->firebase_token = $_POST['firebase_token'];
+        if ( !empty($name) ) $user->name = $name;
+        if ( !empty($username) ) $user->username = $username;
+        if ( !empty($mobile) ) $user->mobile = $mobile;
+        if ( !empty($gender) ) $user->gender = $gender;
+        if ( !empty($birthdate) ) $user->birthdate = $birthdate;
+        if ( !empty($firebase_token) ) $user->firebase_token = $firebase_token;
 
         if(!$user->save()){
             $this->output['status'] = 1;
@@ -542,11 +492,11 @@ class ApiController extends Controller
             return;
         }
 
-        if( !empty($_POST['interests_ids']) ){
+        if( !empty($interests_ids) ){
             // remove old interests
             UserInterest::deleteAll('user_id = '.$user->id);
 
-            $interests = explode(',', $_POST['interests_ids']);
+            $interests = explode(',', $interests_ids);
             foreach ($interests as $interest) {
                 $user_interest = new UserInterest();
                 $user_interest->user_id = $user->id;
@@ -573,19 +523,13 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} users the list of users
      */
-    public function actionSearchForUser()
+    public function actionSearchForUser($name)
     {
-        $parameters = array('user_id', 'auth_key', 'name');
         $this->_addOutputs(['users']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = User::find()
-                ->where(['like', 'name', $_POST['name']])
-                ->andWhere(['!=', 'id', $_POST['user_id']])
+                ->where(['like', 'name', $name])
+                ->andWhere(['!=', 'id', $this->logged_user_id])
                 ->orderBy(['id' => SORT_DESC])
                 ->all();
 
@@ -610,23 +554,17 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} request_id the added request id
      */
-    public function actionAddFriend()
+    public function actionAddFriend($friend_id)
     {
-        $parameters = array('user_id', 'auth_key', 'friend_id');
         $this->_addOutputs(['request']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $friendship = $this->_getLastFriendshipRequest($_POST['user_id'], $_POST['friend_id']);
+        $friendship = $this->_getLastFriendshipRequest($this->logged_user_id, $friend_id);
 
         //if there isn't friendship request or if sent old one and rejected (status:2) or cancelled (status:3) or removed (status:4)
         if ( $friendship == null || $friendship->status == 2 || $friendship->status == 3 || $friendship->status == 4 ){ 
             $model = new Friendship;
-            $model->user_id = $_POST['user_id'];
-            $model->friend_id = $_POST['friend_id'];
+            $model->user_id = $this->logged_user_id;
+            $model->friend_id = $friend_id;
             $model->status = 0;
 
             if($model->save()){
@@ -665,16 +603,10 @@ class ApiController extends Controller
      */
     public function actionGetFriendRequestsSent()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['requests']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = Friendship::find()
-            ->where(['user_id' => $_POST['user_id'], 'status' => 0])
+            ->where(['user_id' => $this->logged_user_id, 'status' => 0])
             ->all();
 
         $requests = array();
@@ -697,16 +629,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionCancelFriendRequest()
+    public function actionCancelFriendRequest($request_id)
     {
-        $parameters = array('user_id', 'auth_key', 'request_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $model = Friendship::findOne($_POST['request_id']);
+        $model = Friendship::findOne($request_id);
         $model->status = 3;
         if(!$model->save()){
             $this->output['status'] = 1;
@@ -728,16 +653,10 @@ class ApiController extends Controller
      */
     public function actionGetFriendRequestsReceived()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['requests']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = Friendship::find()
-            ->where(['friend_id' => $_POST['user_id'], 'status' => 0])
+            ->where(['friend_id' => $this->logged_user_id, 'status' => 0])
             ->all();
 
         $requests = array();
@@ -760,17 +679,10 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAcceptFriendRequest()
+    public function actionAcceptFriendRequest($request_id)
     {
-        $parameters = array('user_id', 'auth_key', 'request_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         // accept request
-        $request = Friendship::findOne($_POST['request_id']);
+        $request = Friendship::findOne($request_id);
         $request->status = 1;
         if( !$request->save() ){
             $this->output['status'] = 1;
@@ -812,16 +724,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionRejectFriendRequest()
+    public function actionRejectFriendRequest($request_id)
     {
-        $parameters = array('user_id', 'auth_key', 'request_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $model = Friendship::findOne($_POST['request_id']);
+        $model = Friendship::findOne($request_id);
         $model->status = 2;
         if(!$model->save()){
             $this->output['status'] = 1;
@@ -841,23 +746,13 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionRemoveFriend()
+    public function actionRemoveFriend($friend_id)
     {
-        $parameters = array('user_id', 'auth_key', 'friend_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $logged_user_id = $_POST['user_id'];
-        $friend_id = $_POST['friend_id'];
-
         $friendship1 = Friendship::find()
-            ->where(['friend_id' => $logged_user_id, 'user_id' => $friend_id, 'status' => 1])
+            ->where(['friend_id' => $this->logged_user_id, 'user_id' => $friend_id, 'status' => 1])
             ->one();
         $friendship2 = Friendship::find()
-            ->where(['friend_id' => $friend_id, 'user_id' => $logged_user_id, 'status' => 1])
+            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user_id, 'status' => 1])
             ->one();
 
         if( isset($friendship1) && isset($friendship2) ){
@@ -888,16 +783,10 @@ class ApiController extends Controller
      */
     public function actionGetFriends()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['friends']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = Friendship::find()
-            ->where(['user_id' => $_POST['user_id'], 'status' => 1])
+            ->where(['user_id' => $this->logged_user_id, 'status' => 1])
             ->all();
 
         $friends = array();
@@ -926,13 +815,7 @@ class ApiController extends Controller
      */
     public function actionGetCategories()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['categories']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $this->output['categories'] = $this->_getCategories();
     }
@@ -950,17 +833,11 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} categories categories details.
      */
-    public function actionGetSubCategories()
+    public function actionGetSubCategories($category_id)
     {
-        $parameters = array('user_id', 'auth_key', 'category_id');
         $this->_addOutputs(['categories']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $this->output['categories'] = $this->_getCategories($_POST['category_id']);
+        $this->output['categories'] = $this->_getCategories($category_id);
     }
 
     /***************************************/
@@ -981,13 +858,7 @@ class ApiController extends Controller
      */
     public function actionGetCountries()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['countries']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $model = Country::find()->all();
 
@@ -1014,18 +885,12 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} Cities List of Cities.
      */
-    public function actionGetCities()
+    public function actionGetCities($country_id)
     {
-        $parameters = array('user_id', 'auth_key', 'country_id');
         $this->_addOutputs(['cities']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = City::find()
-                    ->where(['country_id' => $_POST['country_id']])
+                    ->where(['country_id' => $country_id])
                     ->all();
 
         $cities = [];
@@ -1052,13 +917,7 @@ class ApiController extends Controller
      */
     public function actionGetFlags()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['flags']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $model = Flag::find()->all();
 
@@ -1086,17 +945,10 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddFlag()
+    public function actionAddFlag($name)
     {
-        $parameters = array('user_id', 'auth_key', 'name');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $flag = new Flag;
-        $flag->name = $_POST['name'];
+        $flag->name = $name;
 
         if(!$flag->save()){
             $this->output['status'] = 1;
@@ -1112,7 +964,7 @@ class ApiController extends Controller
                 $file_path = 'uploads/'.$media_type.'/'.$flag->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
                 $media->url = $file_path;
                 $media->type = $media_type;
-                $media->user_id = $_POST['user_id'];
+                $media->user_id = $this->logged_user_id;
                 $media->object_id = $flag->id;
                 $media->object_type = 'Flag';
 
@@ -1148,13 +1000,7 @@ class ApiController extends Controller
      */
     public function actionGetInterests()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['interests']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $model = Interest::find()->all();
 
@@ -1197,35 +1043,28 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionAddBusiness()
+    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $flags_ids = null, $interests = null)
     {
-        $parameters = array('user_id', 'auth_key', 'name', 'address', 'country_id', 'city_id', 'phone', 'open_from', 'open_to', 'lat', 'lng', 'price', 'description', 'category_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $business = new Business;
-        $business->name = $_POST['name'];
-        $business->address = $_POST['address'];
-        $business->country_id = $_POST['country_id'];
-        $business->city_id = $_POST['city_id'];
-        $business->phone = $_POST['phone'];
-        $business->open_from = $_POST['open_from'];
-        $business->open_to = $_POST['open_to'];
-        $business->lat = $_POST['lat'];
-        $business->lng = $_POST['lng'];
-        $business->price = $_POST['price'];
-        if ( !empty($_POST['website']) ) {
-            $business->website = $_POST['website'];
+        $business->name = $name;
+        $business->address = $address;
+        $business->country_id = $country_id;
+        $business->city_id = $city_id;
+        $business->phone = $phone;
+        $business->open_from = $open_from;
+        $business->open_to = $open_to;
+        $business->lat = $lat;
+        $business->lng = $lng;
+        $business->price = $price;
+        if ( !empty($website) ) {
+            $business->website = $website;
         }
-        if ( !empty($_POST['fb_page']) ) {
-            $business->fb_page = $_POST['fb_page'];
+        if ( !empty($fb_page) ) {
+            $business->fb_page = $fb_page;
         }
-        $business->description = $_POST['description'];
-        $business->category_id = $_POST['category_id'];
-        $business->admin_id = $_POST['user_id'];
+        $business->description = $description;
+        $business->category_id = $category_id;
+        $business->admin_id = $this->logged_user_id;
 
         if(!$business->save()){
             $this->output['status'] = 1;
@@ -1233,8 +1072,8 @@ class ApiController extends Controller
             return;
         }
 
-        if( !empty($_POST['flags_ids']) ){
-            $flags = explode(',', $_POST['flags_ids']);
+        if( !empty($flags_ids) ){
+            $flags = explode(',', $flags_ids);
             foreach ($flags as $flag) {
                 $business_flag = new BusinessFlag();
                 $business_flag->business_id = $business->id;
@@ -1243,8 +1082,8 @@ class ApiController extends Controller
             }
         }
 
-        if( !empty($_POST['interests']) ){
-            $interests = explode(',', $_POST['interests']);
+        if( !empty($interests) ){
+            $interests = explode(',', $interests);
             foreach ($interests as $interest) {
                 $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if( empty($temp_interest) ){
@@ -1268,7 +1107,7 @@ class ApiController extends Controller
                 $file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
                 $media->url = $file_path;
                 $media->type = $media_type;
-                $media->user_id = $_POST['user_id'];
+                $media->user_id = $this->logged_user_id;
                 $media->object_id = $business->id;
                 $media->object_type = 'Business';
 
@@ -1320,17 +1159,10 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionEditBusiness()
+    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $open_from = null, $open_to = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $flags_ids = null, $interests = null)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $business = Business::find()
-                        ->where(['id' => $_POST['business_id']])
+                        ->where(['id' => $business_id])
                         ->one();
         if( $business == null ){
             $this->output['status'] = 1;            
@@ -1338,21 +1170,21 @@ class ApiController extends Controller
             return;
         }
 
-        if ( !empty($_POST['name']) ) $business->name = $_POST['name'];
-        if ( !empty($_POST['address']) ) $business->address = $_POST['address'];
-        if ( !empty($_POST['country_id']) ) $business->country_id = $_POST['country_id'];
-        if ( !empty($_POST['city_id']) ) $business->city_id = $_POST['city_id'];
-        if ( !empty($_POST['phone']) ) $business->phone = $_POST['phone'];
-        if ( !empty($_POST['open_from']) ) $business->open_from = $_POST['open_from'];
-        if ( !empty($_POST['open_to']) ) $business->open_to = $_POST['open_to'];
-        if ( !empty($_POST['lat']) ) $business->lat = $_POST['lat'];
-        if ( !empty($_POST['lng']) ) $business->lng = $_POST['lng'];
-        if ( !empty($_POST['price']) ) $business->price = $_POST['price'];
-        if ( !empty($_POST['website']) ) $business->website = $_POST['website'];
-        if ( !empty($_POST['fb_page']) ) $business->fb_page = $_POST['fb_page'];
-        if ( !empty($_POST['description']) ) $business->description = $_POST['description'];
-        if ( !empty($_POST['category_id']) ) $business->category_id = $_POST['category_id'];
-        // $business->admin_id = $_POST['user_id']; //TODO check permissions
+        if ( !empty($name) ) $business->name = $name;
+        if ( !empty($address) ) $business->address = $address;
+        if ( !empty($country_id) ) $business->country_id = $country_id;
+        if ( !empty($city_id) ) $business->city_id = $city_id;
+        if ( !empty($phone) ) $business->phone = $phone;
+        if ( !empty($open_from) ) $business->open_from = $open_from;
+        if ( !empty($open_to) ) $business->open_to = $open_to;
+        if ( !empty($lat) ) $business->lat = $lat;
+        if ( !empty($lng) ) $business->lng = $lng;
+        if ( !empty($price) ) $business->price = $price;
+        if ( !empty($website) ) $business->website = $website;
+        if ( !empty($fb_page) ) $business->fb_page = $fb_page;
+        if ( !empty($description) ) $business->description = $description;
+        if ( !empty($category_id) ) $business->category_id = $category_id;
+        // $business->admin_id = $this->logged_user_id; //TODO check permissions
 
         if(!$business->save()){
             $this->output['status'] = 1;
@@ -1360,11 +1192,11 @@ class ApiController extends Controller
             return;
         }
 
-        if( !empty($_POST['flags_ids']) ){
+        if( !empty($flags_ids) ){
             // remove old flags
             BusinessFlag::deleteAll('business_id = '.$business->id);
 
-            $flags = explode(',', $_POST['flags_ids']);
+            $flags = explode(',', $flags_ids);
             foreach ($flags as $flag) {
                 $business_flag = new BusinessFlag();
                 $business_flag->business_id = $business->id;
@@ -1373,11 +1205,11 @@ class ApiController extends Controller
             }
         }
 
-        if( !empty($_POST['interests']) ){
+        if( !empty($interests) ){
             // remove old interests
             BusinessInterest::deleteAll('business_id = '.$business->id);
 
-            $interests = explode(',', $_POST['interests']);
+            $interests = explode(',', $interests);
             foreach ($interests as $interest) {
                 $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if( empty($temp_interest) ){
@@ -1401,7 +1233,7 @@ class ApiController extends Controller
                 $file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
                 $media->url = $file_path;
                 $media->type = $media_type;
-                $media->user_id = $_POST['user_id'];
+                $media->user_id = $this->logged_user_id;
                 $media->object_id = $business->id;
                 $media->object_type = 'Business';
 
@@ -1436,18 +1268,12 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetHomescreenBusinesses()
+    public function actionGetHomescreenBusinesses($country_id)
     {
-        $parameters = array('user_id', 'auth_key', 'country_id');
         $this->_addOutputs(['businesses']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         // $conditions = ['show_in_home' => true]; //TODO uncomment this later
-        $conditions['country_id'] = $_POST['country_id'];
+        $conditions['country_id'] = $country_id;
         $this->output['businesses'] = $this->_getBusinesses($conditions);
     }
 
@@ -1458,25 +1284,19 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} category_id Category's id to get businesses inside.
      * @apiParam {String} country_id Country's id.
+     * @apiParam {String} category_id Category's id to get businesses inside.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses()
+    public function actionGetBusinesses($country_id, $category_id)
     {
-        $parameters = array('user_id', 'auth_key', 'category_id', 'country_id');
         $this->_addOutputs(['businesses']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $conditions = ['category_id' => $_POST['category_id']];
-        $conditions['country_id'] = $_POST['country_id'];
+        $conditions['country_id'] = $country_id;
+        $conditions['category_id'] = $category_id;
         $this->output['businesses'] = $this->_getBusinesses($conditions);
     }
 
@@ -1503,65 +1323,59 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinesses()
+    public function actionSearchBusinesses($country_id, $name = null, $city = null, $city_id  = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
-        $parameters = array('user_id', 'auth_key', 'country_id');
         $this->_addOutputs(['businesses']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $conditions[] = 'or';
         $and_conditions[] = 'and';
         
-        if( !empty($_POST['name']) ){
-            $conditions[] = ['like', 'name', $_POST['name']];
+        if( !empty($name) ){
+            $conditions[] = ['like', 'name', $name];
         }
-        if( !empty($_POST['city']) ){
-            $model = City::find()->where(['like', 'name', $_POST['city']])->all();
+        if( !empty($city) ){
+            $model = City::find()->where(['like', 'name', $city])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $conditions[] = ['city_id' => $search_keyword];
         }
-        if( !empty($_POST['city_id']) ){
-            $conditions[] = ['city_id' => $_POST['city_id']];
+        if( !empty($city_id) ){
+            $conditions[] = ['city_id' => $city_id];
         }
-        if( !empty($_POST['category']) ){
-            $model = Category::find()->where(['like', 'name', $_POST['category']])->all();
+        if( !empty($category) ){
+            $model = Category::find()->where(['like', 'name', $category])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $conditions[] = ['category_id' => $search_keyword];
         }
-        if( !empty($_POST['category_id']) ){
-            $conditions[] = ['category_id' => $_POST['category_id']];
+        if( !empty($category_id) ){
+            $conditions[] = ['category_id' => $category_id];
         }
-        if( !empty($_POST['flag']) ){
-            $model = Flag::find()->where(['like', 'name', $_POST['flag']])->all();
+        if( !empty($flag) ){
+            $model = Flag::find()->where(['like', 'name', $flag])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
             $conditions[] = ['id' => $ids];
         }
-        if( !empty($_POST['flag_id']) ){
-            $model = BusinessFlag::find()->where(['flag_id' => $_POST['flag_id']])->all();
+        if( !empty($flag_id) ){
+            $model = BusinessFlag::find()->where(['flag_id' => $flag_id])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
             $conditions[] = ['id' => $ids];
         }
-        if( !empty($_POST['interest']) ){
-            $model = Interest::find()->where(['like', 'name', $_POST['interest']])->all();
+        if( !empty($interest) ){
+            $model = Interest::find()->where(['like', 'name', $interest])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
             $conditions[] = ['id' => $ids];
         }
-        if( !empty($_POST['interest_id']) ){
-            $model = BusinessInterest::find()->where(['interest_id' => $_POST['interest_id']])->all();
+        if( !empty($interest_id) ){
+            $model = BusinessInterest::find()->where(['interest_id' => $interest_id])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
             $conditions[] = ['id' => $ids];
         }
             
-        $lat_lng = empty($_POST['nearby']) ? null : explode('-', $_POST['nearby']);
-        $conditions['country_id'] = $_POST['country_id'];
+        $lat_lng = empty($nearby) ? null : explode('-', $nearby);
+        $conditions['country_id'] = $country_id;
         $this->output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
     }
 
@@ -1572,26 +1386,20 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} type Search by (recently_added, recently_viewed).
      * @apiParam {String} country_id Country's id.
+     * @apiParam {String} type Search by (recently_added, recently_viewed).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinessesByType()
+    public function actionSearchBusinessesByType($country_id, $type)
     {
-        $parameters = array('user_id', 'auth_key', 'type', 'country_id');
         $this->_addOutputs(['businesses']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $search_type = $_POST['type'];
+        $search_type = $type;
         if( $search_type == 'recently_added' ){
-            $conditions['country_id'] = $_POST['country_id'];
+            $conditions['country_id'] = $country_id;
             $this->output['businesses'] = $this->_getBusinesses($conditions, $this->no_per_page, ['created' => SORT_DESC]);
         }else if( $search_type == 'recently_viewed' ){
             $model = BusinessView::find()
@@ -1605,7 +1413,7 @@ class ApiController extends Controller
                 $ids_list[] = $business->business_id;
             }
             $conditions = ['id' => $ids_list];
-            $conditions['country_id'] = $_POST['country_id'];
+            $conditions['country_id'] = $country_id;
             $this->output['businesses'] = $this->_getBusinesses($conditions);
         }else{
             $this->output['status'] = 1;            
@@ -1626,21 +1434,15 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} business_data business details.
      */
-    public function actionGetBusinessData()
+    public function actionGetBusinessData($business_id)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id');
         $this->_addOutputs(['business_data']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $model = Business::find()
-                        ->where(['id' => $_POST['business_id']])
+                        ->where(['id' => $business_id])
                         ->one();
         if( $model != null ){
-            $result = $this->_addBusinessView($_POST['business_id'], $_POST['user_id']);
+            $result = $this->_addBusinessView($business_id, $this->logged_user_id);
 
             if( $result == 'done' ){
                 $this->output['business_data'] = $this->_getBusinessesDataObject($model);
@@ -1666,17 +1468,15 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionSaveBusiness()
+    public function actionSaveBusiness($business_id)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id');
-
         $model = Business::find()
-                        ->where(['id' => $_POST['business_id']])
+                        ->where(['id' => $business_id])
                         ->one();
         if( $model != null ){
             $savedBusiness = new SavedBusiness;
-            $savedBusiness->user_id = $_POST['user_id'];
-            $savedBusiness->business_id = $_POST['business_id'];
+            $savedBusiness->user_id = $this->logged_user_id;
+            $savedBusiness->business_id = $business_id;
 
             if(!$savedBusiness->save()){
                 $this->output['status'] = 1;
@@ -1700,11 +1500,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionDeleteSavedBusiness()
+    public function actionDeleteSavedBusiness($saved_business_id)
     {
-        $parameters = array('user_id', 'auth_key', 'saved_business_id');
-
-        $model = SavedBusiness::findOne(['user_id' => $_POST['user_id'], 'business_id' => $_POST['saved_business_id']]);
+        $model = SavedBusiness::findOne(['user_id' => $this->logged_user_id, 'business_id' => $saved_business_id]);
 
         if(!$model->delete()){
             $this->output['status'] = 1;
@@ -1725,19 +1523,13 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetSavedBusinesses()
+    public function actionGetSavedBusinesses($user_to_get)
     {
-        $parameters = array('user_id', 'auth_key', 'user_to_get');
         $this->_addOutputs(['businesses']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $model = SavedBusiness::find()
                     ->select('business_id')
-                    ->where(['user_id' => $_POST['user_to_get']])
+                    ->where(['user_id' => $user_to_get])
                     ->all();
         $ids_list = [];
         foreach ($model as $key => $business) {
@@ -1763,26 +1555,25 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} checkin_id the added checkin id
      */
-    public function actionCheckin()
+    public function actionCheckin($business_id, $review, $rating)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
         $this->_addOutputs(['checkin_id']);
 
         $model = Business::find()
-                        ->where(['id' => $_POST['business_id']])
+                        ->where(['id' => $business_id])
                         ->one();
         if( $model != null ){
             $checkin = new Checkin;
-            $checkin->user_id = $_POST['user_id'];
-            $checkin->business_id = $_POST['business_id'];
-            $checkin->text = $_POST['review'];
-            $checkin->rating = $_POST['rating'];
+            $checkin->user_id = $this->logged_user_id;
+            $checkin->business_id = $business_id;
+            $checkin->text = $review;
+            $checkin->rating = $rating;
 
             if(!$checkin->save()){
                 $this->output['status'] = 1;
                 $this->output['errors'] = $this->_getErrors($checkin); //saving problem
             }else{
-                $model->rating = $this->_calcRating($_POST['business_id']);
+                $model->rating = $this->_calcRating($business_id);
 
                 if(!$model->save()){
                     $this->output['status'] = 1;
@@ -1809,11 +1600,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionDeleteCheckin()
+    public function actionDeleteCheckin($checkin_id)
     {
-        $parameters = array('user_id', 'auth_key', 'checkin_id');
-
-        $model = Checkin::findOne($_POST['checkin_id']);
+        $model = Checkin::findOne($checkin_id);
 
         if(!$model->delete()){
             $this->output['status'] = 1;
@@ -1835,22 +1624,16 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} checkins checkins details.
      */
-    public function actionGetCheckins()
+    public function actionGetCheckins($business_id_to_get = null, $user_id_to_get = null)
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['checkins']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $conditions = [];
-        if ( !empty($_POST['business_id_to_get']) ) {
-            $conditions['business_id'] = $_POST['business_id_to_get'];
+        if ( !empty($business_id_to_get) ) {
+            $conditions['business_id'] = $business_id_to_get;
         }
-        if ( !empty($_POST['user_id_to_get']) ) {
-            $conditions['user_id'] = $_POST['user_id_to_get'];
+        if ( !empty($user_id_to_get) ) {
+            $conditions['user_id'] = $user_id_to_get;
         }
         $this->output['checkins'] = $this->_getCheckins($conditions);
     }
@@ -1870,26 +1653,25 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} review_id the added review id
      */
-    public function actionReview()
+    public function actionReview($business_id, $review, $rating)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id', 'review', 'rating');
         $this->_addOutputs(['review_id']);
 
         $model = Business::find()
-                        ->where(['id' => $_POST['business_id']])
+                        ->where(['id' => $business_id])
                         ->one();
         if( $model != null ){
             $review = new Review;
-            $review->user_id = $_POST['user_id'];
-            $review->business_id = $_POST['business_id'];
-            $review->text = $_POST['review'];
-            $review->rating = $_POST['rating'];
+            $review->user_id = $this->logged_user_id;
+            $review->business_id = $business_id;
+            $review->text = $review;
+            $review->rating = $rating;
 
             if(!$review->save()){
                 $this->output['status'] = 1;
                 $this->output['errors'] = $this->_getErrors($review); //saving problem
             }else{
-                $model->rating = $this->_calcRating($_POST['business_id']);
+                $model->rating = $this->_calcRating($business_id);
 
                 if(!$model->save()){
                     $this->output['status'] = 1;
@@ -1938,11 +1720,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionDeleteReview()
+    public function actionDeleteReview($review_id)
     {
-        $parameters = array('user_id', 'auth_key', 'review_id');
-
-        $model = Review::findOne($_POST['review_id']);
+        $model = Review::findOne($review_id);
 
         if(!$model->delete()){
             $this->output['status'] = 1;
@@ -1964,22 +1744,16 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} reviews reviews details.
      */
-    public function actionGetReviews()
+    public function actionGetReviews($business_id_to_get = null, $user_id_to_get = null)
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['reviews']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $conditions = [];
-        if ( !empty($_POST['business_id_to_get']) ) {
-            $conditions['business_id'] = $_POST['business_id_to_get'];
+        if ( !empty($business_id_to_get) ) {
+            $conditions['business_id'] = $business_id_to_get;
         }
-        if ( !empty($_POST['user_id_to_get']) ) {
-            $conditions['user_id'] = $_POST['user_id_to_get'];
+        if ( !empty($user_id_to_get) ) {
+            $conditions['user_id'] = $user_id_to_get;
         }
         $this->output['reviews'] = $this->_getReviews($conditions);
     }
@@ -1998,13 +1772,7 @@ class ApiController extends Controller
      */
     public function actionGetHomescreenReviews()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['reviews']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         // TODO set condition for this one
         $conditions = [];
@@ -2025,20 +1793,14 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia()
+    public function actionAddMedia($business_id, $type)
     {
-        $parameters = array('user_id', 'auth_key', 'business_id', 'type');
-
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         if( !empty($_FILES['Media']) ){
             $media = new Media;
             $media->file = UploadedFile::getInstance($media,'file');
             if( isset($media->file) ){
-                $media_type = $_POST['type'];
-                $business_id = $_POST['business_id'];
+                $media_type = $type;
+                $business_id = $business_id;
                 $file_path = 'uploads/'.$media_type.'/'.$business_id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
 
                 // get unique name to the file
@@ -2049,7 +1811,7 @@ class ApiController extends Controller
 
                 $media->url = $file_path;
                 $media->type = $media_type;
-                $media->user_id = $_POST['user_id'];
+                $media->user_id = $this->logged_user_id;
                 $media->object_id = $business_id;
                 $media->object_type = 'Business';
 
@@ -2078,11 +1840,9 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionDeleteMedia()
+    public function actionDeleteMedia($media_id)
     {
-        $parameters = array('user_id', 'auth_key', 'media_id');
-
-        $model = Media::findOne($_POST['media_id']);
+        $model = Media::findOne($media_id);
 
         if(!unlink($model->url) || !$model->delete()){
             $this->output['status'] = 1;
@@ -2104,23 +1864,17 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia()
+    public function actionGetMedia($business_id_to_get = null, $user_id_to_get = null)
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['media']);
 
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
         $conditions = '';
-        if ( !empty($_POST['business_id_to_get']) ) {
-            $conditions .= "object_id = '".$_POST['business_id_to_get']."' AND ";
+        if ( !empty($business_id_to_get) ) {
+            $conditions .= "object_id = '".$business_id_to_get."' AND ";
             $conditions .= "object_type = 'business' AND ";
             $conditions .= "type != 'business_image'";
-        }else if ( !empty($_POST['user_id_to_get']) ) {
-            $conditions .= "user_id = '".$_POST['user_id_to_get']."' AND ";
+        }else if ( !empty($user_id_to_get) ) {
+            $conditions .= "user_id = '".$user_id_to_get."' AND ";
             $conditions .= "type != 'profile_photo'";
         }
         $this->output['media'] = $this->_getMedia($conditions);
@@ -2140,13 +1894,7 @@ class ApiController extends Controller
      */
     public function actionGetHomescreenImages()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['images']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $conditions['type'] = 'image';
         $conditions['object_type'] = 'business';
@@ -2171,13 +1919,7 @@ class ApiController extends Controller
      */
     public function actionGetSponsors()
     {
-        $parameters = array('user_id', 'auth_key');
         $this->_addOutputs(['sponsors']);
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
 
         $model = Sponsor::find()->all();
 
@@ -2212,23 +1954,16 @@ class ApiController extends Controller
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionSendNotification()
+    public function actionSendNotification($users_ids, $title, $body)
     {
-        $parameters = array('user_id', 'auth_key', 'users_ids', 'title', 'body');
-
-        // collect user input data
-        if( !$this->_checkParameters($parameters) || !$this->_verifyUser() ){
-            return;
-        }
-
-        $users_ids = explode(',', $_POST['users_ids']);
+        $users_ids = explode(',', $users_ids);
         foreach ($users_ids as $users_id) {
             $user = User::findOne($users_id);
             if( !empty($user->firebase_token)){
                 $data = [
                     'type' => 0,
                 ];
-                $this->_sendNotification($user->firebase_token, $_POST['title'], $_POST['body'], $data);
+                $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
     }
@@ -2252,17 +1987,6 @@ class ApiController extends Controller
 
     }
 
-    private function _checkParameters($parameters){
-        foreach ($parameters as $key => $parameter) {
-            if(!isset($_POST[$parameter]) || $_POST[$parameter] == ""){
-                echo json_encode(['status' => 1, 'errors' => 'inputs problem']);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private function _getErrors($model){
         $errors = '';
         foreach ($model->errors as $key => $element) {
@@ -2274,10 +1998,11 @@ class ApiController extends Controller
         return $errors;
     }
 
-    private function _verifyUser(){
+    private function _verifyUserAndSetID(){
         $user = User::findOne($_POST['user_id']);
 
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
+            $this->logged_user_id = $user->id;
             return true;
         }else{
             echo json_encode(['status' => 1, 'errors' => 'user not verified']);
@@ -2294,10 +2019,10 @@ class ApiController extends Controller
         $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
         $user_data['interests'] = $user->interestsList;
 
-        $last_sent_friend_request = $this->_getLastFriendshipRequest($_POST['user_id'], $user->id);
+        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user_id, $user->id);
         $user_data['last_sent_friend_request'] = $last_sent_friend_request != null ? $last_sent_friend_request->attributes : null ;
 
-        $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $_POST['user_id']);
+        $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user_id);
         $user_data['last_received_friend_request'] = $last_received_friend_request != null ? $last_received_friend_request->attributes : null ;
 
         return $user_data;
@@ -2407,7 +2132,7 @@ class ApiController extends Controller
             $last_checkin['user_data'] = $this->_getUserData($model['checkins'][0]->user);
             $business['last_checkin'] = $last_checkin;
         }
-        $business['is_favorite'] = $this->_isSavedBusiness($_POST['user_id'], $business['id']);
+        $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user_id, $business['id']);
         $business['distance'] = $model['distance'];
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
@@ -2425,8 +2150,8 @@ class ApiController extends Controller
 
     private function _addBusinessView($business_id, $user_id){
         $businessView = new BusinessView;
-        $businessView->user_id = $_POST['user_id'];
-        $businessView->business_id = $_POST['business_id'];
+        $businessView->user_id = $user_id;
+        $businessView->business_id = $business_id;
 
         if(!$businessView->save()){
             return $this->_getErrors($businessView); //saving problem
