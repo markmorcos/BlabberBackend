@@ -5,8 +5,9 @@ namespace app\controllers;
 use Yii;
 use yii\db\Query;
 use yii\web\Controller;
-use yii\helpers\Url;
 use yii\web\UploadedFile;
+use yii\helpers\Url;
+use yii\helpers\ArrayHelper;
 use app\models\User;
 use app\models\Friendship;
 use app\models\Category;
@@ -25,7 +26,6 @@ use app\models\Review;
 use app\models\Media;
 use app\models\BusinessView;
 use app\models\Sponsor;
-use yii\helpers\ArrayHelper;
 
 class ApiController extends Controller
 {
