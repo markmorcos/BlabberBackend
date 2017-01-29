@@ -143,28 +143,7 @@ class ApiController extends Controller
 
         // upload image then save it 
         }else if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = 'profile_photo';
-                $file_path = 'uploads/'.$media_type.'/'.$user->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $user->id;
-                $media->object_id = $user->id;
-                $media->object_type = 'User';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                    $user->profile_photo = $file_path;
-
-                    if(!$user->save()){
-                        throw new HttpException(200, $this->_getErrors($user));
-                    }
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
         }
 
         //login
@@ -349,28 +328,7 @@ class ApiController extends Controller
 
         // upload image then save it 
         }else if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = 'profile_photo';
-                $file_path = 'uploads/'.$media_type.'/'.$user->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $user->id;
-                $media->object_id = $user->id;
-                $media->object_type = 'User';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                    $user->profile_photo = $file_path;
-
-                    if(!$user->save()){
-                        throw new HttpException(200, $this->_getErrors($user));
-                    }
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo');
         }else{
             throw new HttpException(200, 'no url or file input');
         }  
@@ -916,28 +874,7 @@ class ApiController extends Controller
         }
 
         if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = 'flag_icon';
-                $file_path = 'uploads/'.$media_type.'/'.$flag->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $this->logged_user_id;
-                $media->object_id = $flag->id;
-                $media->object_type = 'Flag';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                    $flag->icon = $file_path;
-
-                    if(!$flag->save()){
-                        throw new HttpException(200, $this->_getErrors($flag));
-                    }
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($flag->id, 'Flag', 'flag_icon', $flag, 'icon');
         }
     }
 
@@ -1053,28 +990,7 @@ class ApiController extends Controller
         }
 
         if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = 'business_image';
-                $file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $this->logged_user_id;
-                $media->object_id = $business->id;
-                $media->object_type = 'Business';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                    $business->main_image = $file_path;
-
-                    if(!$business->save()){
-                        throw new HttpException(200, $this->_getErrors($business));
-                    }
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($business->id, 'Business', 'business_image', $business, 'main_image');
         }
     }
 
@@ -1171,28 +1087,7 @@ class ApiController extends Controller
         }
 
         if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = 'business_image';
-                $file_path = 'uploads/'.$media_type.'/'.$business->id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $this->logged_user_id;
-                $media->object_id = $business->id;
-                $media->object_type = 'Business';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                    $business->main_image = $file_path;
-
-                    if(!$business->save()){
-                        throw new HttpException(200, $this->_getErrors($business));
-                    }
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($business->id, 'Business', 'business_image', $business, 'main_image');
         }
     }
 
@@ -1723,31 +1618,7 @@ class ApiController extends Controller
     public function actionAddMedia($business_id, $type)
     {
         if( !empty($_FILES['Media']) ){
-            $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
-            if( isset($media->file) ){
-                $media_type = $type;
-                $business_id = $business_id;
-                $file_path = 'uploads/'.$media_type.'/'.$business_id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
-
-                // get unique name to the file
-                while (file_exists($file_path)) {
-                    $path = pathinfo($file_path);
-                    $file_path = $path['dirname'].'/'.$path['filename'].'-.'.$path['extension'];
-                }
-
-                $media->url = $file_path;
-                $media->type = $media_type;
-                $media->user_id = $this->logged_user_id;
-                $media->object_id = $business_id;
-                $media->object_type = 'Business';
-
-                if($media->save()){
-                    $media->file->saveAs($file_path);
-                }else{
-                    throw new HttpException(200, $this->_getErrors($media));
-                }
-            }
+            $this->_uploadPhoto($business_id, 'Business', $type);
         }else{
             throw new HttpException(200, 'no file input');
         }  
@@ -2167,6 +2038,38 @@ class ApiController extends Controller
         }
 
         return $media;
+    }
+
+    private function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null)
+    {
+        $media = new Media;
+        $media->file = UploadedFile::getInstance($media, 'file');
+        if( isset($media->file) ){
+            $file_path = 'uploads/'.$media_type.'/'.$model_id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
+            while( file_exists($file_path) ){
+                $file_path = preg_replace('/(\.[^.]+)$/', sprintf('%s$1', '-'), $file_path);
+            }
+
+            $media->url = $file_path;
+            $media->type = $media_type;
+            $media->user_id = empty($user_id) ? $this->logged_user_id : $user_id;
+            $media->object_id = $model_id;
+            $media->object_type = $object_type;
+
+            if($media->save()){
+                $media->file->saveAs($file_path);
+
+                if( !empty($model) && !empty($image_name) ){
+                    $model->$image_name = $file_path;
+
+                    if(!$model->save()){
+                        throw new HttpException(200, $this->_getErrors($user));
+                    }
+                }
+            }else{
+                throw new HttpException(200, $this->_getErrors($media));
+            }
+        }
     }
 
     private function _sendNotification($firebase_token, $title, $body, $data = null){
