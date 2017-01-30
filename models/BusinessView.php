@@ -46,4 +46,9 @@ class BusinessView extends \yii\db\ActiveRecord
             'created' => 'Created',
         ];
     }
+
+    public function getBusiness()
+    {
+        return $this->hasOne(Business::className(), ['id' => 'business_id']);
+    }
 }

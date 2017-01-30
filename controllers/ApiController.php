@@ -1112,9 +1112,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['businesses']);
 
-        // $conditions = ['show_in_home' => true]; //TODO uncomment this later
-        $conditions['country_id'] = $country_id;
-        $this->output['businesses'] = $this->_getBusinesses($conditions);
+        $conditions['show_in_home'] = true;
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
     }
 
     /**
@@ -1135,9 +1134,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions['country_id'] = $country_id;
         $conditions['category_id'] = $category_id;
-        $this->output['businesses'] = $this->_getBusinesses($conditions);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
     }
 
     /**
@@ -1215,8 +1213,7 @@ class ApiController extends Controller
         }
             
         $lat_lng = empty($nearby) ? null : explode('-', $nearby);
-        $conditions['country_id'] = $country_id;
-        $this->output['businesses'] = $this->_getBusinesses($conditions, null, null, $lat_lng);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, null, $lat_lng);
     }
 
     /**
@@ -1239,22 +1236,25 @@ class ApiController extends Controller
 
         $search_type = $type;
         if( $search_type == 'recently_added' ){
-            $conditions['country_id'] = $country_id;
-            $this->output['businesses'] = $this->_getBusinesses($conditions, $this->no_per_page, ['created' => SORT_DESC]);
+            $this->output['businesses'] = $this->_getBusinesses(null, $country_id, $this->no_per_page, ['created' => SORT_DESC]);
         }else if( $search_type == 'recently_viewed' ){
             $model = BusinessView::find()
-                ->select(['business_id', 'created'])
+                ->select(['business_id', 'business_view.id'])
                 ->limit($this->no_per_page)
-                ->orderBy(['created' => SORT_DESC])
-                ->distinct()
+                ->orderBy(['business_view.id' => SORT_DESC])
+                ->joinWith('business')
+                ->andWhere(['business.country_id' => $country_id])
                 ->all();
+            $businesses = [];
             $ids_list = [];
-            foreach ($model as $key => $business) {
-                $ids_list[] = $business->business_id;
+            foreach ($model as $key => $business_view) {
+                if( in_array($business_view->business_id, $ids_list) ){
+                    continue;
+                }
+                $ids_list[] = $business_view->business_id;
+                $businesses[] = $this->_getBusinessesDataObject($business_view->business);
             }
-            $conditions = ['id' => $ids_list];
-            $conditions['country_id'] = $country_id;
-            $this->output['businesses'] = $this->_getBusinesses($conditions);
+            $this->output['businesses'] = $businesses;
         }else{
             throw new HttpException(200, 'not supported search type or keyword is empty');
         }
@@ -1591,18 +1591,16 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} country_id Country's id to get reviews related to businesses inside.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} reviews reviews details.
      */
-    public function actionGetHomescreenReviews()
+    public function actionGetHomescreenReviews($country_id)
     {
         $this->_addOutputs(['reviews']);
-
-        // TODO set condition for this one
-        $conditions = [];
-        $this->output['reviews'] = $this->_getReviews($conditions);
+        $this->output['reviews'] = $this->_getReviews($conditions, $country_id);
     }
 
     /**
@@ -1686,18 +1684,19 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} country_id Country's id to get images related to businesses inside.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} images images details.
      */
-    public function actionGetHomescreenImages()
+    public function actionGetHomescreenImages($country_id)
     {
         $this->_addOutputs(['images']);
 
         $conditions['type'] = 'image';
-        $conditions['object_type'] = 'business';
-        $this->output['images'] = $this->_getMedia($conditions);
+        $conditions['object_type'] = 'Business';
+        $this->output['images'] = $this->_getMedia($conditions, $country_id);
     }
 
     /***************************************/
@@ -1853,11 +1852,14 @@ class ApiController extends Controller
         return $categories;
     }
 
-    private function _getBusinesses($conditions, $limit = null, $order = null, $lat_lng = null){
+    private function _getBusinesses($conditions, $country_id = null, $limit = null, $order = null, $lat_lng = null){
         $query = Business::find()
                     ->where($conditions)
                     ->with('category');
 
+        if ($country_id !== null) {
+            $query->andWhere(['country_id' => $country_id]);
+        }
         if ($limit !== null) {
             $query->limit($limit);
         }
@@ -1977,12 +1979,19 @@ class ApiController extends Controller
         return $checkins;
     }
 
-    private function _getReviews($conditions){
-        $model = Review::find()
+    private function _getReviews($conditions, $country_id = null){
+        $query = Review::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
-                    ->with('user')
-                    ->all();
+                    ->with('user');
+
+        if ($country_id !== null) {
+            $query
+                ->joinWith('business')
+                ->andWhere(['business.country_id' => $country_id]);
+        }
+
+        $model = $query->all();
 
         $reviews = [];
         foreach ($model as $key => $review) {
@@ -2019,12 +2028,19 @@ class ApiController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    private function _getMedia($conditions){
-        $model = Media::find()
+    private function _getMedia($conditions, $country_id = null){
+        $query = Media::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
-                    ->with('user')
-                    ->all();
+                    ->with('user');
+
+        if ($country_id !== null) {
+            $query
+                ->leftJoin('business', '`business`.`id` = `media`.`object_id`')
+                ->where(['media.object_type' => 'Business']);
+        }
+
+        $model = $query->all();
 
         $media = [];
         foreach ($model as $key => $value) {
