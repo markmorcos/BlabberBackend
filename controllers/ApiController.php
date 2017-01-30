@@ -117,7 +117,7 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignUp($name, $email, $username, $password)
+    public function actionSignUp($name, $email, $username, $password, $mobile = null, $image = null, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -173,7 +173,7 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignInFb($facebook_id, $facebook_token, $name)
+    public function actionSignInFb($facebook_id, $facebook_token, $name, $image = null, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -234,7 +234,7 @@ class ApiController extends Controller
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignIn($email, $password)
+    public function actionSignIn($email, $password, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -924,10 +924,10 @@ class ApiController extends Controller
      * @apiParam {String} lat business latitude .
      * @apiParam {String} lng business longitude .
      * @apiParam {String} price average business price.
-     * @apiParam {String} website business website. (optional)
-     * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {String} description business description.
      * @apiParam {String} category_id Category's id to add business inside.
+     * @apiParam {String} website business website. (optional)
+     * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
@@ -936,7 +936,7 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $business = new Business;
         $business->name = $name;
@@ -949,15 +949,16 @@ class ApiController extends Controller
         $business->lat = $lat;
         $business->lng = $lng;
         $business->price = $price;
+        $business->description = $description;
+        $business->category_id = $category_id;
+        $business->admin_id = $this->logged_user_id;
+
         if ( !empty($website) ) {
             $business->website = $website;
         }
         if ( !empty($fb_page) ) {
             $business->fb_page = $fb_page;
         }
-        $business->description = $description;
-        $business->category_id = $category_id;
-        $business->admin_id = $this->logged_user_id;
 
         if(!$business->save()){
             throw new HttpException(200, $this->_getErrors($business));
@@ -1013,10 +1014,10 @@ class ApiController extends Controller
      * @apiParam {String} lat business latitude  (optional).
      * @apiParam {String} lng business longitude  (optional).
      * @apiParam {String} price average business price (optional).
-     * @apiParam {String} website business website. (optional)
-     * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {String} description business description (optional).
      * @apiParam {String} category_id Category's id to add business inside (optional).
+     * @apiParam {String} website business website. (optional)
+     * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
@@ -1025,7 +1026,7 @@ class ApiController extends Controller
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $open_from = null, $open_to = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $flags_ids = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $open_from = null, $open_to = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $business = Business::find()
                         ->where(['id' => $business_id])
@@ -1047,10 +1048,10 @@ class ApiController extends Controller
         if ( !empty($lat) ) $business->lat = $lat;
         if ( !empty($lng) ) $business->lng = $lng;
         if ( !empty($price) ) $business->price = $price;
-        if ( !empty($website) ) $business->website = $website;
-        if ( !empty($fb_page) ) $business->fb_page = $fb_page;
         if ( !empty($description) ) $business->description = $description;
         if ( !empty($category_id) ) $business->category_id = $category_id;
+        if ( !empty($website) ) $business->website = $website;
+        if ( !empty($fb_page) ) $business->fb_page = $fb_page;
 
         if(!$business->save()){
             throw new HttpException(200, $this->_getErrors($business));
