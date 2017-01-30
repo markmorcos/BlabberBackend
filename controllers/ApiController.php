@@ -34,9 +34,9 @@ class ApiController extends Controller
     var $output = ['status' => 0, 'errors' => null];
     var $logged_user_id = null;
 
-    // TODO check if this needed on live server
     public function beforeAction($action)
     {
+        // TODO check if this needed on live server
         $this->enableCsrfValidation = false;
 
         if( !in_array($action->id, ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password']) ){
@@ -50,6 +50,7 @@ class ApiController extends Controller
     {
         // Extract the params from the request and bind them to params
         $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+        
         return parent::runAction($id, $params);
     }
 
@@ -1032,6 +1033,9 @@ class ApiController extends Controller
         if( $business == null ){
             throw new HttpException(200, 'no business with this id');
         }
+        if( $business->admin_id != $this->logged_user_id ){
+            throw new HttpException(200, 'you don\'t have permission to edit this business');
+        }
 
         if ( !empty($name) ) $business->name = $name;
         if ( !empty($address) ) $business->address = $address;
@@ -1047,7 +1051,6 @@ class ApiController extends Controller
         if ( !empty($fb_page) ) $business->fb_page = $fb_page;
         if ( !empty($description) ) $business->description = $description;
         if ( !empty($category_id) ) $business->category_id = $category_id;
-        // $business->admin_id = $this->logged_user_id; //TODO check permissions
 
         if(!$business->save()){
             throw new HttpException(200, $this->_getErrors($business));
