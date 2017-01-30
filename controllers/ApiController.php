@@ -149,7 +149,7 @@ class ApiController extends Controller
 
         //login
         $user = User::login($email, $password, $firebase_token);
-        if( $user != null ){
+        if( $user !== null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
@@ -212,7 +212,7 @@ class ApiController extends Controller
 
         //login
         $user = User::login($email, $password, $firebase_token);
-        if( $user != null ){
+        if( $user !== null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
@@ -239,7 +239,7 @@ class ApiController extends Controller
         $this->_addOutputs(['user_data', 'auth_key']);
 
         $user = User::login($email, $password, $firebase_token);
-        if( $user != null ){
+        if( $user !== null ){
             $this->output['user_data'] = $this->_getUserData($user);
             $this->output['auth_key'] = $user->auth_key;
         }else{
@@ -262,7 +262,7 @@ class ApiController extends Controller
         $new_password = substr(md5(uniqid(rand(), true)), 6, 6);
 
         $user = User::findByEmail($email);
-        if( $user != null ){
+        if( $user !== null ){
             $user->password = Yii::$app->security->generatePasswordHash($new_password);
             if($user->save()){
                 $result = Yii::$app->mailer->compose()
@@ -379,7 +379,7 @@ class ApiController extends Controller
             $user = User::findOne(['username' => $user_username_to_get]);
         }
         
-        if( $user != null ){
+        if( $user !== null ){
             $this->output['user_data'] = $this->_getUserData($user);
         }else{
             throw new HttpException(200, 'no user with this id or username');
@@ -1280,7 +1280,7 @@ class ApiController extends Controller
         $model = Business::find()
                         ->where(['id' => $business_id])
                         ->one();
-        if( $model != null ){
+        if( $model !== null ){
             $result = $this->_addBusinessView($business_id, $this->logged_user_id);
 
             if( $result == 'done' ){
@@ -1310,7 +1310,7 @@ class ApiController extends Controller
         $model = Business::find()
                         ->where(['id' => $business_id])
                         ->one();
-        if( $model != null ){
+        if( $model !== null ){
             $savedBusiness = new SavedBusiness;
             $savedBusiness->user_id = $this->logged_user_id;
             $savedBusiness->business_id = $business_id;
@@ -1396,7 +1396,7 @@ class ApiController extends Controller
         $model = Business::find()
                         ->where(['id' => $business_id])
                         ->one();
-        if( $model != null ){
+        if( $model !== null ){
             $checkin = new Checkin;
             $checkin->user_id = $this->logged_user_id;
             $checkin->business_id = $business_id;
@@ -1490,7 +1490,7 @@ class ApiController extends Controller
         $model = Business::find()
                         ->where(['id' => $business_id])
                         ->one();
-        if( $model != null ){
+        if( $model !== null ){
             $review = new Review;
             $review->user_id = $this->logged_user_id;
             $review->business_id = $business_id;
@@ -1809,10 +1809,10 @@ class ApiController extends Controller
         $user_data['interests'] = $user->interestsList;
 
         $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user_id, $user->id);
-        $user_data['last_sent_friend_request'] = $last_sent_friend_request != null ? $last_sent_friend_request->attributes : null ;
+        $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null ;
 
         $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user_id);
-        $user_data['last_received_friend_request'] = $last_received_friend_request != null ? $last_received_friend_request->attributes : null ;
+        $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null ;
 
         return $user_data;
     }
@@ -1858,10 +1858,10 @@ class ApiController extends Controller
                     ->where($conditions)
                     ->with('category');
 
-        if ($limit != null) {
+        if ($limit !== null) {
             $query->limit($limit);
         }
-        if ($order != null) {
+        if ($order !== null) {
             $query->orderBy($order);
         }
 
