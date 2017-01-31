@@ -1288,7 +1288,7 @@ class ApiController extends Controller
             }
             $this->output['businesses'] = $businesses;
         }else{
-            throw new HttpException(200, 'not supported search type or keyword is empty');
+            throw new HttpException(200, 'not supported search type');
         }
     }
 
