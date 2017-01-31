@@ -37,6 +37,7 @@
 		"GetCountries",
 		"GetCities",
 		"GetFlags",
+		"AddFlag",
 		"GetInterests",
 		"AddBusiness",
 		"EditBusiness",
