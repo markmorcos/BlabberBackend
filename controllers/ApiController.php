@@ -27,12 +27,17 @@ use app\models\Review;
 use app\models\Media;
 use app\models\BusinessView;
 use app\models\Sponsor;
+use yii\data\ActiveDataProvider;
 
 class ApiController extends Controller
 {
-    var $no_per_page = 20;
     var $output = ['status' => 0, 'errors' => null];
     var $logged_user_id = null;
+    var $pagination = [
+        'page_no' => null,
+        'no_per_page' => 20,
+        'total_pages_no' => null        
+    ];
 
     public function beforeAction($action)
     {
@@ -50,12 +55,22 @@ class ApiController extends Controller
     {
         // Extract the params from the request and bind them to params
         $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+
+        if( !empty($params['page']) ){
+            $this->pagination['page_no'] = intval($params['page']);
+        }
         
         return parent::runAction($id, $params);
     }
 
     public function afterAction($action, $result)
     {
+        if( $this->pagination['page_no'] !== null ){
+            $this->output['pagination'] = [
+                'page_no' => $this->pagination['page_no'],
+                'total_pages_no' => $this->pagination['total_pages_no'],
+            ];
+        }
         return parent::afterAction($action, json_encode($this->output));
     }
 
@@ -448,6 +463,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name User's name of the user you want to find.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -457,11 +473,11 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['users']);
 
-        $model = User::find()
+        $query = User::find()
                 ->where(['like', 'name', $name])
                 ->andWhere(['!=', 'id', $this->logged_user_id])
-                ->orderBy(['id' => SORT_DESC])
-                ->all();
+                ->orderBy(['id' => SORT_DESC]);
+        $model = $this->_getModelWithPagination($query);
 
         $users = array();
         foreach ($model as $key => $user) {
@@ -524,6 +540,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -533,9 +550,9 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['requests']);
 
-        $model = Friendship::find()
-            ->where(['user_id' => $this->logged_user_id, 'status' => 0])
-            ->all();
+        $query = Friendship::find()
+            ->where(['user_id' => $this->logged_user_id, 'status' => 0]);
+        $model = $this->_getModelWithPagination($query);
 
         $requests = array();
         foreach ($model as $key => $request) {
@@ -573,6 +590,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -582,9 +600,9 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['requests']);
 
-        $model = Friendship::find()
-            ->where(['friend_id' => $this->logged_user_id, 'status' => 0])
-            ->all();
+        $query = Friendship::find()
+            ->where(['friend_id' => $this->logged_user_id, 'status' => 0]);
+        $model = $this->_getModelWithPagination($query);
 
         $requests = array();
         foreach ($model as $key => $request) {
@@ -696,6 +714,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -705,9 +724,9 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['friends']);
 
-        $model = Friendship::find()
-            ->where(['user_id' => $this->logged_user_id, 'status' => 1])
-            ->all();
+        $query = Friendship::find()
+            ->where(['user_id' => $this->logged_user_id, 'status' => 1]);
+        $model = $this->_getModelWithPagination($query);
 
         $friends = array();
         foreach ($model as $key => $friendship) {
@@ -728,6 +747,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -748,6 +768,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} category_id parent category id.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -771,6 +792,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -780,7 +802,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['countries']);
 
-        $model = Country::find()->all();
+        $query = Country::find();
+        $model = $this->_getModelWithPagination($query);
 
         $countries = [];
         foreach ($model as $key => $country) {
@@ -800,6 +823,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get cities inside.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -809,9 +833,9 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['cities']);
 
-        $model = City::find()
-                    ->where(['country_id' => $country_id])
-                    ->all();
+        $query = City::find()
+                    ->where(['country_id' => $country_id]);
+        $model = $this->_getModelWithPagination($query);
 
         $cities = [];
         foreach ($model as $key => $city) {
@@ -830,6 +854,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -839,7 +864,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['flags']);
 
-        $model = Flag::find()->all();
+        $query = Flag::find();
+        $model = $this->_getModelWithPagination($query);
 
         $flags = [];
         foreach ($model as $key => $flag) {
@@ -886,6 +912,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -895,7 +922,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['interests']);
 
-        $model = Interest::find()->all();
+        $query = Interest::find();
+        $model = $this->_getModelWithPagination($query);
 
         $interests = [];
         foreach ($model as $key => $interest) {
@@ -1103,6 +1131,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1125,6 +1154,7 @@ class ApiController extends Controller
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} category_id Category's id to get businesses inside.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1156,6 +1186,7 @@ class ApiController extends Controller
      * @apiParam {String} interest the search keyword for business interest (optional).
      * @apiParam {String} interest_id the business interest_id (optional).
      * @apiParam {String} nearby the search coordinates for nearby business, value lat-lng, ex. 32.22-37.11 (optional).
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1213,7 +1244,7 @@ class ApiController extends Controller
         }
             
         $lat_lng = empty($nearby) ? null : explode('-', $nearby);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, null, $lat_lng);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng);
     }
 
     /**
@@ -1225,6 +1256,7 @@ class ApiController extends Controller
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} type Search by (recently_added, recently_viewed).
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1236,15 +1268,15 @@ class ApiController extends Controller
 
         $search_type = $type;
         if( $search_type == 'recently_added' ){
-            $this->output['businesses'] = $this->_getBusinesses(null, $country_id, $this->no_per_page, ['created' => SORT_DESC]);
+            $this->output['businesses'] = $this->_getBusinesses(null, $country_id, ['created' => SORT_DESC]);
         }else if( $search_type == 'recently_viewed' ){
-            $model = BusinessView::find()
+            $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
-                ->limit($this->no_per_page)
                 ->orderBy(['business_view.id' => SORT_DESC])
                 ->joinWith('business')
-                ->andWhere(['business.country_id' => $country_id])
-                ->all();
+                ->andWhere(['business.country_id' => $country_id]);
+            $model = $this->_getModelWithPagination($query);
+
             $businesses = [];
             $ids_list = [];
             foreach ($model as $key => $business_view) {
@@ -1352,6 +1384,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} user_to_get User's id of User you want to get the saved businesses for.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1449,6 +1482,7 @@ class ApiController extends Controller
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1565,6 +1599,7 @@ class ApiController extends Controller
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1592,6 +1627,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get reviews related to businesses inside.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1656,6 +1692,7 @@ class ApiController extends Controller
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1685,6 +1722,7 @@ class ApiController extends Controller
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get images related to businesses inside.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1710,6 +1748,7 @@ class ApiController extends Controller
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1719,7 +1758,8 @@ class ApiController extends Controller
     {
         $this->_addOutputs(['sponsors']);
 
-        $model = Sponsor::find()->all();
+        $query = Sponsor::find();
+        $model = $this->_getModelWithPagination($query);
 
         $sponsors = [];
         foreach ($model as $key => $sponsor) {
@@ -1788,6 +1828,26 @@ class ApiController extends Controller
         return $errors;
     }
 
+    private function _getModelWithPagination($query)
+    {
+        if ($this->pagination['page_no'] === null) {
+            return $query->all();
+        }
+
+        $provider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => $this->pagination['no_per_page'],
+                'page' => $this->pagination['page_no']-1 // to make it zero based
+            ],
+        ]);
+
+        $model = $provider->getModels();
+        $this->pagination['total_pages_no'] = $provider->pagination->pageCount;
+
+        return $model;
+    }
+
     private function _verifyUserAndSetID(){
         $user = User::findOne($_POST['user_id']);
 
@@ -1834,9 +1894,9 @@ class ApiController extends Controller
     }
 
     private function _getCategories($parent_id = null){
-        $model = Category::find()
-                    ->where(['parent_id' => $parent_id])
-                    ->all();
+        $query = Category::find()
+                    ->where(['parent_id' => $parent_id]);
+        $model = $this->_getModelWithPagination($query);
 
         $categories = [];
         foreach ($model as $key => $category) {
@@ -1852,16 +1912,13 @@ class ApiController extends Controller
         return $categories;
     }
 
-    private function _getBusinesses($conditions, $country_id = null, $limit = null, $order = null, $lat_lng = null){
+    private function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null){
         $query = Business::find()
                     ->where($conditions)
                     ->with('category');
 
         if ($country_id !== null) {
             $query->andWhere(['country_id' => $country_id]);
-        }
-        if ($limit !== null) {
-            $query->limit($limit);
         }
         if ($order !== null) {
             $query->orderBy($order);
@@ -1877,7 +1934,7 @@ class ApiController extends Controller
                 ->orderBy(['distance' => SORT_ASC]);
         }
 
-        $model = $query->all();
+        $model = $this->_getModelWithPagination($query);
 
         $businesses = [];
         foreach ($model as $key => $business) {
@@ -1952,12 +2009,12 @@ class ApiController extends Controller
     }
 
     private function _getCheckins($conditions){
-        $model = Checkin::find()
+        $query = Checkin::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
                     ->with('user')
-                    ->with('business')
-                    ->all();
+                    ->with('business');
+        $model = $this->_getModelWithPagination($query);
 
         $checkins = [];
         foreach ($model as $key => $checkin) {
@@ -1991,7 +2048,7 @@ class ApiController extends Controller
                 ->andWhere(['business.country_id' => $country_id]);
         }
 
-        $model = $query->all();
+        $model = $this->_getModelWithPagination($query);
 
         $reviews = [];
         foreach ($model as $key => $review) {
@@ -2040,7 +2097,7 @@ class ApiController extends Controller
                 ->where(['media.object_type' => 'Business']);
         }
 
-        $model = $query->all();
+        $model = $this->_getModelWithPagination($query);
 
         $media = [];
         foreach ($model as $key => $value) {
