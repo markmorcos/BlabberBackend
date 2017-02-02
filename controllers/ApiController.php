@@ -2064,7 +2064,8 @@ class ApiController extends Controller
         if ($country_id !== null) {
             $query
                 ->leftJoin('business', '`business`.`id` = `media`.`object_id`')
-                ->where(['media.object_type' => 'Business']);
+                ->andWhere(['media.object_type' => 'Business'])
+                ->andWhere(['business.country_id' => $country_id]);
         }
 
         $model = $this->_getModelWithPagination($query);
