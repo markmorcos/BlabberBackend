@@ -44,7 +44,13 @@ class ApiController extends Controller
         // TODO check if this needed on live server
         $this->enableCsrfValidation = false;
 
-        if( !in_array($action->id, ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password']) ){
+        $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password', 
+            'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests', 
+            'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data', 
+            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-sponsors'
+        ];
+
+        if( !in_array($action->id, $guest_actions) ){
             $this->_verifyUserAndSetID();
         }
 
@@ -375,8 +381,6 @@ class ApiController extends Controller
      * @apiName GetProfile
      * @apiGroup User
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} user_id_to_get User's id of User profile you want to get (optional).
      * @apiParam {String} user_username_to_get User's usernam of User profile you want to get (optional).
      *
@@ -745,8 +749,6 @@ class ApiController extends Controller
      * @apiName GetCategories
      * @apiGroup Category
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -765,8 +767,6 @@ class ApiController extends Controller
      * @apiName GetSubCategories
      * @apiGroup Category
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} category_id parent category id.
      * @apiParam {String} page Page number (optional).
      *
@@ -790,8 +790,6 @@ class ApiController extends Controller
      * @apiName GetCountries
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -820,8 +818,6 @@ class ApiController extends Controller
      * @apiName GetCities
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get cities inside.
      * @apiParam {String} page Page number (optional).
      *
@@ -852,8 +848,6 @@ class ApiController extends Controller
      * @apiName GetFlags
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -910,8 +904,6 @@ class ApiController extends Controller
      * @apiName GetInterests
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -1128,8 +1120,6 @@ class ApiController extends Controller
      * @apiName GetHomescreenBusinesses
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} page Page number (optional).
      *
@@ -1150,8 +1140,6 @@ class ApiController extends Controller
      * @apiName GetBusinesses
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} category_id Category's id to get businesses inside.
      * @apiParam {String} page Page number (optional).
@@ -1173,8 +1161,6 @@ class ApiController extends Controller
      * @apiName SearchBusinesses
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} name the search keyword for business name (optional).
      * @apiParam {String} city the search keyword for business city (optional).
@@ -1252,8 +1238,6 @@ class ApiController extends Controller
      * @apiName SearchBusinessesByType
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} type Search by (recently_added, recently_viewed).
      * @apiParam {String} page Page number (optional).
@@ -1297,8 +1281,6 @@ class ApiController extends Controller
      * @apiName GetBusinessData
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to get it's details.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -1478,8 +1460,6 @@ class ApiController extends Controller
      * @apiName GetCheckins
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
@@ -1595,8 +1575,6 @@ class ApiController extends Controller
      * @apiName GetReviews
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
@@ -1624,8 +1602,6 @@ class ApiController extends Controller
      * @apiName GetHomescreenReviews
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get reviews related to businesses inside.
      * @apiParam {String} page Page number (optional).
      *
@@ -1688,8 +1664,6 @@ class ApiController extends Controller
      * @apiName GetMedia
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
@@ -1719,8 +1693,6 @@ class ApiController extends Controller
      * @apiName GetHomescreenImages
      * @apiGroup Business
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id to get images related to businesses inside.
      * @apiParam {String} page Page number (optional).
      *
@@ -1746,8 +1718,6 @@ class ApiController extends Controller
      * @apiName GetSponsors
      * @apiGroup Sponsors
      *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.

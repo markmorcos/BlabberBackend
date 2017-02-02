@@ -28,7 +28,7 @@ class BusinessView extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_id', 'user_id'], 'required'],
+            [['business_id'], 'required'],
             [['business_id', 'user_id'], 'integer'],
             [['created'], 'safe'],
         ];
