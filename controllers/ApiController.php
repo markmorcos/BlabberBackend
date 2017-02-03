@@ -168,14 +168,7 @@ class ApiController extends Controller
             $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
         }
 
-        //login
-        $user = User::login($email, $password, $firebase_token);
-        if( $user !== null ){
-            $this->output['user_data'] = $this->_getUserData($user);
-            $this->output['auth_key'] = $user->auth_key;
-        }else{
-            throw new HttpException(200, 'login problem');
-        }
+        $this->_login($email, $password, $firebase_token);       
     }
 
     /**
@@ -231,14 +224,7 @@ class ApiController extends Controller
             }
         }
 
-        //login
-        $user = User::login($email, $password, $firebase_token);
-        if( $user !== null ){
-            $this->output['user_data'] = $this->_getUserData($user);
-            $this->output['auth_key'] = $user->auth_key;
-        }else{
-            throw new HttpException(200, 'login problem');
-        }
+        $this->_login($email, $password, $firebase_token);            
     }
 
     /**
@@ -258,14 +244,7 @@ class ApiController extends Controller
     public function actionSignIn($email, $password, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
-
-        $user = User::login($email, $password, $firebase_token);
-        if( $user !== null ){
-            $this->output['user_data'] = $this->_getUserData($user);
-            $this->output['auth_key'] = $user->auth_key;
-        }else{
-            throw new HttpException(200, 'login problem');
-        }
+        $this->_login($email, $password, $firebase_token);       
     }
 
     /**
@@ -1825,6 +1804,16 @@ class ApiController extends Controller
             $this->logged_user_id = $user->id;
         }else{
             throw new HttpException(200, 'user not verified');
+        }
+    }
+
+    private function _login($email, $password, $firebase_token){
+        $user = User::login($email, $password, $firebase_token);
+        if( $user !== null ){
+            $this->output['user_data'] = $this->_getUserData($user);
+            $this->output['auth_key'] = $user->auth_key;
+        }else{
+            throw new HttpException(200, 'login problem');
         }
     }
 
