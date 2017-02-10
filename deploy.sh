@@ -1,21 +1,27 @@
 #!/bin/sh
 
-apidoc -i controllers/ -o web/apidoc;
+sed -i "s/localhost:8055/myblabber.com\/be-$1/g" apidoc.json
+apidoc -i controllers/ -o web/apidoc
 
-rsync -avq --exclude='*.zip' ../Blabber/ ../Blabber-production;
+rsync -avq --exclude='*.zip .git' ./ ../public_html/be-$1-temp
 
-sudo rm -R ../Blabber-production/web/uploads/*/*;
+cd ../public_html/
 
-rm ../Blabber-production/web/index.php;
-mv ../Blabber-production/web/index-server.php ../Blabber-production/web/index.php;
-rm ../Blabber-production/config/db.php;
-mv ../Blabber-production/config/db-server.php ../Blabber-production/config/db.php;
-rm ../Blabber-production/config/web.php;
-mv ../Blabber-production/config/web-server.php ../Blabber-production/config/web.php;
+export COMPOSER_HOME="/home/blabber/composer"
+composer global require "fxp/composer-asset-plugin:^1.2.0"
+composer install -d be-$1-temp
 
-sudo find ../Blabber-production/* -type d -print0 | xargs -0 chmod 0755;
-sudo find ../Blabber-production/* -type f -print0 | xargs -0 chmod 0644;
-sudo chmod -R 777 ../Blabber-production/assets ../Blabber-production/runtime ../Blabber-production/web/uploads;
+sed -i "s/\/beta/\/$1/g" be-$1-temp/config/web.php
+rm be-$1-temp/web/index.php
+mv be-$1-temp/web/index-server.php be-$1-temp/web/index.php
+rm be-$1-temp/config/db.php
+mv be-$1-temp/config/db-$1.php be-$1-temp/config/db.php
 
-zip -rq "Blabber-$(date +"%d-%m-%Y").zip" ../Blabber-production/;
-sudo rm -R ../Blabber-production;
+rsync -avq be-$1/web/uploads be-$1-temp/web/uploads
+
+find be-$1-temp/* -type d -print0 | xargs -0 chmod 0755
+find be-$1-temp/* -type f -print0 | xargs -0 chmod 0644
+chmod -R 777 be-$1-temp/assets be-$1-temp/runtime be-$1-temp/web/uploads
+
+rm -R be-$1
+mv be-$1-temp be-$1
