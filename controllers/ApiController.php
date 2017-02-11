@@ -29,71 +29,8 @@ use app\models\BusinessView;
 use app\models\Sponsor;
 use yii\data\ActiveDataProvider;
 
-class ApiController extends Controller
+class ApiController extends ApiBaseController
 {
-    var $output = ['status' => 0, 'errors' => null];
-    var $logged_user_id = null;
-    var $pagination = [
-        'page_no' => null,
-        'no_per_page' => 20,
-        'total_pages_no' => null        
-    ];
-
-    public function beforeAction($action)
-    {
-        // TODO check if this needed on live server
-        $this->enableCsrfValidation = false;
-
-        $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password', 
-            'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests', 
-            'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data', 
-            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-sponsors'
-        ];
-
-        if( !in_array($action->id, $guest_actions) ){
-            $this->_verifyUserAndSetID();
-        }
-
-        return parent::beforeAction($action);
-    }
-
-    public function runAction($id, $params = [])
-    {
-        // Extract the params from the request and bind them to params
-        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
-
-        if( !empty($params['page']) ){
-            $this->pagination['page_no'] = intval($params['page']);
-        }
-        
-        return parent::runAction($id, $params);
-    }
-
-    public function afterAction($action, $result)
-    {
-        if( $this->pagination['page_no'] !== null ){
-            $this->output['pagination'] = [
-                'page_no' => $this->pagination['page_no'],
-                'total_pages_no' => $this->pagination['total_pages_no'],
-            ];
-        }
-        return parent::afterAction($action, json_encode($this->output));
-    }
-
-    /**
-     * This is the action to handle external exceptions.
-     */
-    public function actionError()
-    {
-        $exception = Yii::$app->errorHandler->exception;
-
-        if ($exception !== null)
-        {
-            $this->output['status'] = 1;
-            $this->output['errors'] = $exception->getMessage();
-        }
-    }
-    
     /***************************************/
     /**************** Users ****************/
     /***************************************/
@@ -1766,7 +1703,8 @@ class ApiController extends Controller
         }
     }
 
-    private function _getErrors($model){
+    private function _getErrors($model)
+    {
         $errors = '';
         foreach ($model->errors as $key => $element) {
             foreach ($element as $key => $error) {
@@ -1775,6 +1713,28 @@ class ApiController extends Controller
         }
 
         return $errors;
+    }
+
+    private function _verifyUserAndSetID()
+    {
+        $user = User::findOne($_POST['user_id']);
+
+        if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
+            $this->logged_user_id = $user->id;
+        }else{
+            throw new HttpException(200, 'user not verified');
+        }
+    }
+
+    private function _login($email, $password, $firebase_token)
+    {
+        $user = User::login($email, $password, $firebase_token);
+        if( $user !== null ){
+            $this->output['user_data'] = $this->_getUserData($user);
+            $this->output['auth_key'] = $user->auth_key;
+        }else{
+            throw new HttpException(200, 'login problem');
+        }
     }
 
     private function _getModelWithPagination($query)
@@ -1797,27 +1757,8 @@ class ApiController extends Controller
         return $model;
     }
 
-    private function _verifyUserAndSetID(){
-        $user = User::findOne($_POST['user_id']);
-
-        if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
-            $this->logged_user_id = $user->id;
-        }else{
-            throw new HttpException(200, 'user not verified');
-        }
-    }
-
-    private function _login($email, $password, $firebase_token){
-        $user = User::login($email, $password, $firebase_token);
-        if( $user !== null ){
-            $this->output['user_data'] = $this->_getUserData($user);
-            $this->output['auth_key'] = $user->auth_key;
-        }else{
-            throw new HttpException(200, 'login problem');
-        }
-    }
-
-    private function _getUserData($user){
+    private function _getUserData($user)
+    {
         $user_data['id'] = $user->id;
         $user_data['name'] = $user->name;
         $user_data['email'] = $user->email;
@@ -1835,7 +1776,8 @@ class ApiController extends Controller
         return $user_data;
     }
 
-    private function _getUserPhotoUrl($link){
+    private function _getUserPhotoUrl($link)
+    {
         if(strpos($link, 'upload') === 0){
             return Url::base(true).'/'.$link;
         }else{
@@ -1843,7 +1785,8 @@ class ApiController extends Controller
         }
     }
 
-    private function _getLastFriendshipRequest($user_id, $friend_id){
+    private function _getLastFriendshipRequest($user_id, $friend_id)
+    {
         $model = Friendship::find()
                 ->where(['user_id' => $user_id, 'friend_id' => $friend_id])
                 ->orderBy(['id' => SORT_DESC])
@@ -1852,7 +1795,8 @@ class ApiController extends Controller
         return $model;
     }
 
-    private function _getCategories($parent_id = null){
+    private function _getCategories($parent_id = null)
+    {
         $query = Category::find()
                     ->where(['parent_id' => $parent_id]);
         $model = $this->_getModelWithPagination($query);
@@ -1871,7 +1815,8 @@ class ApiController extends Controller
         return $categories;
     }
 
-    private function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null){
+    private function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null)
+    {
         $query = Business::find()
                     ->where($conditions)
                     ->with('category');
@@ -1903,7 +1848,8 @@ class ApiController extends Controller
         return $businesses;
     }
 
-    private function _getBusinessesDataObject($model){
+    private function _getBusinessesDataObject($model)
+    {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'];
         $business['address'] = $model['address'];
@@ -1947,7 +1893,8 @@ class ApiController extends Controller
         return $business;
     }
 
-    private function _isSavedBusiness($user_id, $business_id){
+    private function _isSavedBusiness($user_id, $business_id)
+    {
         $model = SavedBusiness::find()
                     ->select('business_id')
                     ->where(['user_id' => $user_id, 'business_id' => $business_id])
@@ -1955,7 +1902,8 @@ class ApiController extends Controller
         return !empty($model);
     }
 
-    private function _addBusinessView($business_id, $user_id){
+    private function _addBusinessView($business_id, $user_id)
+    {
         $businessView = new BusinessView;
         $businessView->user_id = $user_id;
         $businessView->business_id = $business_id;
@@ -1967,7 +1915,8 @@ class ApiController extends Controller
         return 'done';
     }
 
-    private function _getCheckins($conditions){
+    private function _getCheckins($conditions)
+    {
         $query = Checkin::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
@@ -1995,7 +1944,8 @@ class ApiController extends Controller
         return $checkins;
     }
 
-    private function _getReviews($conditions, $country_id = null){
+    private function _getReviews($conditions, $country_id = null)
+    {
         $query = Review::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
@@ -2028,7 +1978,8 @@ class ApiController extends Controller
         return $reviews;
     }
 
-    private function _calcRating($business_id){
+    private function _calcRating($business_id)
+    {
         $checkins = Checkin::find()->where(['business_id' => $business_id]);
         $checkin_rating = $checkins->sum('rating');
         $checkin_no = count($checkins->all());
@@ -2044,7 +1995,8 @@ class ApiController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    private function _getMedia($conditions, $country_id = null){
+    private function _getMedia($conditions, $country_id = null)
+    {
         $query = Media::find()
                     ->where($conditions)
                     ->orderBy(['id' => SORT_DESC])
@@ -2109,7 +2061,8 @@ class ApiController extends Controller
         }
     }
 
-    private function _sendNotification($firebase_token, $title, $body, $data = null){
+    private function _sendNotification($firebase_token, $title, $body, $data = null)
+    {
         $server_key = 'AAAAqGzljtM:APA91bGRz5hiS-IyHW6HPnK-yrIJRFkzqP85PzByvWlI0YYCfLF_NH94Rybgg31bDs2d0EfxzD_zYmb4fNwSH1x6HOXFY_a-solzKgn7xiSi336sUYQjrXZuCWrk29ioaHBZLL7p0LfO';
         $postData = [
             'to' => $firebase_token,
