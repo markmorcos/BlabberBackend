@@ -17,7 +17,7 @@ mv be-$1-temp/web/index-$1.php be-$1-temp/web/index.php
 rm be-$1-temp/config/db.php
 mv be-$1-temp/config/db-$1.php be-$1-temp/config/db.php
 
-rsync -avq be-$1/web/uploads be-$1-temp/web/uploads
+rsync -avq be-$1/web/uploads be-$1-temp/web
 
 find be-$1-temp/* -type d -print0 | xargs -0 chmod 0755
 find be-$1-temp/* -type f -print0 | xargs -0 chmod 0644
