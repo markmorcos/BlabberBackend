@@ -13,7 +13,7 @@ composer install -d be-$1-temp
 
 sed -i "s/\/beta/\/be-$1/g" be-$1-temp/config/web.php
 rm be-$1-temp/web/index.php
-mv be-$1-temp/web/index-server.php be-$1-temp/web/index.php
+mv be-$1-temp/web/index-$1.php be-$1-temp/web/index.php
 rm be-$1-temp/config/db.php
 mv be-$1-temp/config/db-$1.php be-$1-temp/config/db.php
 
