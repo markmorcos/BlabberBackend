@@ -45,6 +45,7 @@ AppAsset::register($this);
             ['label' => 'Interests', 'url' => ['/interest/index']],
             ['label' => 'Flags', 'url' => ['/flag/index']],
             ['label' => 'Sponsors', 'url' => ['/sponsor/index']],
+            ['label' => 'Reports', 'url' => ['/report/index']],
             Yii::$app->user->isGuest ? (
                 ['label' => 'Login', 'url' => ['/site/login']]
             ) : (
