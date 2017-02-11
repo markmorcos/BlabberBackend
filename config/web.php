@@ -10,8 +10,7 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'khqw@!kkgq!355?',
-            'enableCsrfValidation' => false,
-            'baseUrl' => '/beta',
+            'baseUrl' => '/',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -40,7 +39,7 @@ $config = [
             'class' => 'yii\web\UrlManager',
             'showScriptName' => false,
             'enablePrettyUrl' => true,
-            'baseUrl' => '/beta',
+            'baseUrl' => '/',
        ],
     ],
     'params' => $params,
