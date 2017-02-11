@@ -11,7 +11,7 @@ export COMPOSER_HOME="/home/blabber/composer"
 composer global require "fxp/composer-asset-plugin:^1.2.0"
 composer install -d be-$1-temp
 
-sed -i "s/\/beta/\/$1/g" be-$1-temp/config/web.php
+sed -i "s/\/beta/\/be-$1/g" be-$1-temp/config/web.php
 rm be-$1-temp/web/index.php
 mv be-$1-temp/web/index-server.php be-$1-temp/web/index.php
 rm be-$1-temp/config/db.php
