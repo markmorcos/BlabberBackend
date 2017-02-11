@@ -10,7 +10,8 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'khqw@!kkgq!355?',
-            'baseUrl' => '/',
+            'enableCsrfValidation' => false,
+            'baseUrl' => '/beta',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -20,7 +21,7 @@ $config = [
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            'errorAction' => 'api/error',
         ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
@@ -39,8 +40,8 @@ $config = [
             'class' => 'yii\web\UrlManager',
             'showScriptName' => false,
             'enablePrettyUrl' => true,
-            'baseUrl' => '/',
-        ],
+            'baseUrl' => '/beta',
+       ],
     ],
     'params' => $params,
 ];

@@ -163,25 +163,25 @@ class Business extends \yii\db\ActiveRecord
     public function getImages()
     {
         return $this->hasMany(Media::className(), ['object_id' => 'id'])
-            ->where(['object_type' => 'business', 'type' => 'image']);
+            ->where(['object_type' => 'Business', 'type' => 'image']);
     }
 
     public function getVideos()
     {
         return $this->hasMany(Media::className(), ['object_id' => 'id'])
-            ->where(['object_type' => 'business', 'type' => 'video']);
+            ->where(['object_type' => 'Business', 'type' => 'video']);
     }
 
     public function getMenus()
     {
         return $this->hasMany(Media::className(), ['object_id' => 'id'])
-            ->where(['object_type' => 'business', 'type' => 'menu']);
+            ->where(['object_type' => 'Business', 'type' => 'menu']);
     }
 
     public function getProducts()
     {
         return $this->hasMany(Media::className(), ['object_id' => 'id'])
-            ->where(['object_type' => 'business', 'type' => 'product']);
+            ->where(['object_type' => 'Business', 'type' => 'product']);
     }
 
     public function getViews()

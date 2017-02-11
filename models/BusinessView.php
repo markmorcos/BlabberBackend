@@ -28,7 +28,7 @@ class BusinessView extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_id', 'user_id'], 'required'],
+            [['business_id'], 'required'],
             [['business_id', 'user_id'], 'integer'],
             [['created'], 'safe'],
         ];
@@ -45,5 +45,10 @@ class BusinessView extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'created' => 'Created',
         ];
+    }
+
+    public function getBusiness()
+    {
+        return $this->hasOne(Business::className(), ['id' => 'business_id']);
     }
 }
