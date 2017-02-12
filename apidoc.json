@@ -65,6 +65,9 @@
 		"GetSponsors",
 
 		"Notifications",
-		"SendNotification"
+		"SendNotification",
+
+		"Reporting",
+		"Report"
 	]
 }

@@ -69,12 +69,16 @@ class BusinessController extends AdminController
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             // add flags
-            $flags = Yii::$app->request->post('Business')['flags'];
-            $this->_addFlags($flags, $model->id);
-
+            if( !empty(Yii::$app->request->post('Business')['flags']) ){
+                $flags = Yii::$app->request->post('Business')['flags'];
+                $this->_addFlags($flags, $model->id);
+            }
+            
             // add interests
-            $interests = Yii::$app->request->post('Business')['interestsList'];
-            $this->_addInterests($interests, $model->id);
+            if( !empty(Yii::$app->request->post('Business')['interestsList']) ){
+                $interests = Yii::$app->request->post('Business')['interestsList'];
+                $this->_addInterests($interests, $model->id);
+            }
             
             $this->uploadPhoto($model, 'Business', 'business_image', 'main_image');
 
@@ -107,19 +111,23 @@ class BusinessController extends AdminController
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            // remove old flags
-            BusinessFlag::deleteAll('business_id = '.$id);            
+            if( !empty(Yii::$app->request->post('Business')['flags']) ){
+                // remove old flags
+                BusinessFlag::deleteAll('business_id = '.$id);            
 
-            // add flags
-            $flags = Yii::$app->request->post('Business')['flags'];
-            $this->_addFlags($flags, $id);
+                // add flags
+                $flags = Yii::$app->request->post('Business')['flags'];
+                $this->_addFlags($flags, $id);
+            }
 
-            // remove old interests
-            BusinessInterest::deleteAll('business_id = '.$id);
+            if( !empty(Yii::$app->request->post('Business')['interestsList']) ){
+                // remove old interests
+                BusinessInterest::deleteAll('business_id = '.$id);
 
-            // add interests
-            $interests = Yii::$app->request->post('Business')['interestsList'];
-            $this->_addInterests($interests, $id);
+                // add interests
+                $interests = Yii::$app->request->post('Business')['interestsList'];
+                $this->_addInterests($interests, $id);
+            }
 
             $this->uploadPhoto($model, 'Business', 'business_image', 'main_image');
 

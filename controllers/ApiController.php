@@ -27,6 +27,7 @@ use app\models\Review;
 use app\models\Media;
 use app\models\BusinessView;
 use app\models\Sponsor;
+use app\models\Report;
 use yii\data\ActiveDataProvider;
 
 class ApiController extends ApiBaseController
@@ -1689,6 +1690,35 @@ class ApiController extends ApiBaseController
                 ];
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
+        }
+    }
+
+    /***************************************/
+    /************** Reporting **************/
+    /***************************************/
+
+    /**
+     * @api {post} /api/report Report improper content
+     * @apiName Report
+     * @apiGroup Reporting
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} object_id Object's id to be reported.
+     * @apiParam {String} object_type Object's type to be reported.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionReport($object_id, $object_type)
+    {
+        $report = new Report;
+        $report->user_id = $this->logged_user_id;
+        $report->object_id = $object_id;
+        $report->object_type = $object_type;
+
+        if(!$report->save()){
+            throw new HttpException(200, $this->_getErrors($report));
         }
     }
 }
