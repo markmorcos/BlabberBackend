@@ -1529,7 +1529,7 @@ class ApiController extends ApiBaseController
     public function actionGetHomescreenReviews($country_id)
     {
         $this->_addOutputs(['reviews']);
-        $this->output['reviews'] = $this->_getReviews($conditions, $country_id);
+        $this->output['reviews'] = $this->_getReviews(null, $country_id);
     }
 
     /**
