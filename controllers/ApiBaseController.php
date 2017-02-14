@@ -119,6 +119,10 @@ class ApiBaseController extends Controller
 
     protected function _verifyUserAndSetID()
     {
+        if( empty($_POST['user_id']) || empty($_POST['auth_key']) ){
+            throw new HttpException(200, 'no user credentials input');
+        }
+
         $user = User::findOne($_POST['user_id']);
 
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
