@@ -1314,14 +1314,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to checkin.
-     * @apiParam {String} review User's review about the place.
+     * @apiParam {String} text User's review about the place.
      * @apiParam {String} rating User's rating about the place.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} checkin_id the added checkin id
      */
-    public function actionCheckin($business_id, $review, $rating)
+    public function actionCheckin($business_id, $text, $rating)
     {
         $this->_addOutputs(['checkin_id']);
 
@@ -1332,7 +1332,7 @@ class ApiController extends ApiBaseController
             $checkin = new Checkin;
             $checkin->user_id = $this->logged_user_id;
             $checkin->business_id = $business_id;
-            $checkin->text = $review;
+            $checkin->text = $text;
             $checkin->rating = $rating;
 
             if(!$checkin->save()){
@@ -1407,14 +1407,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to review.
-     * @apiParam {String} review User's review about the place.
+     * @apiParam {String} text User's review about the place.
      * @apiParam {String} rating User's rating about the place.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} review_id the added review id
      */
-    public function actionReview($business_id, $review, $rating)
+    public function actionReview($business_id, $text, $rating)
     {
         $this->_addOutputs(['review_id']);
 
@@ -1425,7 +1425,7 @@ class ApiController extends ApiBaseController
             $review = new Review;
             $review->user_id = $this->logged_user_id;
             $review->business_id = $business_id;
-            $review->text = $review;
+            $review->text = $text;
             $review->rating = $rating;
 
             if(!$review->save()){
