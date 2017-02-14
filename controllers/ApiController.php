@@ -1705,7 +1705,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} object_id Object's id to be reported.
-     * @apiParam {String} object_type Object's type to be reported.
+     * @apiParam {String} object_type Object's type to be reported (review, comment, business, image).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
