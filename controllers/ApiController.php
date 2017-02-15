@@ -144,22 +144,19 @@ class ApiController extends ApiBaseController
         if( $user == null ){
             // sign up
             $user = new User;
-            $user->name = $name;
             $user->email = $email;
             $user->password = Yii::$app->security->generatePasswordHash($password);
             $user->facebook_id = $facebook_id;
+        }
 
-            if(!$user->save()){
-                throw new HttpException(200, $this->_getErrors($user));
-            }
+        // save name and user (if changed)
+        $user->name = $name;
+        if( !empty($image) ){
+            $user->profile_photo = $image;
+        }
 
-            // save url if image coming from external source like Facebook
-            if( !empty($image) ){
-                $user->profile_photo = $image;
-                if(!$user->save()){
-                    throw new HttpException(200, $this->_getErrors($user));
-                }
-            }
+        if(!$user->save()){
+            throw new HttpException(200, $this->_getErrors($user));
         }
 
         $this->_login($email, $password, $firebase_token);            
