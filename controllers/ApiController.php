@@ -250,6 +250,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} new_photo the url of the new added image.
      */
     public function actionChangeProfilePhoto($image = null)
     {
@@ -269,7 +270,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'no url or file input');
         }  
 
-        $this->output['new_photo'] = $user->profile_photo;
+        $this->output['new_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
     }
 
     /**
