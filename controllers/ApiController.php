@@ -268,6 +268,8 @@ class ApiController extends ApiBaseController
         }else{
             throw new HttpException(200, 'no url or file input');
         }  
+
+        $this->output['new_photo'] = $user->profile_photo;
     }
 
     /**
