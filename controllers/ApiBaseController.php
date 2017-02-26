@@ -332,6 +332,10 @@ class ApiBaseController extends Controller
 
         $checkins = [];
         foreach ($model as $key => $checkin) {
+            if (empty($checkin->business)) {
+                continue;
+            }
+
             $temp['id'] = $checkin['id'];
             $temp['text'] = $checkin['text'];
             $temp['rating'] = $checkin['rating'];
@@ -367,6 +371,10 @@ class ApiBaseController extends Controller
 
         $reviews = [];
         foreach ($model as $key => $review) {
+            if (empty($review->business)) {
+                continue;
+            }
+
             $temp['id'] = $review['id'];
             $temp['text'] = $review['text'];
             $temp['rating'] = $review['rating'];
