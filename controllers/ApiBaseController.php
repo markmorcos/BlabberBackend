@@ -50,8 +50,8 @@ class ApiBaseController extends Controller
             'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-sponsors'
         ];
 
-        if( !in_array($action->id, $guest_actions) ){
-            $this->_verifyUserAndSetID();
+        if( !$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions) ){
+            throw new HttpException(200, 'no valid user credentials input');
         }
 
         return parent::beforeAction($action);
@@ -120,15 +120,16 @@ class ApiBaseController extends Controller
     protected function _verifyUserAndSetID()
     {
         if( empty($_POST['user_id']) || empty($_POST['auth_key']) ){
-            throw new HttpException(200, 'no user credentials input');
+            return false;
         }
 
         $user = User::findOne($_POST['user_id']);
 
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
             $this->logged_user_id = $user->id;
+            return true;
         }else{
-            throw new HttpException(200, 'user not verified');
+            return false;
         }
     }
 
