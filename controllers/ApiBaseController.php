@@ -333,7 +333,7 @@ class ApiBaseController extends Controller
 
         $checkins = [];
         foreach ($model as $key => $checkin) {
-            if (empty($checkin->business)) {
+            if (empty($checkin->user) || empty($checkin->business)) {
                 continue;
             }
 
@@ -372,7 +372,7 @@ class ApiBaseController extends Controller
 
         $reviews = [];
         foreach ($model as $key => $review) {
-            if (empty($review->business)) {
+            if (empty($review->user) || empty($review->business)) {
                 continue;
             }
 
@@ -428,6 +428,10 @@ class ApiBaseController extends Controller
 
         $media = [];
         foreach ($model as $key => $value) {
+            if (empty($value->user)) {
+                continue;
+            }
+
             $temp['id'] = $value['id'];
             $temp['url'] = Url::base(true).'/'.$value['url'];
             $temp['type'] = $value['type'];
