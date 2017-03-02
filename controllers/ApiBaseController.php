@@ -166,6 +166,10 @@ class ApiBaseController extends Controller
 
     protected function _getUserData($user)
     {
+        if(empty($user)){
+            return null;
+        }
+        
         $user_data['id'] = $user->id;
         $user_data['name'] = $user->name;
         $user_data['email'] = $user->email;
