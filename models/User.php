@@ -156,6 +156,16 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         if( isset($user) && $user->validatePassword($password) ){
             $user->auth_key = \Yii::$app->security->generateRandomString(16);
             if (!empty($firebase_token)) {
+                // get list of users with the same token and reset the token for them
+                $query = static::find()
+                    ->where(['firebase_token' => $firebase_token])
+                    ->andWhere(['!=', 'id', $user->id])
+                    ->all();
+                foreach ($query as $model) {
+                    $model->firebase_token = '';
+                    $model->save();
+                }
+
                 $user->firebase_token = $firebase_token;
             }
             if( $user->save() ){
