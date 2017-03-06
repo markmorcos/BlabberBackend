@@ -497,10 +497,16 @@ class ApiController extends ApiBaseController
      */
     public function actionCancelFriendRequest($request_id)
     {
-        $model = Friendship::findOne($request_id);
-        $model->status = 3;
-        if(!$model->save()){
-            throw new HttpException(200, $this->_getErrors($model));
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
+        $request->status = 3;
+        if(!$request->save()){
+            throw new HttpException(200, $this->_getErrors($request));
         }
     }
 
@@ -548,7 +554,13 @@ class ApiController extends ApiBaseController
     public function actionAcceptFriendRequest($request_id)
     {
         // accept request
-        $request = Friendship::findOne($request_id);
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
         $request->status = 1;
         if( !$request->save() ){
             throw new HttpException(200, $this->_getErrors($request));
@@ -588,10 +600,16 @@ class ApiController extends ApiBaseController
      */
     public function actionRejectFriendRequest($request_id)
     {
-        $model = Friendship::findOne($request_id);
-        $model->status = 2;
-        if(!$model->save()){
-            throw new HttpException(200, $this->_getErrors($model));
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
+        $request->status = 2;
+        if(!$request->save()){
+            throw new HttpException(200, $this->_getErrors($request));
         }
     }
 
