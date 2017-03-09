@@ -164,6 +164,20 @@ class ApiBaseController extends Controller
         return $model;
     }
 
+    protected function _validateUsername($username)
+    {
+        if( strpos($username, ' ') !== false ){
+            throw new HttpException(200, 'username can\'t contains spaces');
+        }
+
+        $model = User::find()
+                ->where(['username' => $username])
+                ->one();
+        if (!empty($model)) {
+            throw new HttpException(200, 'this username already taken');
+        }
+    }
+
     protected function _getUserData($user)
     {
         if(empty($user)){
