@@ -235,9 +235,13 @@ class ApiBaseController extends Controller
         if ($country_id !== null) {
             $query->andWhere(['country_id' => $country_id]);
         }
+
         if ($order !== null) {
-            $query->orderBy($order);
+            $order = ['featured' => SORT_DESC] + $order;
+        }else{
+            $order = ['featured' => SORT_DESC];
         }
+        $query->orderBy($order);
 
         if (!empty($lat_lng)) {
             $lat = $lat_lng[0];
