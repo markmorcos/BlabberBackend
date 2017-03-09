@@ -164,6 +164,20 @@ class ApiBaseController extends Controller
         return $model;
     }
 
+    protected function _validateUsername($username)
+    {
+        if( strpos($username, ' ') !== false ){
+            throw new HttpException(200, 'username can\'t contains spaces');
+        }
+
+        $model = User::find()
+                ->where(['username' => $username])
+                ->one();
+        if (!empty($model)) {
+            throw new HttpException(200, 'this username already taken');
+        }
+    }
+
     protected function _getUserData($user)
     {
         if(empty($user)){
@@ -235,9 +249,13 @@ class ApiBaseController extends Controller
         if ($country_id !== null) {
             $query->andWhere(['country_id' => $country_id]);
         }
+
         if ($order !== null) {
-            $query->orderBy($order);
+            $order = ['featured' => SORT_DESC] + $order;
+        }else{
+            $order = ['featured' => SORT_DESC];
         }
+        $query->orderBy($order);
 
         if (!empty($lat_lng)) {
             $lat = $lat_lng[0];

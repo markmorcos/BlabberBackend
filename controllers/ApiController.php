@@ -48,13 +48,7 @@ class ApiController extends ApiBaseController
      */
     public function actionIsUniqueUsername($username)
     {
-        $model = User::find()
-                ->where(['username' => $username])
-                ->one();
-
-        if (!empty($model)) {
-            throw new HttpException(200, 'this username already taken');
-        }
+        $this->_validateUsername($username);
     }
 
     /**
@@ -79,6 +73,8 @@ class ApiController extends ApiBaseController
     public function actionSignUp($name, $email, $username, $password, $mobile = null, $image = null, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
+
+        $this->_validateUsername($username);
 
         // sign up
         $user = new User;
@@ -348,7 +344,10 @@ class ApiController extends ApiBaseController
         }
 
         if ( !empty($name) ) $user->name = $name;
-        if ( !empty($username) ) $user->username = $username;
+        if ( !empty($username) ) {
+            $this->_validateUsername($username); 
+            $user->username = $username;
+        }
         if ( !empty($mobile) ) $user->mobile = $mobile;
         if ( !empty($gender) ) $user->gender = $gender;
         if ( !empty($birthdate) ) $user->birthdate = $birthdate;
@@ -1117,8 +1116,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions[] = 'or';
-        $and_conditions[] = 'and';
+        $conditions[] = 'and';
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
