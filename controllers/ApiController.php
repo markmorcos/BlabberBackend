@@ -1117,8 +1117,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions[] = 'or';
-        $and_conditions[] = 'and';
+        $conditions[] = 'and';
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
