@@ -1097,6 +1097,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} name the search keyword for business name (optional).
+     * @apiParam {String} address the search keyword for business address (optional).
      * @apiParam {String} city the search keyword for business city (optional).
      * @apiParam {String} city_id the business city_id (optional).
      * @apiParam {String} category the search keyword for business category (optional).
@@ -1112,7 +1113,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinesses($country_id, $name = null, $city = null, $city_id  = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
+    public function actionSearchBusinesses($country_id, $name = null, $address = null, $city = null, $city_id  = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1120,6 +1121,9 @@ class ApiController extends ApiBaseController
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
+        }
+        if( !empty($address) ){
+            $conditions[] = ['like', 'address', $address];
         }
         if( !empty($city) ){
             $model = City::find()->where(['like', 'name', $city])->all();
