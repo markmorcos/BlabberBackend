@@ -1117,13 +1117,14 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions[] = 'and';
+        $conditions[] = 'or';
+        $andConditions[] = 'and';
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
         }
         if( !empty($address) ){
-            $conditions[] = ['like', 'address', $address];
+            $andConditions[] = ['like', 'address', $address];
         }
         if( !empty($city) ){
             $model = City::find()->where(['like', 'name', $city])->all();
@@ -1167,7 +1168,7 @@ class ApiController extends ApiBaseController
         }
             
         $lat_lng = empty($nearby) ? null : explode('-', $nearby);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
     }
 
     /**
