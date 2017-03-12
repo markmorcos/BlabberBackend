@@ -1193,7 +1193,7 @@ class ApiController extends ApiBaseController
         }else if( $search_type == 'recently_viewed' ){
             $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
-                ->orderBy(['business_view.id' => SORT_DESC])
+                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
                 ->joinWith('business')
                 ->andWhere(['business.country_id' => $country_id]);
             $model = $this->_getModelWithPagination($query);
