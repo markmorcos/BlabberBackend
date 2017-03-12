@@ -240,7 +240,7 @@ class ApiBaseController extends Controller
         return $categories;
     }
 
-    protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null)
+    protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
                     ->where($conditions)
@@ -255,7 +255,6 @@ class ApiBaseController extends Controller
         }else{
             $order = ['featured' => SORT_DESC];
         }
-        $query->orderBy($order);
 
         if (!empty($lat_lng)) {
             $lat = $lat_lng[0];
@@ -263,10 +262,15 @@ class ApiBaseController extends Controller
 
             $query
                 ->select(['*', '( 6371 * acos( cos( radians('.$lat.') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians('.$lng.') ) + sin( radians('.$lat.') ) * sin( radians( lat ) ) ) ) AS distance'])
-                ->having('distance < 100')
-                ->orderBy(['distance' => SORT_ASC]);
+                ->having('distance < 100');
+            $order += ['distance' => SORT_ASC];
         }
 
+        if (!empty($andConditions)) {
+            $query->andWhere($andConditions);
+        }
+
+        $query->orderBy($order);
         $model = $this->_getModelWithPagination($query);
 
         $businesses = [];

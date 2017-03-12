@@ -1117,13 +1117,14 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions[] = 'and';
+        $conditions[] = 'or';
+        $andConditions[] = 'and';
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
         }
         if( !empty($address) ){
-            $conditions[] = ['like', 'address', $address];
+            $andConditions[] = ['like', 'address', $address];
         }
         if( !empty($city) ){
             $model = City::find()->where(['like', 'name', $city])->all();
@@ -1166,8 +1167,8 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
             
-        $lat_lng = empty($nearby) ? null : explode('-', $nearby);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng);
+        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
     }
 
     /**
@@ -1193,7 +1194,7 @@ class ApiController extends ApiBaseController
         }else if( $search_type == 'recently_viewed' ){
             $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
-                ->orderBy(['business_view.id' => SORT_DESC])
+                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
                 ->joinWith('business')
                 ->andWhere(['business.country_id' => $country_id]);
             $model = $this->_getModelWithPagination($query);
