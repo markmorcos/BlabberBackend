@@ -1167,7 +1167,7 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
             
-        $lat_lng = empty($nearby) ? null : explode('-', $nearby);
+        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
         $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
     }
 
