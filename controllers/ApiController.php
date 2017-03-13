@@ -137,7 +137,7 @@ class ApiController extends ApiBaseController
         $email = $facebook_id.'@facebook.com';
         $password = md5($facebook_id);
         $user = User::findByEmail($email);
-        if( $user == null ){
+        if( $user === null ){
             // sign up
             $user = new User;
             $user->email = $email;
@@ -339,7 +339,7 @@ class ApiController extends ApiBaseController
     public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $interests_ids = null)
     {
         $user = User::findOne($this->logged_user_id);
-        if( $user == null ){
+        if( $user === null ){
             throw new HttpException(200, 'no user with this id');
         }
 
@@ -427,7 +427,7 @@ class ApiController extends ApiBaseController
         $friendship = $this->_getLastFriendshipRequest($this->logged_user_id, $friend_id);
 
         //if there isn't friendship request or if sent old one and rejected (status:2) or cancelled (status:3) or removed (status:4)
-        if ( $friendship == null || $friendship->status == 2 || $friendship->status == 3 || $friendship->status == 4 ){ 
+        if ( $friendship === null || $friendship->status === 2 || $friendship->status === 3 || $friendship->status === 4 ){ 
             $model = new Friendship;
             $model->user_id = $this->logged_user_id;
             $model->friend_id = $friend_id;
@@ -985,7 +985,7 @@ class ApiController extends ApiBaseController
         $business = Business::find()
                         ->where(['id' => $business_id])
                         ->one();
-        if( $business == null ){
+        if( $business === null ){
             throw new HttpException(200, 'no business with this id');
         }
         if( $business->admin_id != $this->logged_user_id ){
@@ -1189,9 +1189,9 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['businesses']);
 
         $search_type = $type;
-        if( $search_type == 'recently_added' ){
+        if( $search_type === 'recently_added' ){
             $this->output['businesses'] = $this->_getBusinesses(null, $country_id, ['created' => SORT_DESC]);
-        }else if( $search_type == 'recently_viewed' ){
+        }else if( $search_type === 'recently_viewed' ){
             $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
                 ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
@@ -1235,7 +1235,7 @@ class ApiController extends ApiBaseController
         if( $model !== null ){
             $result = $this->_addBusinessView($business_id, $this->logged_user_id);
 
-            if( $result == 'done' ){
+            if( $result === 'done' ){
                 $this->output['business_data'] = $this->_getBusinessesDataObject($model);
             }else{
                 throw new HttpException(200, $result);
