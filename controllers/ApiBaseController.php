@@ -50,8 +50,8 @@ class ApiBaseController extends Controller
             'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-sponsors'
         ];
 
-        if( !in_array($action->id, $guest_actions) ){
-            $this->_verifyUserAndSetID();
+        if( !$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions) ){
+            throw new HttpException(200, 'no valid user credentials input');
         }
 
         return parent::beforeAction($action);
@@ -119,12 +119,17 @@ class ApiBaseController extends Controller
 
     protected function _verifyUserAndSetID()
     {
+        if( empty($_POST['user_id']) || empty($_POST['auth_key']) ){
+            return false;
+        }
+
         $user = User::findOne($_POST['user_id']);
 
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
             $this->logged_user_id = $user->id;
+            return true;
         }else{
-            throw new HttpException(200, 'user not verified');
+            return false;
         }
     }
 
@@ -159,8 +164,26 @@ class ApiBaseController extends Controller
         return $model;
     }
 
+    protected function _validateUsername($username)
+    {
+        if( strpos($username, ' ') !== false ){
+            throw new HttpException(200, 'username can\'t contains spaces');
+        }
+
+        $model = User::find()
+                ->where(['username' => $username])
+                ->one();
+        if (!empty($model)) {
+            throw new HttpException(200, 'this username already taken');
+        }
+    }
+
     protected function _getUserData($user)
     {
+        if(empty($user)){
+            return null;
+        }
+        
         $user_data['id'] = $user->id;
         $user_data['name'] = $user->name;
         $user_data['email'] = $user->email;
@@ -217,7 +240,7 @@ class ApiBaseController extends Controller
         return $categories;
     }
 
-    protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null)
+    protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
                     ->where($conditions)
@@ -226,8 +249,11 @@ class ApiBaseController extends Controller
         if ($country_id !== null) {
             $query->andWhere(['country_id' => $country_id]);
         }
+
         if ($order !== null) {
-            $query->orderBy($order);
+            $order = ['featured' => SORT_DESC] + $order;
+        }else{
+            $order = ['featured' => SORT_DESC];
         }
 
         if (!empty($lat_lng)) {
@@ -236,10 +262,15 @@ class ApiBaseController extends Controller
 
             $query
                 ->select(['*', '( 6371 * acos( cos( radians('.$lat.') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians('.$lng.') ) + sin( radians('.$lat.') ) * sin( radians( lat ) ) ) ) AS distance'])
-                ->having('distance < 100')
-                ->orderBy(['distance' => SORT_ASC]);
+                ->having('distance < 100');
+            $order += ['distance' => SORT_ASC];
         }
 
+        if (!empty($andConditions)) {
+            $query->andWhere($andConditions);
+        }
+
+        $query->orderBy($order);
         $model = $this->_getModelWithPagination($query);
 
         $businesses = [];
@@ -328,6 +359,10 @@ class ApiBaseController extends Controller
 
         $checkins = [];
         foreach ($model as $key => $checkin) {
+            if (empty($checkin->user) || empty($checkin->business)) {
+                continue;
+            }
+
             $temp['id'] = $checkin['id'];
             $temp['text'] = $checkin['text'];
             $temp['rating'] = $checkin['rating'];
@@ -363,6 +398,10 @@ class ApiBaseController extends Controller
 
         $reviews = [];
         foreach ($model as $key => $review) {
+            if (empty($review->user) || empty($review->business)) {
+                continue;
+            }
+
             $temp['id'] = $review['id'];
             $temp['text'] = $review['text'];
             $temp['rating'] = $review['rating'];
@@ -415,6 +454,10 @@ class ApiBaseController extends Controller
 
         $media = [];
         foreach ($model as $key => $value) {
+            if (empty($value->user)) {
+                continue;
+            }
+
             $temp['id'] = $value['id'];
             $temp['url'] = Url::base(true).'/'.$value['url'];
             $temp['type'] = $value['type'];

@@ -48,13 +48,7 @@ class ApiController extends ApiBaseController
      */
     public function actionIsUniqueUsername($username)
     {
-        $model = User::find()
-                ->where(['username' => $username])
-                ->one();
-
-        if (!empty($model)) {
-            throw new HttpException(200, 'this username already taken');
-        }
+        $this->_validateUsername($username);
     }
 
     /**
@@ -79,6 +73,8 @@ class ApiController extends ApiBaseController
     public function actionSignUp($name, $email, $username, $password, $mobile = null, $image = null, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
+
+        $this->_validateUsername($username);
 
         // sign up
         $user = new User;
@@ -144,22 +140,19 @@ class ApiController extends ApiBaseController
         if( $user == null ){
             // sign up
             $user = new User;
-            $user->name = $name;
             $user->email = $email;
             $user->password = Yii::$app->security->generatePasswordHash($password);
             $user->facebook_id = $facebook_id;
+        }
 
-            if(!$user->save()){
-                throw new HttpException(200, $this->_getErrors($user));
-            }
+        // save name and user (if changed)
+        $user->name = $name;
+        if( !empty($image) ){
+            $user->profile_photo = $image;
+        }
 
-            // save url if image coming from external source like Facebook
-            if( !empty($image) ){
-                $user->profile_photo = $image;
-                if(!$user->save()){
-                    throw new HttpException(200, $this->_getErrors($user));
-                }
-            }
+        if(!$user->save()){
+            throw new HttpException(200, $this->_getErrors($user));
         }
 
         $this->_login($email, $password, $firebase_token);            
@@ -253,6 +246,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} new_photo the url of the new added image.
      */
     public function actionChangeProfilePhoto($image = null)
     {
@@ -271,6 +265,8 @@ class ApiController extends ApiBaseController
         }else{
             throw new HttpException(200, 'no url or file input');
         }  
+
+        $this->output['new_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
     }
 
     /**
@@ -348,7 +344,10 @@ class ApiController extends ApiBaseController
         }
 
         if ( !empty($name) ) $user->name = $name;
-        if ( !empty($username) ) $user->username = $username;
+        if ( !empty($username) ) {
+            $this->_validateUsername($username); 
+            $user->username = $username;
+        }
         if ( !empty($mobile) ) $user->mobile = $mobile;
         if ( !empty($gender) ) $user->gender = $gender;
         if ( !empty($birthdate) ) $user->birthdate = $birthdate;
@@ -497,10 +496,16 @@ class ApiController extends ApiBaseController
      */
     public function actionCancelFriendRequest($request_id)
     {
-        $model = Friendship::findOne($request_id);
-        $model->status = 3;
-        if(!$model->save()){
-            throw new HttpException(200, $this->_getErrors($model));
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
+        $request->status = 3;
+        if(!$request->save()){
+            throw new HttpException(200, $this->_getErrors($request));
         }
     }
 
@@ -548,7 +553,13 @@ class ApiController extends ApiBaseController
     public function actionAcceptFriendRequest($request_id)
     {
         // accept request
-        $request = Friendship::findOne($request_id);
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
         $request->status = 1;
         if( !$request->save() ){
             throw new HttpException(200, $this->_getErrors($request));
@@ -588,10 +599,16 @@ class ApiController extends ApiBaseController
      */
     public function actionRejectFriendRequest($request_id)
     {
-        $model = Friendship::findOne($request_id);
-        $model->status = 2;
-        if(!$model->save()){
-            throw new HttpException(200, $this->_getErrors($model));
+        $request = Friendship::find()
+            ->where(['id' => $request_id, 'status' => 0])
+            ->one();
+        if(empty($request)){
+            throw new HttpException(200, "no pending request with this id");
+        }
+
+        $request->status = 2;
+        if(!$request->save()){
+            throw new HttpException(200, $this->_getErrors($request));
         }
     }
 
@@ -1080,6 +1097,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} name the search keyword for business name (optional).
+     * @apiParam {String} address the search keyword for business address (optional).
      * @apiParam {String} city the search keyword for business city (optional).
      * @apiParam {String} city_id the business city_id (optional).
      * @apiParam {String} category the search keyword for business category (optional).
@@ -1095,15 +1113,18 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinesses($country_id, $name = null, $city = null, $city_id  = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
+    public function actionSearchBusinesses($country_id, $name = null, $address = null, $city = null, $city_id  = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
         $this->_addOutputs(['businesses']);
 
         $conditions[] = 'or';
-        $and_conditions[] = 'and';
+        $andConditions[] = 'and';
         
         if( !empty($name) ){
             $conditions[] = ['like', 'name', $name];
+        }
+        if( !empty($address) ){
+            $andConditions[] = ['like', 'address', $address];
         }
         if( !empty($city) ){
             $model = City::find()->where(['like', 'name', $city])->all();
@@ -1146,8 +1167,8 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
             
-        $lat_lng = empty($nearby) ? null : explode('-', $nearby);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng);
+        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
     }
 
     /**
@@ -1173,7 +1194,7 @@ class ApiController extends ApiBaseController
         }else if( $search_type == 'recently_viewed' ){
             $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
-                ->orderBy(['business_view.id' => SORT_DESC])
+                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
                 ->joinWith('business')
                 ->andWhere(['business.country_id' => $country_id]);
             $model = $this->_getModelWithPagination($query);
@@ -1314,14 +1335,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to checkin.
-     * @apiParam {String} review User's review about the place.
+     * @apiParam {String} text User's review about the place.
      * @apiParam {String} rating User's rating about the place.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} checkin_id the added checkin id
      */
-    public function actionCheckin($business_id, $review, $rating)
+    public function actionCheckin($business_id, $text, $rating)
     {
         $this->_addOutputs(['checkin_id']);
 
@@ -1332,7 +1353,7 @@ class ApiController extends ApiBaseController
             $checkin = new Checkin;
             $checkin->user_id = $this->logged_user_id;
             $checkin->business_id = $business_id;
-            $checkin->text = $review;
+            $checkin->text = $text;
             $checkin->rating = $rating;
 
             if(!$checkin->save()){
@@ -1407,14 +1428,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to review.
-     * @apiParam {String} review User's review about the place.
+     * @apiParam {String} text User's review about the place.
      * @apiParam {String} rating User's rating about the place.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} review_id the added review id
      */
-    public function actionReview($business_id, $review, $rating)
+    public function actionReview($business_id, $text, $rating)
     {
         $this->_addOutputs(['review_id']);
 
@@ -1425,7 +1446,7 @@ class ApiController extends ApiBaseController
             $review = new Review;
             $review->user_id = $this->logged_user_id;
             $review->business_id = $business_id;
-            $review->text = $review;
+            $review->text = $text;
             $review->rating = $rating;
 
             if(!$review->save()){
@@ -1705,7 +1726,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} object_id Object's id to be reported.
-     * @apiParam {String} object_type Object's type to be reported.
+     * @apiParam {String} object_type Object's type to be reported (review, comment, business, image).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
