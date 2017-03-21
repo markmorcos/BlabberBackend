@@ -91,6 +91,9 @@ class ApiController extends ApiBaseController
         if( !empty($mobile) ){
             $user->mobile = $mobile;
         }
+        if( $type === 'user' ){
+            $user->approved = 1; //true
+        }
 
         if(!$user->save()){
             throw new HttpException(200, $this->_getErrors($user));
@@ -161,6 +164,7 @@ class ApiController extends ApiBaseController
             $user->email = $email;
             $user->password = Yii::$app->security->generatePasswordHash($password);
             $user->facebook_id = $facebook_id;
+            $user->approved = 1; //true
         }
 
         // save name and user (if changed)
