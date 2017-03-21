@@ -217,17 +217,6 @@ class BusinessController extends AdminController
         echo 'done';
     }
 
-    public function actionDeleteMedia()
-    {
-        $model = Media::findOne($_POST['media_id']);
-
-        if(!unlink($model->url) || !$model->delete()){
-            echo 'error';
-        }
-
-        echo 'done';
-    }
-
     private function _addInterests($interests_input, $business_id){
         $interests = explode(',', $interests_input);
         foreach ($interests as $interest) {

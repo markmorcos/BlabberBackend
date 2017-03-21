@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Business */
@@ -80,14 +81,38 @@ span.interest {
 
         $all_images .= '<br />Images:<br />';
         foreach ($model->images as $media) { 
-            $all_images .= '<img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/>'; 
+            $all_images .= newImage($media);
         }
 
         $all_images .= '<br />Products:<br />';
         foreach ($model->products as $media) { 
-            $all_images .= '<img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/>'; 
+            $all_images .= newImage($media);
+        }
+
+        function newImage($media){
+            $image = "<div>";
+            $image .= '<img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/>'; 
+            $image .= Html::a('Delete', '#', [
+                'class' => 'btn btn-danger',
+                'onclick' => "
+                    if (confirm('Are you sure you want to delete this item?')) {
+                        $.ajax('".Url::to(['media/delete'])."', {
+                            type: 'POST',
+                            data: {id: ".$media->id."},
+                        }).done(function(data) {
+                            $.pjax.reload({container: '#pjax_widget'});
+                        });
+                    }
+                    return false;
+                ",
+            ]);
+            $image .= "</div>";
+
+            return $image;
         }
     ?>
+
+    <?php Pjax::begin(['id' => 'pjax_widget', 'timeout' => false]); ?>
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -171,6 +196,8 @@ span.interest {
         ],
     ]) 
     ?>
+    <?php Pjax::end(); ?>
+
     <script>
         var map, position;
         function initMap() {
@@ -205,7 +232,5 @@ span.interest {
         });
         e.preventDefault();
     });
-    // $('.subm').click(function(e){
-    // }
     </script>
 </div>
