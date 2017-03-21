@@ -32,7 +32,7 @@ use yii\data\ActiveDataProvider;
 class ApiBaseController extends Controller
 {
     var $output = ['status' => 0, 'errors' => null];
-    var $logged_user_id = null;
+    var $logged_user = ['id'=>''];
     var $pagination = [
         'page_no' => null,
         'no_per_page' => 20,
@@ -126,7 +126,7 @@ class ApiBaseController extends Controller
         $user = User::findOne($_POST['user_id']);
 
         if( isset($user) && $user->auth_key == $_POST['auth_key'] ){
-            $this->logged_user_id = $user->id;
+            $this->logged_user = $user;
             return true;
         }else{
             return false;
@@ -192,10 +192,10 @@ class ApiBaseController extends Controller
         $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
         $user_data['interests'] = $user->interestsList;
 
-        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user_id, $user->id);
+        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user['id'], $user->id);
         $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null ;
 
-        $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user_id);
+        $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user['id']);
         $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null ;
 
         return $user_data;
@@ -318,7 +318,7 @@ class ApiBaseController extends Controller
             $last_checkin['user_data'] = $this->_getUserData($model['checkins'][0]->user);
             $business['last_checkin'] = $last_checkin;
         }
-        $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user_id, $business['id']);
+        $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['distance'] = $model['distance'];
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
@@ -486,7 +486,7 @@ class ApiBaseController extends Controller
 
             $media->url = $file_path;
             $media->type = $media_type;
-            $media->user_id = empty($user_id) ? $this->logged_user_id : $user_id;
+            $media->user_id = empty($user_id) ? $this->logged_user['id'] : $user_id;
             $media->object_id = $model_id;
             $media->object_type = $object_type;
 

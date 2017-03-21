@@ -227,7 +227,7 @@ class ApiController extends ApiBaseController
      */
     public function actionChangePassword($new_password)
     {
-        $model = User::findOne($this->logged_user_id);
+        $model = User::findOne($this->logged_user['id']);
         $model->password = Yii::$app->security->generatePasswordHash($new_password);
         if(!$model->save()){
             throw new HttpException(200, $this->_getErrors($model));
@@ -250,7 +250,7 @@ class ApiController extends ApiBaseController
      */
     public function actionChangeProfilePhoto($image = null)
     {
-        $user = User::findOne($this->logged_user_id);
+        $user = User::findOne($this->logged_user['id']);
 
         // save url if image coming from external source like Facebook
         if( !empty($image) ){
@@ -282,7 +282,7 @@ class ApiController extends ApiBaseController
      */
     public function actionLogout()
     {
-        $user = User::findOne($this->logged_user_id);
+        $user = User::findOne($this->logged_user['id']);
         $user->auth_key = "";
         if( !$user->save() ){
             throw new HttpException(200, 'logout problem');
@@ -338,7 +338,7 @@ class ApiController extends ApiBaseController
      */
     public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $interests_ids = null)
     {
-        $user = User::findOne($this->logged_user_id);
+        $user = User::findOne($this->logged_user['id']);
         if( $user === null ){
             throw new HttpException(200, 'no user with this id');
         }
@@ -395,7 +395,7 @@ class ApiController extends ApiBaseController
 
         $query = User::find()
                 ->where(['like', 'name', $name])
-                ->andWhere(['!=', 'id', $this->logged_user_id])
+                ->andWhere(['!=', 'id', $this->logged_user['id']])
                 ->orderBy(['id' => SORT_DESC]);
         $model = $this->_getModelWithPagination($query);
 
@@ -424,12 +424,12 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['request']);
 
-        $friendship = $this->_getLastFriendshipRequest($this->logged_user_id, $friend_id);
+        $friendship = $this->_getLastFriendshipRequest($this->logged_user['id'], $friend_id);
 
         //if there isn't friendship request or if sent old one and rejected (status:2) or cancelled (status:3) or removed (status:4)
         if ( $friendship === null || $friendship->status === 2 || $friendship->status === 3 || $friendship->status === 4 ){ 
             $model = new Friendship;
-            $model->user_id = $this->logged_user_id;
+            $model->user_id = $this->logged_user['id'];
             $model->friend_id = $friend_id;
             $model->status = 0;
 
@@ -471,7 +471,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['requests']);
 
         $query = Friendship::find()
-            ->where(['user_id' => $this->logged_user_id, 'status' => 0]);
+            ->where(['user_id' => $this->logged_user['id'], 'status' => 0]);
         $model = $this->_getModelWithPagination($query);
 
         $requests = array();
@@ -527,7 +527,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['requests']);
 
         $query = Friendship::find()
-            ->where(['friend_id' => $this->logged_user_id, 'status' => 0]);
+            ->where(['friend_id' => $this->logged_user['id'], 'status' => 0]);
         $model = $this->_getModelWithPagination($query);
 
         $requests = array();
@@ -627,10 +627,10 @@ class ApiController extends ApiBaseController
     public function actionRemoveFriend($friend_id)
     {
         $friendship1 = Friendship::find()
-            ->where(['friend_id' => $this->logged_user_id, 'user_id' => $friend_id, 'status' => 1])
+            ->where(['friend_id' => $this->logged_user['id'], 'user_id' => $friend_id, 'status' => 1])
             ->one();
         $friendship2 = Friendship::find()
-            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user_id, 'status' => 1])
+            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user['id'], 'status' => 1])
             ->one();
 
         if( isset($friendship1) && isset($friendship2) ){
@@ -663,7 +663,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['friends']);
 
         $query = Friendship::find()
-            ->where(['user_id' => $this->logged_user_id, 'status' => 1]);
+            ->where(['user_id' => $this->logged_user['id'], 'status' => 1]);
         $model = $this->_getModelWithPagination($query);
 
         $friends = array();
@@ -905,7 +905,7 @@ class ApiController extends ApiBaseController
         $business->price = $price;
         $business->description = $description;
         $business->category_id = $category_id;
-        $business->admin_id = $this->logged_user_id;
+        $business->admin_id = $this->logged_user['id'];
 
         if ( !empty($website) ) {
             $business->website = $website;
@@ -988,8 +988,9 @@ class ApiController extends ApiBaseController
         if( $business === null ){
             throw new HttpException(200, 'no business with this id');
         }
-        if( $business->admin_id != $this->logged_user_id ){
-            throw new HttpException(200, 'you don\'t have permission to edit this business');
+
+        if( $business->admin_id != $this->logged_user['id'] ){
+            throw new HttpException(200, 'you are not allowed to edit this business');
         }
 
         if ( !empty($name) ) $business->name = $name;
@@ -1233,7 +1234,7 @@ class ApiController extends ApiBaseController
                         ->where(['id' => $business_id])
                         ->one();
         if( $model !== null ){
-            $result = $this->_addBusinessView($business_id, $this->logged_user_id);
+            $result = $this->_addBusinessView($business_id, $this->logged_user['id']);
 
             if( $result === 'done' ){
                 $this->output['business_data'] = $this->_getBusinessesDataObject($model);
@@ -1264,7 +1265,7 @@ class ApiController extends ApiBaseController
                         ->one();
         if( $model !== null ){
             $savedBusiness = new SavedBusiness;
-            $savedBusiness->user_id = $this->logged_user_id;
+            $savedBusiness->user_id = $this->logged_user['id'];
             $savedBusiness->business_id = $business_id;
 
             if(!$savedBusiness->save()){
@@ -1289,7 +1290,7 @@ class ApiController extends ApiBaseController
      */
     public function actionDeleteSavedBusiness($saved_business_id)
     {
-        $model = SavedBusiness::findOne(['user_id' => $this->logged_user_id, 'business_id' => $saved_business_id]);
+        $model = SavedBusiness::findOne(['user_id' => $this->logged_user['id'], 'business_id' => $saved_business_id]);
 
         if(!$model->delete()){
             throw new HttpException(200, $this->_getErrors($model));
@@ -1351,7 +1352,7 @@ class ApiController extends ApiBaseController
                         ->one();
         if( $model !== null ){
             $checkin = new Checkin;
-            $checkin->user_id = $this->logged_user_id;
+            $checkin->user_id = $this->logged_user['id'];
             $checkin->business_id = $business_id;
             $checkin->text = $text;
             $checkin->rating = $rating;
@@ -1444,7 +1445,7 @@ class ApiController extends ApiBaseController
                         ->one();
         if( $model !== null ){
             $review = new Review;
-            $review->user_id = $this->logged_user_id;
+            $review->user_id = $this->logged_user['id'];
             $review->business_id = $business_id;
             $review->text = $text;
             $review->rating = $rating;
@@ -1734,7 +1735,7 @@ class ApiController extends ApiBaseController
     public function actionReport($object_id, $object_type)
     {
         $report = new Report;
-        $report->user_id = $this->logged_user_id;
+        $report->user_id = $this->logged_user['id'];
         $report->object_id = $object_id;
         $report->object_type = $object_type;
 
