@@ -43,6 +43,7 @@
 		"EditBusiness",
 		"GetHomescreenBusinesses",
 		"GetBusinesses",
+		"GetBusinessesByOwner",
 		"SearchBusinesses",
 		"SearchBusinessesByType",
 		"GetBusinessData",

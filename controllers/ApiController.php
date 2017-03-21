@@ -1114,6 +1114,28 @@ class ApiController extends ApiBaseController
     }
 
     /**
+     * @api {post} /api/get-businesses-by-owner Get businesses by owner
+     * @apiName GetBusinessesByOwner
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} country_id Country's id.
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} businesses businesses details.
+     */
+    public function actionGetBusinessesByOwner($country_id)
+    {
+        $this->_addOutputs(['businesses']);
+
+        $conditions['admin_id'] = $this->logged_user['id'];
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
+    }
+
+    /**
      * @api {post} /api/search-businesses Get businesses by search
      * @apiName SearchBusinesses
      * @apiGroup Business
