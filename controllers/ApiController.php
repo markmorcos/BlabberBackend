@@ -427,7 +427,7 @@ class ApiController extends ApiBaseController
         $friendship = $this->_getLastFriendshipRequest($this->logged_user['id'], $friend_id);
 
         //if there isn't friendship request or if sent old one and rejected (status:2) or cancelled (status:3) or removed (status:4)
-        if ( $friendship === null || $friendship->status === 2 || $friendship->status === 3 || $friendship->status === 4 ){ 
+        if ( $friendship === null || $friendship->status === "2" || $friendship->status === "3" || $friendship->status === "4" ){ 
             $model = new Friendship;
             $model->user_id = $this->logged_user['id'];
             $model->friend_id = $friend_id;
