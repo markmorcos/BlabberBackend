@@ -46,6 +46,14 @@ class AdminController extends Controller
         ];
     }
 
+    public function runAction($id, $params = [])
+    {
+        // Extract the params from the request and bind them to params
+        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+        
+        return parent::runAction($id, $params);
+    }
+
     protected function uploadPhoto($model, $object_type, $media_type, $image_name){
         if( !empty($_FILES[$object_type]) && 
             !empty($_FILES[$object_type]['size']) && 
