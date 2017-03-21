@@ -44,6 +44,13 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'verified',
             // 'show_in_home',
             array(
+                'attribute' => 'country_id',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return ($data->country_id!=null)?Html::a($data->country->name, ['country/view', 'id' => $data->country_id]):null;
+                },
+            ), 
+            array(
                 'attribute' => 'category_id',
                 'format' => 'raw',
                 'value' => function ($data) {
