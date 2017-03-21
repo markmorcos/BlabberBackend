@@ -61,6 +61,7 @@
 		"DeleteMedia",
 		"GetMedia",
 		"GetHomescreenImages",
+		"Comment",
 
 		"Sponsors",
 		"GetSponsors",

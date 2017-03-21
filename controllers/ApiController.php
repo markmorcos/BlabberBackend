@@ -28,6 +28,7 @@ use app\models\Media;
 use app\models\BusinessView;
 use app\models\Sponsor;
 use app\models\Report;
+use app\models\Comment;
 use yii\data\ActiveDataProvider;
 
 class ApiController extends ApiBaseController
@@ -1694,6 +1695,94 @@ class ApiController extends ApiBaseController
         $conditions['type'] = 'image';
         $conditions['object_type'] = 'Business';
         $this->output['images'] = $this->_getMedia($conditions, $country_id);
+    }
+
+    /**
+     * @api {post} /api/comment Comment on review or media
+     * @apiName Comment
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} text the comment.
+     * @apiParam {String} object_id Object's id to comment about.
+     * @apiParam {String} object_type Object's type to comment about (review or media).
+     * @apiParam {String} business_identity Business's id to link the comment (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} review_id the added review id
+     */
+    public function actionComment($text, $object_id, $object_type, $business_identity = null)
+    {
+        $this->_addOutputs(['comment_id']);
+
+        if($object_type == 'review'){
+            $model = Review::findOne($object_id); 
+        }else if($object_type == 'media'){
+            $model = Media::findOne($object_id); 
+        }else{
+            throw new HttpException(200, 'not supported type');
+        }
+
+        if (empty($model)) {
+            throw new HttpException(200, 'no object with this id');
+        } 
+
+        if (!empty($business_identity)) {
+            $business = Business::findOne($business_identity);
+            if (empty($business)) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            if ($business->admin_id !== $this->logged_user['id']) {
+                throw new HttpException(200, 'you are not admin to this business');
+            }
+        }
+
+        if( $model !== null ){
+            $comment = new Comment;
+            $comment->user_id = $this->logged_user['id'];
+            $comment->object_id = $object_id;
+            $comment->object_type = $object_type;
+            $comment->text = $text;
+            $comment->business_identity = $business_identity;
+
+            if(!$comment->save()){
+                throw new HttpException(200, $this->_getErrors($comment));
+            }else{
+                $this->output['comment_id'] = $comment->id;
+
+                // send notifications
+                if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches))
+                {
+                    $commenter_name = $comment->user->name;
+                    if (!empty($business)) {
+                        $commenter_name = $business->name;
+                    }
+
+                    $users = $matches[1];
+                    foreach ($users as $username)
+                    {
+                        $user = User::findOne(['username' => $username]);
+                        if (empty($user)) {
+                            continue;
+                        }
+
+                        $title = 'New Comment Tag';
+                        $body = $commenter_name .' has tagged you in comment';
+                        $data = [
+                            'comment_id' => $comment->id,
+                            'object_id' => $comment->object_id,
+                            'object_type' => $comment->object_type,
+                            'type' => 4,
+                        ];
+                        $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                    }
+                }
+            }
+        }else{
+            throw new HttpException(200, 'no item with this id');
+        }
     }
 
     /***************************************/
