@@ -25,6 +25,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'email') ?>
 
+    <?php // echo $form->field($model, 'username') ?>
+
     <?php // echo $form->field($model, 'mobile') ?>
 
     <?php // echo $form->field($model, 'gender') ?>
@@ -38,6 +40,12 @@ use yii\widgets\ActiveForm;
     <?php // echo $form->field($model, 'cover_photo') ?>
 
     <?php // echo $form->field($model, 'facebook_id') ?>
+
+    <?php // echo $form->field($model, 'firebase_token') ?>
+
+    <?php // echo $form->field($model, 'approved') ?>
+
+    <?php // echo $form->field($model, 'blocked') ?>
 
     <?php // echo $form->field($model, 'created') ?>
 
