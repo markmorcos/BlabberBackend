@@ -60,6 +60,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} email User's unique email.
      * @apiParam {String} username User's unique username.
      * @apiParam {String} password User's password.
+     * @apiParam {String} type User's type (user or business) (optional).
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
@@ -70,11 +71,15 @@ class ApiController extends ApiBaseController
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignUp($name, $email, $username, $password, $mobile = null, $image = null, $firebase_token = null)
+    public function actionSignUp($name, $email, $username, $password, $type = 'user', $mobile = null, $image = null, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
         $this->_validateUsername($username);
+
+        if( !in_array($type, ['user', 'business']) ){
+            throw new HttpException(200, 'invalid user type');
+        }
 
         // sign up
         $user = new User;
@@ -82,6 +87,7 @@ class ApiController extends ApiBaseController
         $user->email = $email;
         $user->username = $username;
         $user->password = Yii::$app->security->generatePasswordHash($password);
+        $user->role = $type;
         if( !empty($mobile) ){
             $user->mobile = $mobile;
         }
@@ -100,6 +106,18 @@ class ApiController extends ApiBaseController
         // upload image then save it 
         }else if( !empty($_FILES['Media']) ){
             $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
+        }
+
+        if( $type === 'business' ){
+            $link = Url::to(['user/view', 'id' => $user->id], true);
+
+            Yii::$app->mailer->compose()
+                ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+                ->setTo($this->adminEmail)
+                ->setSubject('New Buisness Account ('.$user->name.')')
+                ->setTextBody('New business account created through the mobile application, check it from here: '.$link)
+                ->setHtmlBody('New business account created through the mobile application, check it from here: <a href="'.$link.'">link</a>')
+                ->send();
         }
 
         $this->_login($email, $password, $firebase_token);       
@@ -892,6 +910,10 @@ class ApiController extends ApiBaseController
      */
     public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
+        if( $this->logged_user['role'] !== "business" ){
+            throw new HttpException(200, 'you are not allowed to add new business');
+        }
+
         $business = new Business;
         $business->name = $name;
         $business->address = $address;

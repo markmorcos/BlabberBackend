@@ -38,6 +38,7 @@ class ApiBaseController extends Controller
         'no_per_page' => 20,
         'total_pages_no' => null        
     ];
+    var $adminEmail = 'admin@myblabber.com';
 
     public function beforeAction($action)
     {
@@ -188,6 +189,7 @@ class ApiBaseController extends Controller
         $user_data['name'] = $user->name;
         $user_data['email'] = $user->email;
         $user_data['username'] = $user->username;
+        $user_data['type'] = $user->role;
         $user_data['mobile'] = $user->mobile;
         $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
         $user_data['interests'] = $user->interestsList;
