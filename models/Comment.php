@@ -32,7 +32,7 @@ class Comment extends \yii\db\ActiveRecord
     {
         return [
             [['text', 'user_id', 'object_id', 'object_type'], 'required'],
-            [['user_id', 'object_id'], 'integer'],
+            [['user_id', 'object_id', 'business_identity'], 'integer'],
             [['object_type'], 'string'],
             [['created', 'updated'], 'safe'],
             [['text'], 'string', 'max' => 1023],
@@ -50,8 +50,14 @@ class Comment extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'object_id' => 'Object ID',
             'object_type' => 'Object Type',
+            'business_identity' => 'Business Identity',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
+    }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 }

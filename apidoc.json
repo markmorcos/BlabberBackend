@@ -43,6 +43,7 @@
 		"EditBusiness",
 		"GetHomescreenBusinesses",
 		"GetBusinesses",
+		"GetBusinessesByOwner",
 		"SearchBusinesses",
 		"SearchBusinessesByType",
 		"GetBusinessData",
@@ -60,6 +61,7 @@
 		"DeleteMedia",
 		"GetMedia",
 		"GetHomescreenImages",
+		"Comment",
 
 		"Sponsors",
 		"GetSponsors",
