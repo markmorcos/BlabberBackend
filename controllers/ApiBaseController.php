@@ -525,7 +525,7 @@ class ApiBaseController extends Controller
                 'title' => $title,
                 'body' => $body,
                 'sound' => 'default',
-                'tag' => $data,
+                'tag' => $data, // TODO: remove this one asap
             ],
             'data' => $data,
         ];

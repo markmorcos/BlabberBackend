@@ -441,7 +441,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {String} request_id the added request id
+     * @apiSuccess {String} request the added request object
      */
     public function actionAddFriend($friend_id)
     {
@@ -911,10 +911,12 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} businesses businesses details.
+     * @apiSuccess {String} business_id the added business id
      */
     public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
+        $this->_addOutputs(['business_id']);
+
         if( $this->logged_user['role'] !== "business" ){
             throw new HttpException(200, 'you are not allowed to add new business');
         }
@@ -944,7 +946,7 @@ class ApiController extends ApiBaseController
         if(!$business->save()){
             throw new HttpException(200, $this->_getErrors($business));
         }
-
+        
         if( !empty($flags_ids) ){
             $flags = explode(',', $flags_ids);
             foreach ($flags as $flag) {
@@ -975,6 +977,8 @@ class ApiController extends ApiBaseController
         if( !empty($_FILES['Media']) ){
             $this->_uploadPhoto($business->id, 'Business', 'business_image', $business, 'main_image');
         }
+
+        $this->output['business_id'] = $business->id;
     }
 
     /**
@@ -1005,7 +1009,6 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} businesses businesses details.
      */
     public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $open_from = null, $open_to = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
