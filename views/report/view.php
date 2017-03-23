@@ -34,11 +34,12 @@ $this->params['breadcrumbs'][] = $this->title;
             'object_id',
             'object_type',
             array(
-                'label' => 'Item Link',
+                'attribute' => 'preview',
                 'format' => 'raw',
-                'value' => function ($data) {
-                    return "<a href='".Url::to([$data->object_type.'/view', 'id' => $data->object_id], true)."'>Link</a>";
-                },
+            ), 
+            array(
+                'attribute' => 'link',
+                'format' => 'raw',
             ), 
             array(
                 'label' => 'Action',
@@ -49,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'class' => 'btn btn-danger',
                         'onclick' => "
                             if (confirm('Are you sure you want to delete this item?')) {
-                                $.ajax('".Url::to([$data->object_type.'/delete'])."', {
+                                $.ajax('".Url::to([(($data->object_type === 'image')?'media':$data->object_type).'/delete'])."', {
                                     type: 'POST',
                                     data: {id: ".$data->object_id."},
                                 }).done(function(data) {

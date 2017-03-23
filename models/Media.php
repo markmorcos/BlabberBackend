@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\Url;
 
 /**
  * This is the model class for table "media".
@@ -59,6 +60,7 @@ class Media extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'object_id' => 'Object ID',
             'object_type' => 'Object Type',
+            'preview' => 'Preview',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -67,5 +69,16 @@ class Media extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
+
+    public function getPreview()
+    {
+        if( in_array($this->type, ['business_image', 'category_badge', 'category_icon', 'category_image', 'flag_icon', 'image', 'menu', 'product', 'profile_photo', 'sponsor_image']) ){
+            $preview = '<img src="'.Url::base(true).'/'.$this->url.'" />';
+        }else if( $this->type === 'video' ){
+            $preview = '<video src="'.Url::base(true).'/'.$this->url.'" />';
+        }
+        
+        return $preview;
     }
 }

@@ -30,15 +30,14 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            array(
-                'attribute' => 'url',
-                'format' => 'raw',
-                'value' =>  Html::a('Link', '@web/'.$model->url, ['target' => '_blank'])
-            ), 
             'type',
             'user_id',
             'object_id',
             'object_type',
+            array(
+                'attribute' => 'preview',
+                'format' => 'raw',
+            ), 
             'created',
             'updated',
         ],
