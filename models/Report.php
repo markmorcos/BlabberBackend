@@ -59,7 +59,7 @@ class Report extends \yii\db\ActiveRecord
     {
         if( $this->object_type === 'image' ){
             $image = Media::findOne($this->object_id);
-            $preview = '<img src="'.Url::base(true).'/'.$image['url'].'" />';
+            $preview = '<img src="'.Url::base(true).'/'.$image['url'].'" style="max-width: 700px;" />';
         }else if( $this->object_type === 'review' ){
             $review = Review::findOne($this->object_id);
             $preview = $review->text;
