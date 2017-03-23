@@ -19,7 +19,7 @@ class BusinessSearch extends Business
     {
         return [
             [['id'], 'integer'],
-            [['name', 'address', 'lat', 'lng', 'main_image', 'rating', 'price', 'created', 'updated'], 'safe'],
+            [['name', 'address', 'lat', 'lng', 'main_image', 'rating', 'price', 'country_id', 'category_id', 'admin_id', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -60,6 +60,7 @@ class BusinessSearch extends Business
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'country_id' => $this->country_id,
             'category_id' => $this->category_id,
             'admin_id' => $this->admin_id,
             'created' => $this->created,
