@@ -30,13 +30,6 @@ class BusinessController extends AdminController
      */
     public function actionIndex()
     {
-        (new \yii\db\Query())
-                        ->select(['id', '( 6371 * acos( cos( radians(37) ) * cos( radians( 28.625032392 ) ) * cos( radians( 31.585693 ) - radians(-122) ) + sin( radians(37) ) * sin( radians( 28.625032392 ) ) ) ) AS distance'])
-                        ->from('business')
-                        ->having('distance < 2000')
-                        ->orderBy(['distance' => SORT_ASC])
-                        ->limit(20)
-                        ->all();
         $searchModel = new BusinessSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
