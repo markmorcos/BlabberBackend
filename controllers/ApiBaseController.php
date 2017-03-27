@@ -27,6 +27,9 @@ use app\models\Review;
 use app\models\Media;
 use app\models\BusinessView;
 use app\models\Sponsor;
+use app\models\Report;
+use app\models\Comment;
+use app\models\Notification;
 use yii\data\ActiveDataProvider;
 
 class ApiBaseController extends Controller
@@ -512,6 +515,19 @@ class ApiBaseController extends Controller
             }else{
                 throw new HttpException(200, $this->_getErrors($media));
             }
+        }
+    }
+
+    protected function _addNotification($user_id, $title, $body, $data = null)
+    {
+        $notification = new Notification;
+        $notification->user_id = $user_id;
+        $notification->title = $title;
+        $notification->body = $body;
+        $notification->data = json_encode($data);
+
+        if(!$notification->save()){
+            return $this->_getErrors($notification); //saving problem
         }
     }
 

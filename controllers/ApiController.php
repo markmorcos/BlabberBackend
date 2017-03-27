@@ -29,6 +29,7 @@ use app\models\BusinessView;
 use app\models\Sponsor;
 use app\models\Report;
 use app\models\Comment;
+use app\models\Notification;
 use yii\data\ActiveDataProvider;
 
 class ApiController extends ApiBaseController
@@ -467,6 +468,7 @@ class ApiController extends ApiBaseController
                     'friend_id' => $model->user_id,
                     'type' => 1,
                 ];
+                $this->_addNotification($model->friend_id, $title, $body, $data);
                 $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
             }else{
                 throw new HttpException(200, $this->_getErrors($model));
@@ -605,6 +607,7 @@ class ApiController extends ApiBaseController
             'friend_id' => $request->friend_id,
             'type' => 2,
         ];
+        $this->_addNotification($request->user_id, $title, $body, $data);
         $this->_sendNotification($request->user->firebase_token, $title, $body, $data);
     }
 
@@ -1530,6 +1533,7 @@ class ApiController extends ApiBaseController
                                 'business_id' => $review->business_id,
                                 'type' => 3,
                             ];
+                            $this->_addNotification($user->id, $title, $body, $data);
                             $this->_sendNotification($user->firebase_token, $title, $body, $data);
                         }
                     }
@@ -1742,49 +1746,58 @@ class ApiController extends ApiBaseController
             }
         }
 
-        if( $model !== null ){
-            $comment = new Comment;
-            $comment->user_id = $this->logged_user['id'];
-            $comment->object_id = $object_id;
-            $comment->object_type = $object_type;
-            $comment->text = $text;
-            $comment->business_identity = $business_identity;
+        $comment = new Comment;
+        $comment->user_id = $this->logged_user['id'];
+        $comment->object_id = $object_id;
+        $comment->object_type = $object_type;
+        $comment->text = $text;
+        $comment->business_identity = $business_identity;
 
-            if(!$comment->save()){
-                throw new HttpException(200, $this->_getErrors($comment));
-            }else{
-                $this->output['comment_id'] = $comment->id;
+        if(!$comment->save()){
+            throw new HttpException(200, $this->_getErrors($comment));
+        }else{
+            $this->output['comment_id'] = $comment->id;
 
-                // send notifications
-                if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches))
+            $commenter_name = $comment->user->name;
+            if (!empty($business)) {
+                $commenter_name = $business->name;
+            }
+
+            // send notification
+            $title = 'New Comment';
+            $body = $commenter_name .' added new comment to your '.$object_type;
+            $data = [
+                'comment_id' => $comment->id,
+                'object_id' => $comment->object_id,
+                'object_type' => $comment->object_type,
+                'type' => 4,
+            ];
+            $this->_addNotification($object->user_id, $title, $body, $data);
+            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+
+            // send notifications
+            if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches))
+            {
+                $users = $matches[1];
+                foreach ($users as $username)
                 {
-                    $commenter_name = $comment->user->name;
-                    if (!empty($business)) {
-                        $commenter_name = $business->name;
+                    $user = User::findOne(['username' => $username]);
+                    if (empty($user)) {
+                        continue;
                     }
 
-                    $users = $matches[1];
-                    foreach ($users as $username)
-                    {
-                        $user = User::findOne(['username' => $username]);
-                        if (empty($user)) {
-                            continue;
-                        }
-
-                        $title = 'New Comment Tag';
-                        $body = $commenter_name .' has tagged you in comment';
-                        $data = [
-                            'comment_id' => $comment->id,
-                            'object_id' => $comment->object_id,
-                            'object_type' => $comment->object_type,
-                            'type' => 4,
-                        ];
-                        $this->_sendNotification($user->firebase_token, $title, $body, $data);
-                    }
+                    $title = 'New Comment Tag';
+                    $body = $commenter_name .' has tagged you in comment';
+                    $data = [
+                        'comment_id' => $comment->id,
+                        'object_id' => $comment->object_id,
+                        'object_type' => $comment->object_type,
+                        'type' => 4,
+                    ];
+                    $this->_addNotification($user->id, $title, $body, $data);
+                    $this->_sendNotification($user->firebase_token, $title, $body, $data);
                 }
             }
-        }else{
-            throw new HttpException(200, 'no item with this id');
         }
     }
 
@@ -1828,30 +1841,89 @@ class ApiController extends ApiBaseController
     /***************************************/
 
     /**
-     * @api {post} /api/send-notification Send Notification
-     * @apiName SendNotification
+     * @api {post} /api/get-unseen-notifications-count Get all user unseen notifications count
+     * @apiName GetUnseenNotificationsCount
      * @apiGroup Notifications
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {Array} users_ids Array list of users' id to send the notification to.
-     * @apiParam {String} title Notification's title.
-     * @apiParam {String} body Notification's body.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Integer} notifications_count unseen notifications count.
+     */
+    public function actionGetUnseenNotificationsCount()
+    {
+        $this->_addOutputs(['notifications_count']);
+
+        $count = Notification::find()
+                ->where(['user_id' => $this->logged_user['id'], 'seen' => 0])
+                ->count();
+
+        $this->output['notifications_count'] = $count;
+    }
+
+    /**
+     * @api {post} /api/get-all-notifications Get all user notifications
+     * @apiName GetAllNotifications
+     * @apiGroup Notifications
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} notifications List of Notifications.
+     */
+    public function actionGetAllNotifications()
+    {
+        $this->_addOutputs(['notifications']);
+
+        $query = Notification::find()
+                ->where(['user_id' => $this->logged_user['id']])
+                ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $notifications = [];
+        foreach ($model as $key => $notification) {
+            $temp['id'] = $notification['id'];
+            $temp['title'] = $notification['title'];
+            $temp['body'] = $notification['body'];
+            $temp['data'] = json_decode($notification['data']);
+            $temp['seen'] = $notification['seen'];
+            $temp['created'] = $notification['created'];
+            $notifications[] = $temp;
+        }
+
+        $this->output['notifications'] = $notifications;
+    }
+
+    /**
+     * @api {post} /api/mark-notification-seen Mark user notification as seen
+     * @apiName MarkNotificationSeen
+     * @apiGroup Notifications
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} notification_id Notification iD.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionSendNotification($users_ids, $title, $body)
+    public function actionMarkNotificationSeen($notification_id)
     {
-        $users_ids = explode(',', $users_ids);
-        foreach ($users_ids as $users_id) {
-            $user = User::findOne($users_id);
-            if( !empty($user->firebase_token)){
-                $data = [
-                    'type' => 0,
-                ];
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
-            }
+        $notification = Notification::findOne($notification_id);
+
+        if( $notification === null ){
+            throw new HttpException(200, 'no notification with this id');
+        }   
+
+        $notification->seen = 1;
+
+        if(!$notification->save()){
+            throw new HttpException(200, $this->_getErrors($notification));
         }
     }
 

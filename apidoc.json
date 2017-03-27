@@ -67,7 +67,9 @@
 		"GetSponsors",
 
 		"Notifications",
-		"SendNotification",
+		"GetUnseenNotificationsCount",
+		"GetAllNotifications",
+		"MarkNotificationSeen",
 
 		"Reporting",
 		"Report"
