@@ -54,6 +54,7 @@
 		"DeleteCheckin",
 		"GetCheckins",
 		"ReviewBusiness",
+		"EditReview",
 		"DeleteReview",
 		"GetReviews",
 		"GetHomescreenReviews",

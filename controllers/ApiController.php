@@ -1544,10 +1544,10 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['review_id']);
 
-        $model = Business::find()
+        $business = Business::find()
             ->where(['id' => $business_id])
             ->one();
-        if ($model === null) {
+        if ($business === null) {
             throw new HttpException(200, 'no business with this id');
         }
 
@@ -1561,10 +1561,10 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($review));
         }
 
-        $model->rating = $this->_calcRating($business_id);
+        $business->rating = $this->_calcRating($business_id);
 
-        if (!$model->save()) {
-            throw new HttpException(200, $this->_getErrors($model));
+        if (!$business->save()) {
+            throw new HttpException(200, $this->_getErrors($business));
         }
 
         $this->output['review_id'] = $review->id;
@@ -1590,7 +1590,81 @@ class ApiController extends ApiBaseController
             }
         }
     }
+
+    /**
+     * @api {post} /api/edit-review Edit Review
+     * @apiName EditReview
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} review_id review's id to edit.
+     * @apiParam {String} business_id business's id to review.
+     * @apiParam {String} text User's review about the place (optional).
+     * @apiParam {String} rating User's rating about the place (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionEditReview($review_id, $business_id, $text = null, $rating = null)
+    {
+        $business = Business::find()
+            ->where(['id' => $business_id])
+            ->one();
+        if ($business === null) {
             throw new HttpException(200, 'no business with this id');
+        }
+
+        $review = Review::find()
+            ->where(['id' => $review_id])
+            ->one();
+        if ($review === null) {
+            throw new HttpException(200, 'no review with this id');
+        }
+
+        if ($review->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to edit this review');
+        }
+
+        $review->business_id = $business_id;
+
+        if (!empty($text)) {
+            $review->text = $text;
+        }
+
+        if (!empty($rating)) {
+            $review->rating = $rating;
+        }
+
+        if (!$review->save()) {
+            throw new HttpException(200, $this->_getErrors($review));
+        }
+
+        $business->rating = $this->_calcRating($business_id);
+
+        if (!$business->save()) {
+            throw new HttpException(200, $this->_getErrors($business));
+        }
+
+        // send notifications
+        if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches)) {
+            $users = $matches[1];
+            foreach ($users as $username) {
+                $user = User::findOne(['username' => $username]);
+                if (empty($user)) {
+                    continue;
+                }
+
+                $title = 'New Review Tag';
+                $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
+                $data = [
+                    'review_id' => $review->id,
+                    'business_id' => $review->business_id,
+                    'type' => 3,
+                ];
+                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+            }
         }
     }
 
