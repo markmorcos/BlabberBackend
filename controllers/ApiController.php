@@ -1182,10 +1182,10 @@ class ApiController extends ApiBaseController
         if( !empty($city) ){
             $model = City::find()->where(['like', 'name', $city])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $conditions[] = ['city_id' => $search_keyword];
+            $andConditions[] = ['city_id' => $search_keyword];
         }
         if( !empty($city_id) ){
-            $conditions[] = ['city_id' => $city_id];
+            $andConditions[] = ['city_id' => $city_id];
         }
         if( !empty($category) ){
             $model = Category::find()->where(['like', 'name', $category])->all();
