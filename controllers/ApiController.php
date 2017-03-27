@@ -751,7 +751,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} Countries List of Countries.
+     * @apiSuccess {Array} countries List of Countries.
      */
     public function actionGetCountries()
     {
@@ -780,7 +780,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} Cities List of Cities.
+     * @apiSuccess {Array} cities List of Cities.
      */
     public function actionGetCities($country_id)
     {
@@ -809,7 +809,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} Flags List of Flags.
+     * @apiSuccess {Array} flags List of Flags.
      */
     public function actionGetFlags()
     {
@@ -865,7 +865,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} Interests List of Interests.
+     * @apiSuccess {Array} interests List of Interests.
      */
     public function actionGetInterests()
     {
@@ -1721,15 +1721,15 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['comment_id']);
 
         if($object_type == 'review'){
-            $model = Review::findOne($object_id); 
+            $object = Review::findOne($object_id); 
         }else if($object_type == 'media'){
-            $model = Media::findOne($object_id); 
+            $object = Media::findOne($object_id); 
         }else{
             throw new HttpException(200, 'not supported type');
         }
 
-        if (empty($model)) {
-            throw new HttpException(200, 'no object with this id');
+        if (empty($object)) {
+            throw new HttpException(200, 'no item with this id');
         } 
 
         if (!empty($business_identity)) {
@@ -1801,7 +1801,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} Sponsors List of Sponsors.
+     * @apiSuccess {Array} sponsors List of Sponsors.
      */
     public function actionGetSponsors()
     {
