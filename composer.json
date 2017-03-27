@@ -21,7 +21,8 @@
         "yiisoft/yii2-swiftmailer": "*",
         "yiisoft/yii2-jui": "~2.0.0",
         "kartik-v/yii2-widget-timepicker": "*",
-        "faryshta/yii2-jquery-tagsinput": "*"
+        "faryshta/yii2-jquery-tagsinput": "*",
+        "kartik-v/yii2-widget-select2": "@dev"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",

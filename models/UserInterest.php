@@ -51,4 +51,9 @@ class UserInterest extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Interest::className(), ['id' => 'interest_id']);
     }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
 }
