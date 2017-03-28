@@ -42,7 +42,7 @@ class ApiBaseController extends Controller
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
-            throw new HttpException(200, 'no valid user credentials input, if logged in try to logout and login again');
+            throw new HttpException(200, 'authentication error, please login again');
         }
 
         return parent::beforeAction($action);
