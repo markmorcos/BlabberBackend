@@ -1615,9 +1615,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'no business with this id');
         }
 
-        $review = Review::find()
-            ->where(['id' => $review_id])
-            ->one();
+        $review = Review::findOne($review_id);
+
         if ($review === null) {
             throw new HttpException(200, 'no review with this id');
         }
@@ -1682,7 +1681,15 @@ class ApiController extends ApiBaseController
      */
     public function actionDeleteReview($review_id)
     {
-        $model = Review::findOne($review_id);
+        $review = Review::findOne($review_id);
+
+        if ($review === null) {
+            throw new HttpException(200, 'no review with this id');
+        }
+
+        if ($review->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to delete this review');
+        }
 
         if (!$model->delete()) {
             throw new HttpException(200, $this->_getErrors($model));
