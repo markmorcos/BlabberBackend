@@ -1778,7 +1778,15 @@ class ApiController extends ApiBaseController
      */
     public function actionDeleteMedia($media_id)
     {
-        $model = Media::findOne($media_id);
+        $media = Media::findOne($media_id);
+
+        if ($media === null) {
+            throw new HttpException(200, 'no media with this id');
+        }
+
+        if ($media->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to delete this media');
+        }
 
         if (!unlink($model->url) || !$model->delete()) {
             throw new HttpException(200, $this->_getErrors($model));
