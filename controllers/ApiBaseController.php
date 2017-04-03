@@ -502,6 +502,18 @@ class ApiBaseController extends Controller
             $temp['user_id'] = $value['user_id'];
             $temp['user_name'] = $value->user->name;
             $temp['user_photo'] = $this->_getUserPhotoUrl($value->user->profile_photo);
+
+            if ($value['object_type'] === 'Business') {
+                $business = Business::findOne($value['object_id']);
+                if (empty($business)) {
+                    continue;
+                }
+
+                $temp['business_id'] = $business['id'];
+                $temp['business_name'] = $business['name'];
+                $temp['business_photo'] = $this->_getUserPhotoUrl($business['main_image']);
+            }
+
             $media[] = $temp;
         }
 
