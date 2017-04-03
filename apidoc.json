@@ -63,6 +63,10 @@
 		"GetMedia",
 		"GetHomescreenImages",
 		"Comment",
+		"EditComment",
+		"DeleteComment",
+		"GetComments",
+
 
 		"Sponsors",
 		"GetSponsors",
