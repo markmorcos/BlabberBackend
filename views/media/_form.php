@@ -22,6 +22,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'object_type')->dropDownList([ 'User' => 'User', 'Business' => 'Business', 'Category' => 'Category', 'Flag' => 'Flag', 'Sponsor' => 'Sponsor', ], ['prompt' => '']) ?>
 
+    <?= $form->field($model, 'caption')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'created')->textInput() ?>
 
     <?= $form->field($model, 'updated')->textInput() ?>

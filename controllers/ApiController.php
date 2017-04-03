@@ -1748,17 +1748,18 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id business's id to add media to.
      * @apiParam {String} type Media's type (image, video, menu or product).
      * @apiParam {File} Media[file] Business's new file (optional).
+     * @apiParam {String} caption Media's caption (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $type)
+    public function actionAddMedia($business_id, $type, $caption = null)
     {
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
 
-        $this->_uploadPhoto($business_id, 'Business', $type);
+        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption);
     }
 
     /**

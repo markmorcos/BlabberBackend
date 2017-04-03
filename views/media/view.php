@@ -38,6 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'preview',
                 'format' => 'raw',
             ), 
+            'caption',
             'created',
             'updated',
         ],

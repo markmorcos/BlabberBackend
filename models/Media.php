@@ -43,7 +43,7 @@ class Media extends \yii\db\ActiveRecord
             [['user_id', 'object_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['url'], 'string', 'max' => 255],
-
+            [['caption'], 'string', 'max' => 511],
             [['file'], 'file', 'skipOnEmpty' => false, 'extensions' => 'png, jpg, mp4, pdf'],
         ];
     }
@@ -60,6 +60,7 @@ class Media extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'object_id' => 'Object ID',
             'object_type' => 'Object Type',
+            'caption' => 'Caption',
             'preview' => 'Preview',
             'created' => 'Created',
             'updated' => 'Updated',

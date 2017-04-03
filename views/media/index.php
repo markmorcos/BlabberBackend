@@ -30,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'user_id',
             'object_id',
             // 'object_type',
+            // 'caption',
             // 'created',
             // 'updated',
 

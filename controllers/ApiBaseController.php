@@ -520,7 +520,7 @@ class ApiBaseController extends Controller
         return $media;
     }
 
-    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null)
+    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null)
     {
         $media = new Media;
         $media->file = UploadedFile::getInstance($media, 'file');
@@ -535,6 +535,10 @@ class ApiBaseController extends Controller
             $media->user_id = empty($user_id) ? $this->logged_user['id'] : $user_id;
             $media->object_id = $model_id;
             $media->object_type = $object_type;
+
+            if (!empty($caption)) {
+                $media->caption = $caption;
+            }
 
             if (!$media->save()) {
                 throw new HttpException(200, $this->_getErrors($media));
