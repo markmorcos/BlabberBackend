@@ -1860,9 +1860,9 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['comment_id']);
 
-        if ($object_type == 'review') {
+        if ($object_type === 'review') {
             $object = Review::findOne($object_id);
-        } else if ($object_type == 'media') {
+        } else if ($object_type === 'media') {
             $object = Media::findOne($object_id);
         } else {
             throw new HttpException(200, 'not supported type');
@@ -1908,8 +1908,8 @@ class ApiController extends ApiBaseController
             'object_type' => $comment->object_type,
             'type' => 4,
         ];
-        $this->_addNotification($object->user_id, $title, $body, $data);
-        $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+        $this->_addNotification($comment->user_id, $title, $body, $data);
+        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
@@ -1932,6 +1932,145 @@ class ApiController extends ApiBaseController
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
+    }
+
+    /**
+     * @api {post} /api/edit-comment Edit Comment
+     * @apiName EditComment
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} comment_id comment's id to edit.
+     * @apiParam {String} text User's comment about the place (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionEditComment($comment_id, $text = null)
+    {
+        $comment = Comment::findOne($comment_id);
+
+        if ($comment === null) {
+            throw new HttpException(200, 'no comment with this id');
+        }
+
+        if ($comment->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to edit this comment');
+        }
+
+        if (!empty($text)) {
+            $comment->text = $text;
+        }
+
+        if (!$comment->save()) {
+            throw new HttpException(200, $this->_getErrors($comment));
+        }
+
+        if (!empty($comment->business_identity)) {
+            $business = Business::findOne($comment->business_identity);
+            if (empty($business)) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            if ($business->admin_id !== $this->logged_user['id']) {
+                throw new HttpException(200, 'you are not admin to this business');
+            }
+        }
+
+        $commenter_name = $comment->user->name;
+        if (!empty($business)) {
+            $commenter_name = $business->name;
+        }
+
+        // send notification
+        $title = 'Edit Comment';
+        $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
+        $data = [
+            'comment_id' => $comment->id,
+            'object_id' => $comment->object_id,
+            'object_type' => $comment->object_type,
+            'type' => 4,
+        ];
+        $this->_addNotification($comment->user_id, $title, $body, $data);
+        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
+
+        // send notifications
+        if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
+            $users = $matches[1];
+            foreach ($users as $username) {
+                $user = User::findOne(['username' => $username]);
+                if (empty($user)) {
+                    continue;
+                }
+
+                $title = 'New Comment Tag';
+                $body = $commenter_name . ' has tagged you in comment';
+                $data = [
+                    'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
+                    'type' => 4,
+                ];
+                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+            }
+        }
+    }
+
+    /**
+     * @api {post} /api/delete-comment Delete Comment
+     * @apiName DeleteComment
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} comment_id comment's id to delete it.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionDeleteComment($comment_id)
+    {
+        $comment = Comment::findOne($comment_id);
+
+        if ($comment === null) {
+            throw new HttpException(200, 'no comment with this id');
+        }
+
+        if ($comment->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to delete this comment');
+        }
+
+        if (!$comment->delete()) {
+            throw new HttpException(200, $this->_getErrors($comment));
+        }
+    }
+
+    /**
+     * @api {post} /api/get-comments Get all comments for object
+     * @apiName GetComments
+     * @apiGroup Business
+     *
+     * @apiParam {String} object_id Object's id to get comments related.
+     * @apiParam {String} object_type Object's type to get comments related (review or media).
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} comments comments details.
+     */
+    public function actionGetComments($object_id, $object_type)
+    {
+        $this->_addOutputs(['comments']);
+
+        if ($object_type !== 'review' && $object_type !== 'media') {
+            throw new HttpException(200, 'not supported type');
+        }
+
+        $conditions = ['and'];
+        $conditions[] = ['object_id' => $object_id];
+        $conditions[] = ['object_type' => $object_type];
+        $this->output['comments'] = $this->_getComments($conditions);
     }
 
     /***************************************/

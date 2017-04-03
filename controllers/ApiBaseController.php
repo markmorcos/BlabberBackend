@@ -6,6 +6,7 @@ use app\models\Business;
 use app\models\BusinessView;
 use app\models\Category;
 use app\models\Checkin;
+use app\models\Comment;
 use app\models\Friendship;
 use app\models\Media;
 use app\models\Notification;
@@ -38,7 +39,7 @@ class ApiBaseController extends Controller
         $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
-            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-sponsors',
+            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-comments', 'get-sponsors',
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -417,6 +418,39 @@ class ApiBaseController extends Controller
         }
 
         return $reviews;
+    }
+
+    protected function _getComments($conditions)
+    {
+        $query = Comment::find()
+            ->where($conditions)
+            ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $comments = [];
+        foreach ($model as $key => $comment) {
+            $business_details = [];
+            if (!empty($comment->business_identity)) {
+                $model = Business::findOne($comment->business_identity);
+                if (!empty($model)) {
+                    $business_details = $this->_getBusinessesDataObject($model);
+                }
+            }
+
+            $temp['id'] = $comment['id'];
+            $temp['text'] = $comment['text'];
+            $temp['user_id'] = $comment['user_id'];
+            $temp['object_id'] = $comment['object_id'];
+            $temp['object_type'] = $comment['object_type'];
+            $temp['business_data'] = $business_details;
+            $temp['created'] = $comment['created'];
+            $temp['updated'] = $comment['updated'];
+
+            $comments[] = $temp;
+        }
+
+        return $comments;
     }
 
     protected function _calcRating($business_id)
