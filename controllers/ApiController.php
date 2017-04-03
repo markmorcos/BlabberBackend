@@ -1691,8 +1691,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'you are not allowed to delete this review');
         }
 
-        if (!$model->delete()) {
-            throw new HttpException(200, $this->_getErrors($model));
+        if (!$review->delete()) {
+            throw new HttpException(200, $this->_getErrors($review));
         }
     }
 
@@ -1788,8 +1788,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'you are not allowed to delete this media');
         }
 
-        if (!unlink($model->url) || !$model->delete()) {
-            throw new HttpException(200, $this->_getErrors($model));
+        if (!unlink($media->url) || !$media->delete()) {
+            throw new HttpException(200, $this->_getErrors($media));
         }
     }
 
