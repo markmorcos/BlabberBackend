@@ -74,7 +74,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $html;
                 },
             ), 
-            'private',
+            array(
+                'attribute' => 'private',
+                'format' => 'raw',
+                'value' => ($model->private === 0) ? "No" : "Yes"
+            ), 
             'created',
             'updated',
         ],
