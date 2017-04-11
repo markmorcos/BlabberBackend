@@ -19,7 +19,8 @@ class UserSearch extends User
     {
         return [
             [['id'], 'integer'],
-            [['name', 'password', 'role', 'email', 'username', 'mobile', 'gender', 'birthdate', 'auth_key', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token', 'approved', 'blocked', 'created', 'updated'], 'safe'],
+            [['approved', 'blocked', 'private'], 'boolean'],
+            [['name', 'password', 'role', 'email', 'username', 'mobile', 'gender', 'birthdate', 'auth_key', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token', 'approved', 'blocked', 'private', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -63,6 +64,7 @@ class UserSearch extends User
             'birthdate' => $this->birthdate,
             'approved' => $this->approved,
             'blocked' => $this->blocked,
+            'private' => $this->private,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);

@@ -184,20 +184,33 @@ class ApiBaseController extends Controller
             return null;
         }
 
-        $user_data['id'] = $user->id;
-        $user_data['name'] = $user->name;
-        $user_data['email'] = $user->email;
-        $user_data['username'] = $user->username;
-        $user_data['type'] = $user->role;
-        $user_data['mobile'] = $user->mobile;
-        $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
-        $user_data['interests'] = $user->interestsList;
-
         $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user['id'], $user->id);
-        $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
-
         $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user['id']);
-        $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+
+        if ($user->private === 1 && 
+            ($last_sent_friend_request === null || $last_sent_friend_request->status !== '1') && 
+            ($last_received_friend_request === null || $last_received_friend_request->status !== '1') ) {
+
+            $user_data['id'] = $user->id;
+            $user_data['name'] = $user->name;
+            $user_data['private'] = $user->private;
+
+            $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
+            $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+        } else {
+            $user_data['id'] = $user->id;
+            $user_data['name'] = $user->name;
+            $user_data['email'] = $user->email;
+            $user_data['username'] = $user->username;
+            $user_data['type'] = $user->role;
+            $user_data['mobile'] = $user->mobile;
+            $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
+            $user_data['interests'] = $user->interestsList;
+            $user_data['private'] = $user->private;
+
+            $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
+            $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+        }
 
         return $user_data;
     }

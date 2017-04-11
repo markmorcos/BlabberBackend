@@ -47,6 +47,8 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'blocked') ?>
 
+    <?php // echo $form->field($model, 'private') ?>
+
     <?php // echo $form->field($model, 'created') ?>
 
     <?php // echo $form->field($model, 'updated') ?>

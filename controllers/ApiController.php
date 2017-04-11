@@ -350,12 +350,13 @@ class ApiController extends ApiBaseController
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
+     * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $interests_ids = null)
+    public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $private = null, $interests_ids = null)
     {
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
@@ -384,6 +385,10 @@ class ApiController extends ApiBaseController
 
         if (!empty($firebase_token)) {
             $user->firebase_token = $firebase_token;
+        }
+
+        if (isset($private)) {
+            $user->private = $private;
         }
 
         if (!$user->save()) {

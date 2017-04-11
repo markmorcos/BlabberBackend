@@ -21,6 +21,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'mobile')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'gender')->dropDownList([ 'male' => 'Male', 'female' => 'Female', ], ['prompt' => '']) ?>
