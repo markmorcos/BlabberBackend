@@ -16,7 +16,11 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'address')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'addressAr')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'country_id')->dropDownList($countries_for_dropdown) ?>
 
@@ -39,8 +43,10 @@ use faryshta\widgets\JqueryTagsInput;
     <?= $form->field($model, 'website')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'fb_page')->textInput(['maxlength' => true]) ?>
-    
+
     <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'descriptionAr')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'featured')->checkbox(['maxlength' => true]) ?>
 

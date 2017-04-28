@@ -7,10 +7,11 @@ use Yii;
 /**
  * This is the model class for table "business_flag".
  *
- * @property string $id
- * @property string $flag_id
- * @property string $business_id
+ * @property integer $id
+ * @property integer $business_id
+ * @property integer $flag_id
  * @property string $created
+ * @property string $updated
  */
 class BusinessFlag extends \yii\db\ActiveRecord
 {
@@ -28,9 +29,9 @@ class BusinessFlag extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['flag_id', 'business_id'], 'required'],
-            [['flag_id', 'business_id'], 'integer'],
-            [['created'], 'safe'],
+            [['business_id', 'flag_id'], 'required'],
+            [['business_id', 'flag_id'], 'integer'],
+            [['created', 'updated'], 'safe'],
         ];
     }
 
@@ -41,9 +42,10 @@ class BusinessFlag extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'flag_id' => 'Flag ID',
             'business_id' => 'Business ID',
+            'flag_id' => 'Flag ID',
             'created' => 'Created',
+            'updated' => 'Updated',
         ];
     }
 

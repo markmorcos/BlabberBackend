@@ -9,7 +9,9 @@ use Yii;
  *
  * @property integer $id
  * @property string $title
+ * @property string $titleAr
  * @property string $body
+ * @property string $bodyAr
  * @property integer $business_id
  * @property string $image_url
  * @property integer $interest_id
@@ -36,8 +38,8 @@ class Offer extends \yii\db\ActiveRecord
             [['title', 'business_id', 'image_url', 'push'], 'required'],
             [['business_id', 'interest_id', 'push'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['title', 'image_url'], 'string', 'max' => 255],
-            [['body'], 'string', 'max' => 511],
+            [['title', 'titleAr', 'image_url'], 'string', 'max' => 255],
+            [['body', 'bodyAr'], 'string', 'max' => 511],
         ];
     }
 
@@ -49,7 +51,9 @@ class Offer extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'title' => 'Title',
+            'titleAr' => 'Title Ar',
             'body' => 'Body',
+            'bodyAr' => 'Body Ar',
             'business_id' => 'Business',
             'image_url' => 'Image Url',
             'interest_id' => 'Interest',

@@ -8,12 +8,13 @@ use yii\helpers\Url;
 /**
  * This is the model class for table "media".
  *
- * @property string $id
+ * @property integer $id
  * @property string $url
  * @property string $type
- * @property string $user_id
- * @property string $object_id
+ * @property integer $user_id
+ * @property integer $object_id
  * @property string $object_type
+ * @property string $caption
  * @property string $created
  * @property string $updated
  */

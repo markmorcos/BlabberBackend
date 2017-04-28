@@ -2,10 +2,12 @@
 
 namespace app\models;
 
+use Yii;
+
 /**
  * This is the model class for table "user".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
  * @property string $password
  * @property string $role
@@ -19,9 +21,9 @@ namespace app\models;
  * @property string $cover_photo
  * @property string $facebook_id
  * @property string $firebase_token
- * @property boolean $approved
- * @property boolean $blocked
- * @property boolean $private
+ * @property integer $approved
+ * @property integer $blocked
+ * @property integer $private
  * @property string $created
  * @property string $updated
  */

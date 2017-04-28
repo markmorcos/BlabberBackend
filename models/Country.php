@@ -7,8 +7,9 @@ use Yii;
 /**
  * This is the model class for table "country".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
+ * @property string $nameAr
  * @property string $created
  * @property string $updated
  */
@@ -30,7 +31,7 @@ class Country extends \yii\db\ActiveRecord
         return [
             [['name'], 'required'],
             [['created', 'updated'], 'safe'],
-            [['name'], 'string', 'max' => 255],
+            [['name', 'nameAr'], 'string', 'max' => 255],
         ];
     }
 
@@ -42,6 +43,7 @@ class Country extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

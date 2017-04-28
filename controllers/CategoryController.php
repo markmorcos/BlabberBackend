@@ -31,7 +31,7 @@ class CategoryController extends AdminController
 
     /**
      * Displays a single Category model.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionView($id)
@@ -68,7 +68,7 @@ class CategoryController extends AdminController
     /**
      * Updates an existing Category model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionUpdate($id)
@@ -93,7 +93,7 @@ class CategoryController extends AdminController
     /**
      * Deletes an existing Category model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionDelete($id)
@@ -108,7 +108,7 @@ class CategoryController extends AdminController
     /**
      * Finds the Category model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id
+     * @param integer $id
      * @return Category the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */

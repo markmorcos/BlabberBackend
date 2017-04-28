@@ -15,7 +15,11 @@ use kartik\select2\Select2;
 
     <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'titleAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'body')->textArea(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'bodyAr')->textArea(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'business_id')->widget(Select2::classname(), [
         'data' => $businesses_for_dropdown,

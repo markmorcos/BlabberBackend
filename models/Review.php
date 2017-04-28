@@ -7,11 +7,11 @@ use Yii;
 /**
  * This is the model class for table "review".
  *
- * @property string $id
+ * @property integer $id
  * @property string $text
  * @property string $rating
- * @property string $user_id
- * @property string $business_id
+ * @property integer $user_id
+ * @property integer $business_id
  * @property string $created
  * @property string $updated
  */

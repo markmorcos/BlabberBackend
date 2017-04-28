@@ -5,9 +5,9 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\models\Flag */
 
-$this->title = 'Update Flag: ' . $model->id;
+$this->title = 'Update Flag: ' . $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Flags', 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
+$this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="flag-update">

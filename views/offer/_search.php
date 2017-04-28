@@ -19,11 +19,15 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'title') ?>
 
+    <?= $form->field($model, 'titleAr') ?>
+
     <?= $form->field($model, 'body') ?>
 
-    <?= $form->field($model, 'business_id') ?>
+    <?= $form->field($model, 'bodyAr') ?>
 
-    <?= $form->field($model, 'image_url') ?>
+    <?php // echo $form->field($model, 'business_id') ?>
+
+    <?php // echo $form->field($model, 'image_url') ?>
 
     <?php // echo $form->field($model, 'interest_id') ?>
 

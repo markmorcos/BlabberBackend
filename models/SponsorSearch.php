@@ -19,7 +19,7 @@ class SponsorSearch extends Sponsor
     {
         return [
             [['id'], 'integer'],
-            [['name', 'description', 'main_image', 'link', 'created', 'updated'], 'safe'],
+            [['name', 'nameAr', 'description', 'descriptionAr', 'main_image', 'link', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -65,7 +65,9 @@ class SponsorSearch extends Sponsor
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'nameAr', $this->nameAr])
             ->andFilterWhere(['like', 'description', $this->description])
+            ->andFilterWhere(['like', 'descriptionAr', $this->descriptionAr])
             ->andFilterWhere(['like', 'main_image', $this->main_image])
             ->andFilterWhere(['like', 'link', $this->link]);
 

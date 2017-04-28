@@ -7,9 +7,9 @@ use Yii;
 /**
  * This is the model class for table "friendship".
  *
- * @property string $id
- * @property string $user_id
- * @property string $friend_id
+ * @property integer $id
+ * @property integer $user_id
+ * @property integer $friend_id
  * @property string $status 0 -> no action yet, 1 -> accepted, 2 -> rejected, 3 -> cancelled, 4 -> removed 
  * @property string $created
  * @property string $updated
@@ -33,6 +33,7 @@ class Friendship extends \yii\db\ActiveRecord
             [['user_id', 'friend_id', 'status'], 'required'],
             [['user_id', 'friend_id'], 'integer'],
             [['created', 'updated'], 'safe'],
+            [['status'], 'string', 'max' => 1],
         ];
     }
 

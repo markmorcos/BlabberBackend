@@ -19,7 +19,7 @@ class FlagSearch extends Flag
     {
         return [
             [['id'], 'integer'],
-            [['name', 'created', 'updated'], 'safe'],
+            [['name', 'nameAr', 'icon', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -64,7 +64,9 @@ class FlagSearch extends Flag
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name]);
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'nameAr', $this->nameAr])
+            ->andFilterWhere(['like', 'icon', $this->icon]);
 
         return $dataProvider;
     }

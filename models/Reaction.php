@@ -7,10 +7,10 @@ use Yii;
 /**
  * This is the model class for table "reaction".
  *
- * @property string $id
+ * @property integer $id
  * @property string $type
- * @property string $user_id
- * @property string $object_id
+ * @property integer $user_id
+ * @property integer $object_id
  * @property string $object_type
  * @property string $created
  * @property string $updated

@@ -5,11 +5,11 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "saved-business".
+ * This is the model class for table "saved_business".
  *
- * @property string $id
- * @property string $user_id
- * @property string $business_id
+ * @property integer $id
+ * @property integer $user_id
+ * @property integer $business_id
  * @property string $created
  * @property string $updated
  */

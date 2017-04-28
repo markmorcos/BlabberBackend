@@ -14,7 +14,11 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'descriptionAr')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'parent_id')->dropDownList($categories_for_dropdown, ['prompt' => 'no parent']) ?>
 

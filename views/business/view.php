@@ -118,7 +118,9 @@ span.interest {
         'attributes' => [
             'id',
             'name',
+            'nameAr',
             'address',
+            'addressAr',
             array(
                 'attribute' => 'country_id',
                 'format' => 'raw',
@@ -139,6 +141,7 @@ span.interest {
             'website',
             'fb_page',
             'description',
+            'descriptionAr',
             array(
                 'attribute' => 'featured',
                 'format' => 'raw',

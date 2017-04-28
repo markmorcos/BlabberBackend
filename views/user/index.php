@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'password',
             'role',
             'email:email',
-            // 'username', 
+            // 'username',
             // 'mobile',
             // 'gender',
             // 'birthdate',

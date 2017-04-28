@@ -7,10 +7,11 @@ use Yii;
 /**
  * This is the model class for table "user_interest".
  *
- * @property string $id
- * @property string $interest_id
- * @property string $user_id
+ * @property integer $id
+ * @property integer $user_id
+ * @property integer $interest_id
  * @property string $created
+ * @property string $updated
  */
 class UserInterest extends \yii\db\ActiveRecord
 {
@@ -28,9 +29,9 @@ class UserInterest extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['interest_id', 'user_id'], 'required'],
-            [['interest_id', 'user_id'], 'integer'],
-            [['created'], 'safe'],
+            [['user_id', 'interest_id'], 'required'],
+            [['user_id', 'interest_id'], 'integer'],
+            [['created', 'updated'], 'safe'],
         ];
     }
 
@@ -41,9 +42,10 @@ class UserInterest extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'interest_id' => 'Flag ID',
             'user_id' => 'User ID',
+            'interest_id' => 'Interest ID',
             'created' => 'Created',
+            'updated' => 'Updated',
         ];
     }
 

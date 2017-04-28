@@ -26,7 +26,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'name',
+            'nameAr',
             // 'address',
+            // 'addressAr',
             // 'country_id',
             // 'city_id',
             // 'phone',
@@ -40,6 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'website',
             // 'fb_page',
             // 'description',
+            // 'descriptionAr',
             // 'featured',
             // 'verified',
             // 'show_in_home',

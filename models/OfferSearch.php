@@ -19,7 +19,7 @@ class OfferSearch extends Offer
     {
         return [
             [['id', 'business_id', 'interest_id', 'push'], 'integer'],
-            [['title', 'body', 'image_url', 'created', 'updated'], 'safe'],
+            [['title', 'titleAr', 'body', 'bodyAr', 'image_url', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -68,7 +68,9 @@ class OfferSearch extends Offer
         ]);
 
         $query->andFilterWhere(['like', 'title', $this->title])
+            ->andFilterWhere(['like', 'titleAr', $this->titleAr])
             ->andFilterWhere(['like', 'body', $this->body])
+            ->andFilterWhere(['like', 'bodyAr', $this->bodyAr])
             ->andFilterWhere(['like', 'image_url', $this->image_url]);
 
         return $dataProvider;
