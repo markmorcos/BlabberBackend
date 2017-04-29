@@ -386,7 +386,7 @@ class ApiBaseController extends Controller
             $temp['text'] = $checkin['text'];
             $temp['rating'] = $checkin['rating'];
             $temp['user_id'] = $checkin['user_id'];
-            $temp['user_name'] = $checkin->user->name;
+            $temp['user_name'] = $checkin->user['name'];
             $temp['user_photo'] = $this->_getUserPhotoUrl($checkin->user['profile_photo']);
             $temp['business_id'] = $checkin['business_id'];
             $temp['business_name'] = $checkin->business['name'.$this->lang];
