@@ -53,7 +53,7 @@ class Business extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'address', 'lat', 'lng', 'price', 'category_id', 'admin_id'], 'required'],
+            [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],

@@ -30,7 +30,6 @@ class Flag extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr'], 'string', 'max' => 255],
         ];

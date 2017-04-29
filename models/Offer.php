@@ -35,7 +35,7 @@ class Offer extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'business_id', 'image_url', 'push'], 'required'],
+            [['business_id', 'image_url', 'push'], 'required'],
             [['business_id', 'interest_id', 'push'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['title', 'titleAr', 'image_url'], 'string', 'max' => 255],
