@@ -724,6 +724,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Category
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -743,6 +744,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} category_id parent category id.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -765,6 +767,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -780,7 +783,7 @@ class ApiController extends ApiBaseController
         $countries = [];
         foreach ($model as $key => $country) {
             $temp['id'] = $country['id'];
-            $temp['name'] = $country['name'];
+            $temp['name'] = $country['name'.$this->lang];
             $countries[] = $temp;
         }
 
@@ -794,6 +797,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} country_id Country's id to get cities inside.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -810,7 +814,7 @@ class ApiController extends ApiBaseController
         $cities = [];
         foreach ($model as $key => $city) {
             $temp['id'] = $city['id'];
-            $temp['name'] = $city['name'];
+            $temp['name'] = $city['name'.$this->lang];
             $cities[] = $temp;
         }
 
@@ -823,6 +827,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -838,7 +843,7 @@ class ApiController extends ApiBaseController
         $flags = [];
         foreach ($model as $key => $flag) {
             $temp['id'] = $flag['id'];
-            $temp['name'] = $flag['name'];
+            $temp['name'] = $flag['name'.$this->lang];
             $temp['icon'] = Url::base(true) . '/' . $flag['icon'];
             $flags[] = $temp;
         }
@@ -855,6 +860,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name Flags's name.
      * @apiParam {File} Media[file] Flag's icon file (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -862,7 +868,7 @@ class ApiController extends ApiBaseController
     public function actionAddFlag($name)
     {
         $flag = new Flag;
-        $flag->name = $name;
+        $flag->{"name".$this->lang} = $name;
 
         if (!$flag->save()) {
             throw new HttpException(200, $this->_getErrors($flag));
@@ -879,6 +885,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -894,7 +901,7 @@ class ApiController extends ApiBaseController
         $interests = [];
         foreach ($model as $key => $interest) {
             $temp['id'] = $interest['id'];
-            $temp['name'] = $interest['name'];
+            $temp['name'] = $interest['name'.$this->lang];
             $interests[] = $temp;
         }
 
@@ -925,6 +932,7 @@ class ApiController extends ApiBaseController
      * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -939,8 +947,8 @@ class ApiController extends ApiBaseController
         }
 
         $business = new Business;
-        $business->name = $name;
-        $business->address = $address;
+        $business->{"name".$this->lang} = $name;
+        $business->{"address".$this->lang} = $address;
         $business->country_id = $country_id;
         $business->city_id = $city_id;
         $business->phone = $phone;
@@ -949,7 +957,7 @@ class ApiController extends ApiBaseController
         $business->lat = $lat;
         $business->lng = $lng;
         $business->price = $price;
-        $business->description = $description;
+        $business->{"description".$this->lang} = $description;
         $business->category_id = $category_id;
         $business->admin_id = $this->logged_user['id'];
 
@@ -977,7 +985,7 @@ class ApiController extends ApiBaseController
         if (!empty($interests)) {
             $interests = explode(',', $interests);
             foreach ($interests as $interest) {
-                $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
+                $temp_interest = Interest::find()->where('name'.$this->lang.' = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
@@ -1023,6 +1031,7 @@ class ApiController extends ApiBaseController
      * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1041,11 +1050,11 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($name)) {
-            $business->name = $name;
+            $business->{"name".$this->lang} = $name;
         }
 
         if (!empty($address)) {
-            $business->address = $address;
+            $business->{"address".$this->lang} = $address;
         }
 
         if (!empty($country_id)) {
@@ -1081,7 +1090,7 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($description)) {
-            $business->description = $description;
+            $business->{"description".$this->lang} = $description;
         }
 
         if (!empty($category_id)) {
@@ -1119,7 +1128,7 @@ class ApiController extends ApiBaseController
 
             $interests = explode(',', $interests);
             foreach ($interests as $interest) {
-                $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
+                $temp_interest = Interest::find()->where('name'.$this->lang.' = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
@@ -1145,6 +1154,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1166,6 +1176,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} category_id Category's id to get businesses inside.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1188,6 +1199,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1219,6 +1231,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} interest_id the business interest_id (optional).
      * @apiParam {String} nearby the search coordinates for nearby business, value lat-lng, ex. 32.22-37.11 (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1232,13 +1245,13 @@ class ApiController extends ApiBaseController
         $andConditions[] = 'and';
 
         if (!empty($name)) {
-            $conditions[] = ['like', 'name', $name];
+            $conditions[] = ['like', 'name'.$this->lang, $name];
         }
         if (!empty($address)) {
-            $andConditions[] = ['like', 'address', $address];
+            $andConditions[] = ['like', 'address'.$this->lang, $address];
         }
         if (!empty($city)) {
-            $model = City::find()->where(['like', 'name', $city])->all();
+            $model = City::find()->where(['like', 'name'.$this->lang, $city])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $andConditions[] = ['city_id' => $search_keyword];
         }
@@ -1246,7 +1259,7 @@ class ApiController extends ApiBaseController
             $andConditions[] = ['city_id' => $city_id];
         }
         if (!empty($category)) {
-            $model = Category::find()->where(['like', 'name', $category])->all();
+            $model = Category::find()->where(['like', 'name'.$this->lang, $category])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $conditions[] = ['category_id' => $search_keyword];
         }
@@ -1254,7 +1267,7 @@ class ApiController extends ApiBaseController
             $conditions[] = ['category_id' => $category_id];
         }
         if (!empty($flag)) {
-            $model = Flag::find()->where(['like', 'name', $flag])->all();
+            $model = Flag::find()->where(['like', 'name'.$this->lang, $flag])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
@@ -1266,7 +1279,7 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
         if (!empty($interest)) {
-            $model = Interest::find()->where(['like', 'name', $interest])->all();
+            $model = Interest::find()->where(['like', 'name'.$this->lang, $interest])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
@@ -1290,6 +1303,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} type Search by (recently_added, recently_viewed).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1331,6 +1345,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} business_id business's id to get it's details.
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1511,6 +1526,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1706,6 +1722,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1804,6 +1821,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -1832,6 +1850,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} country_id Country's id to get images related to businesses inside.
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -2089,6 +2108,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Sponsors
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -2104,8 +2124,8 @@ class ApiController extends ApiBaseController
         $sponsors = [];
         foreach ($model as $key => $sponsor) {
             $temp['id'] = $sponsor['id'];
-            $temp['name'] = $sponsor['name'];
-            $temp['description'] = $sponsor['description'];
+            $temp['name'] = $sponsor['name'.$this->lang];
+            $temp['description'] = $sponsor['description'.$this->lang];
             $temp['main_image'] = Url::base(true) . '/' . $sponsor['main_image'];
             $temp['link'] = $sponsor['link'];
             $sponsors[] = $temp;

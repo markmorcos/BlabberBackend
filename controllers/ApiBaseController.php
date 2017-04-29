@@ -24,6 +24,7 @@ class ApiBaseController extends Controller
 {
     public $output = ['status' => 0, 'errors' => null];
     public $logged_user = ['id' => ''];
+    public $lang = '';
     public $pagination = [
         'page_no' => null,
         'no_per_page' => 20,
@@ -56,6 +57,10 @@ class ApiBaseController extends Controller
 
         if (!empty($params['page'])) {
             $this->pagination['page_no'] = intval($params['page']);
+        }
+
+        if (!empty($params['lang']) && $params['lang'] === 'Ar') {
+            $this->lang = $params['lang'];
         }
 
         return parent::runAction($id, $params);
@@ -243,8 +248,8 @@ class ApiBaseController extends Controller
         $categories = [];
         foreach ($model as $key => $category) {
             $temp['id'] = $category['id'];
-            $temp['name'] = $category['name'];
-            $temp['description'] = $category['description'];
+            $temp['name'] = $category['name'.$this->lang];
+            $temp['description'] = $category['description'.$this->lang];
             $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
             $temp['icon'] = Url::base(true) . '/' . $category['icon'];
             $temp['badge'] = Url::base(true) . '/' . $category['badge'];
@@ -298,12 +303,12 @@ class ApiBaseController extends Controller
     protected function _getBusinessesDataObject($model)
     {
         $business['id'] = $model['id'];
-        $business['name'] = $model['name'];
-        $business['address'] = $model['address'];
+        $business['name'] = $model['name'.$this->lang];
+        $business['address'] = $model['address'.$this->lang];
         $business['country_id'] = $model['country_id'];
-        $business['country'] = $model['country']->name;
+        $business['country'] = $model['country']['name'.$this->lang];
         $business['city_id'] = $model['city_id'];
-        $business['city'] = $model['city']->name;
+        $business['city'] = $model['city']['name'.$this->lang];
         $business['phone'] = $model['phone'];
         $business['open_from'] = $model['open_from'];
         $business['open_to'] = $model['open_to'];
@@ -314,7 +319,7 @@ class ApiBaseController extends Controller
         $business['price'] = $model['price'];
         $business['website'] = $model['website'];
         $business['fb_page'] = $model['fb_page'];
-        $business['description'] = $model['description'];
+        $business['description'] = $model['description'.$this->lang];
         $business['featured'] = $model['featured'];
         $business['verified'] = $model['verified'];
         $business['show_in_home'] = $model['show_in_home'];
@@ -382,10 +387,10 @@ class ApiBaseController extends Controller
             $temp['rating'] = $checkin['rating'];
             $temp['user_id'] = $checkin['user_id'];
             $temp['user_name'] = $checkin->user->name;
-            $temp['user_photo'] = $this->_getUserPhotoUrl($checkin->user->profile_photo);
+            $temp['user_photo'] = $this->_getUserPhotoUrl($checkin->user['profile_photo']);
             $temp['business_id'] = $checkin['business_id'];
-            $temp['business_name'] = $checkin->business->name;
-            $temp['business_photo'] = $this->_getUserPhotoUrl($checkin->business->main_image);
+            $temp['business_name'] = $checkin->business['name'.$this->lang];
+            $temp['business_photo'] = $this->_getUserPhotoUrl($checkin->business['main_image']);
             $temp['created'] = $checkin['created'];
             $temp['updated'] = $checkin['updated'];
 
@@ -420,11 +425,11 @@ class ApiBaseController extends Controller
             $temp['text'] = $review['text'];
             $temp['rating'] = $review['rating'];
             $temp['user_id'] = $review['user_id'];
-            $temp['user_name'] = $review->user->name;
-            $temp['user_photo'] = $this->_getUserPhotoUrl($review->user->profile_photo);
+            $temp['user_name'] = $review->user['name'];
+            $temp['user_photo'] = $this->_getUserPhotoUrl($review->user['profile_photo']);
             $temp['business_id'] = $review['business_id'];
-            $temp['business_name'] = $review->business->name;
-            $temp['business_photo'] = $this->_getUserPhotoUrl($review->business->main_image);
+            $temp['business_name'] = $review->business['name'.$this->lang];
+            $temp['business_photo'] = $this->_getUserPhotoUrl($review->business['main_image']);
             $temp['created'] = $review['created'];
             $temp['updated'] = $review['updated'];
             $reviews[] = $temp;
@@ -514,8 +519,8 @@ class ApiBaseController extends Controller
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
             $temp['user_id'] = $value['user_id'];
-            $temp['user_name'] = $value->user->name;
-            $temp['user_photo'] = $this->_getUserPhotoUrl($value->user->profile_photo);
+            $temp['user_name'] = $value->user['name'];
+            $temp['user_photo'] = $this->_getUserPhotoUrl($value->user['profile_photo']);
 
             if ($value['object_type'] === 'Business') {
                 $business = Business::findOne($value['object_id']);
@@ -524,7 +529,7 @@ class ApiBaseController extends Controller
                 }
 
                 $temp['business_id'] = $business['id'];
-                $temp['business_name'] = $business['name'];
+                $temp['business_name'] = $business['name'.$this->lang];
                 $temp['business_photo'] = $this->_getUserPhotoUrl($business['main_image']);
             }
 
