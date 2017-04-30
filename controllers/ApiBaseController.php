@@ -183,41 +183,42 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _getUserData($user)
+    protected function _getUserData($model)
     {
-        if (empty($user)) {
+        if (empty($model)) {
             return null;
         }
 
-        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user['id'], $user->id);
-        $last_received_friend_request = $this->_getLastFriendshipRequest($user->id, $this->logged_user['id']);
+        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user['id'], $model->id);
+        $last_received_friend_request = $this->_getLastFriendshipRequest($model->id, $this->logged_user['id']);
 
-        if ($user->private === 1 && 
+        $user['id'] = $model->id;
+        $user['name'] = $model->name;
+        $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
+        $user['private'] = $model->private;
+        $user['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
+        $user['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+
+        if (!($model->private === 1 && 
             ($last_sent_friend_request === null || $last_sent_friend_request->status !== '1') && 
-            ($last_received_friend_request === null || $last_received_friend_request->status !== '1') ) {
-
-            $user_data['id'] = $user->id;
-            $user_data['name'] = $user->name;
-            $user_data['private'] = $user->private;
-
-            $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
-            $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
-        } else {
-            $user_data['id'] = $user->id;
-            $user_data['name'] = $user->name;
-            $user_data['email'] = $user->email;
-            $user_data['username'] = $user->username;
-            $user_data['type'] = $user->role;
-            $user_data['mobile'] = $user->mobile;
-            $user_data['profile_photo'] = $this->_getUserPhotoUrl($user->profile_photo);
-            $user_data['interests'] = $user->interestsList;
-            $user_data['private'] = $user->private;
-
-            $user_data['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
-            $user_data['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+            ($last_received_friend_request === null || $last_received_friend_request->status !== '1'))) {
+            $user['email'] = $model->email;
+            $user['username'] = $model->username;
+            $user['type'] = $model->role;
+            $user['mobile'] = $model->mobile;
+            $user['interests'] = $model->interestsList;
         }
 
-        return $user_data;
+        return $user;
+    }
+
+    protected function _getUserMinimalData($model)
+    {
+        $user['id'] = $model->id;
+        $user['name'] = $model->name;
+        $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
+
+        return $user;
     }
 
     protected function _getUserPhotoUrl($link)
@@ -294,13 +295,13 @@ class ApiBaseController extends Controller
 
         $businesses = [];
         foreach ($model as $key => $business) {
-            $businesses[] = $this->_getBusinessesDataObject($business);
+            $businesses[] = $this->_getBusinessesData($business);
         }
 
         return $businesses;
     }
 
-    protected function _getBusinessesDataObject($model)
+    protected function _getBusinessesData($model)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -345,6 +346,17 @@ class ApiBaseController extends Controller
         return $business;
     }
 
+    protected function _getBusinessesMinimalDataObject($model)
+    {
+        $business['id'] = $model['id'];
+        $business['name'] = $model['name'.$this->lang];
+        $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
+        $business['rating'] = $model['rating'];
+        $business['no_of_reviews'] = count($model['reviews']);
+
+        return $business;
+    }
+
     protected function _isSavedBusiness($user_id, $business_id)
     {
         $model = SavedBusiness::find()
@@ -385,14 +397,11 @@ class ApiBaseController extends Controller
             $temp['id'] = $checkin['id'];
             $temp['text'] = $checkin['text'];
             $temp['rating'] = $checkin['rating'];
-            $temp['user_id'] = $checkin['user_id'];
-            $temp['user_name'] = $checkin->user['name'];
-            $temp['user_photo'] = $this->_getUserPhotoUrl($checkin->user['profile_photo']);
-            $temp['business_id'] = $checkin['business_id'];
-            $temp['business_name'] = $checkin->business['name'.$this->lang];
-            $temp['business_photo'] = $this->_getUserPhotoUrl($checkin->business['main_image']);
             $temp['created'] = $checkin['created'];
             $temp['updated'] = $checkin['updated'];
+
+            $temp['user'] = $this->_getUserMinimalData($checkin->user);
+            $temp['business'] = $this->_getBusinessesMinimalDataObject($checkin->business);
 
             $checkins[] = $temp;
         }
@@ -424,14 +433,12 @@ class ApiBaseController extends Controller
             $temp['id'] = $review['id'];
             $temp['text'] = $review['text'];
             $temp['rating'] = $review['rating'];
-            $temp['user_id'] = $review['user_id'];
-            $temp['user_name'] = $review->user['name'];
-            $temp['user_photo'] = $this->_getUserPhotoUrl($review->user['profile_photo']);
-            $temp['business_id'] = $review['business_id'];
-            $temp['business_name'] = $review->business['name'.$this->lang];
-            $temp['business_photo'] = $this->_getUserPhotoUrl($review->business['main_image']);
             $temp['created'] = $review['created'];
             $temp['updated'] = $review['updated'];
+
+            $temp['user'] = $this->_getUserMinimalData($review->user);
+            $temp['business'] = $this->_getBusinessesMinimalDataObject($review->business);
+
             $reviews[] = $temp;
         }
 
@@ -448,22 +455,21 @@ class ApiBaseController extends Controller
 
         $comments = [];
         foreach ($model as $key => $comment) {
-            $business_details = [];
+            $temp['id'] = $comment['id'];
+            $temp['text'] = $comment['text'];
+            $temp['object_id'] = $comment['object_id'];
+            $temp['object_type'] = $comment['object_type'];
+            $temp['created'] = $comment['created'];
+            $temp['updated'] = $comment['updated'];
+
+            $temp['user'] = $this->_getUserMinimalData($comment->user);
+
             if (!empty($comment->business_identity)) {
                 $model = Business::findOne($comment->business_identity);
                 if (!empty($model)) {
-                    $business_details = $this->_getBusinessesDataObject($model);
+                    $temp['business_data'] = $this->_getBusinessesMinimalDataObject($model);
                 }
             }
-
-            $temp['id'] = $comment['id'];
-            $temp['text'] = $comment['text'];
-            $temp['user_id'] = $comment['user_id'];
-            $temp['object_id'] = $comment['object_id'];
-            $temp['object_type'] = $comment['object_type'];
-            $temp['business_data'] = $business_details;
-            $temp['created'] = $comment['created'];
-            $temp['updated'] = $comment['updated'];
 
             $comments[] = $temp;
         }
@@ -518,9 +524,8 @@ class ApiBaseController extends Controller
             $temp['caption'] = $value['caption'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
-            $temp['user_id'] = $value['user_id'];
-            $temp['user_name'] = $value->user['name'];
-            $temp['user_photo'] = $this->_getUserPhotoUrl($value->user['profile_photo']);
+
+            $temp['user'] = $this->_getUserMinimalData($value->user);
 
             if ($value['object_type'] === 'Business') {
                 $business = Business::findOne($value['object_id']);
@@ -528,9 +533,7 @@ class ApiBaseController extends Controller
                     continue;
                 }
 
-                $temp['business_id'] = $business['id'];
-                $temp['business_name'] = $business['name'.$this->lang];
-                $temp['business_photo'] = $this->_getUserPhotoUrl($business['main_image']);
+                $temp['business'] = $this->_getBusinessesMinimalDataObject($business);
             }
 
             $media[] = $temp;

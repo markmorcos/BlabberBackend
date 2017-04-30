@@ -1331,7 +1331,7 @@ class ApiController extends ApiBaseController
                     continue;
                 }
                 $ids_list[] = $business_view->business_id;
-                $businesses[] = $this->_getBusinessesDataObject($business_view->business);
+                $businesses[] = $this->_getBusinessesData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
         } else {
@@ -1368,7 +1368,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $result);
         }
 
-        $this->output['business_data'] = $this->_getBusinessesDataObject($model);
+        $this->output['business_data'] = $this->_getBusinessesData($model);
     }
 
     /**
