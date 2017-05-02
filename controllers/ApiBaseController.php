@@ -295,13 +295,13 @@ class ApiBaseController extends Controller
 
         $businesses = [];
         foreach ($model as $key => $business) {
-            $businesses[] = $this->_getBusinessesData($business);
+            $businesses[] = $this->_getBusinessData($business);
         }
 
         return $businesses;
     }
 
-    protected function _getBusinessesData($model)
+    protected function _getBusinessData($model)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -346,7 +346,7 @@ class ApiBaseController extends Controller
         return $business;
     }
 
-    protected function _getBusinessesMinimalDataObject($model)
+    protected function _getBusinessMinimalData($model)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -401,7 +401,7 @@ class ApiBaseController extends Controller
             $temp['updated'] = $checkin['updated'];
 
             $temp['user'] = $this->_getUserMinimalData($checkin->user);
-            $temp['business'] = $this->_getBusinessesMinimalDataObject($checkin->business);
+            $temp['business'] = $this->_getBusinessMinimalData($checkin->business);
 
             $checkins[] = $temp;
         }
@@ -437,7 +437,7 @@ class ApiBaseController extends Controller
             $temp['updated'] = $review['updated'];
 
             $temp['user'] = $this->_getUserMinimalData($review->user);
-            $temp['business'] = $this->_getBusinessesMinimalDataObject($review->business);
+            $temp['business'] = $this->_getBusinessMinimalData($review->business);
 
             $reviews[] = $temp;
         }
@@ -467,7 +467,7 @@ class ApiBaseController extends Controller
             if (!empty($comment->business_identity)) {
                 $model = Business::findOne($comment->business_identity);
                 if (!empty($model)) {
-                    $temp['business_data'] = $this->_getBusinessesMinimalDataObject($model);
+                    $temp['business_data'] = $this->_getBusinessMinimalData($model);
                 }
             }
 
@@ -533,7 +533,7 @@ class ApiBaseController extends Controller
                     continue;
                 }
 
-                $temp['business'] = $this->_getBusinessesMinimalDataObject($business);
+                $temp['business'] = $this->_getBusinessMinimalData($business);
             }
 
             $media[] = $temp;
