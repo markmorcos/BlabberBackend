@@ -78,10 +78,10 @@ class AdminController extends Controller
                     $model->$image_name = $file_path;
 
                     if(!$model->save()){
-                        die($this->_getErrors($model)); //TODO: change this one to use output
+                        echo $this->_getErrors($model);
                     }
                 }else{
-                    die($this->_getErrors($media)); //TODO: change this one to use output
+                    echo $this->_getErrors($media);
                 }
             }
         }

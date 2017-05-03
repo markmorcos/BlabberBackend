@@ -34,7 +34,6 @@ class ApiBaseController extends Controller
 
     public function beforeAction($action)
     {
-        // TODO check if this needed on live server
         $this->enableCsrfValidation = false;
 
         $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',

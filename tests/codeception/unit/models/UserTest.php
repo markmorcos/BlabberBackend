@@ -12,6 +12,4 @@ class UserTest extends TestCase
         // uncomment the following to load fixtures for user table
         //$this->loadFixtures(['user']);
     }
-
-    // TODO add test methods here
 }
