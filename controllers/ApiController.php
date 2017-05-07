@@ -228,7 +228,7 @@ class ApiController extends ApiBaseController
             ->setTextBody('your password changed to: ' . $new_password)
             ->send();
         if ($result === null) {
-            throw new HttpException(200, 'Password changed but errors while sending email: ' . $mail->getError());
+            throw new HttpException(200, 'Password changed but errors while sending email');
         }
     }
 
@@ -920,8 +920,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} country_id business country id.
      * @apiParam {String} city_id business city id.
      * @apiParam {String} phone business phone.
-     * @apiParam {String} open_from business openning hour.
-     * @apiParam {String} open_to business closing hour.
+     * @apiParam {String} operation_hours business operation hour.
      * @apiParam {String} lat business latitude .
      * @apiParam {String} lng business longitude .
      * @apiParam {String} price average business price.
@@ -938,7 +937,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $open_from, $open_to, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -952,8 +951,7 @@ class ApiController extends ApiBaseController
         $business->country_id = $country_id;
         $business->city_id = $city_id;
         $business->phone = $phone;
-        $business->open_from = $open_from;
-        $business->open_to = $open_to;
+        $business->operation_hours = $operation_hours;
         $business->lat = $lat;
         $business->lng = $lng;
         $business->price = $price;
@@ -1019,8 +1017,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} country_id business country id (optional).
      * @apiParam {String} city_id business city id (optional).
      * @apiParam {String} phone business phone (optional).
-     * @apiParam {String} open_from business openning hour (optional).
-     * @apiParam {String} open_to business closing hour (optional).
+     * @apiParam {String} operation_hours business operation hour.
      * @apiParam {String} lat business latitude  (optional).
      * @apiParam {String} lng business longitude  (optional).
      * @apiParam {String} price average business price (optional).
@@ -1036,7 +1033,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $open_from = null, $open_to = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $business = Business::find()
             ->where(['id' => $business_id])
@@ -1069,12 +1066,8 @@ class ApiController extends ApiBaseController
             $business->phone = $phone;
         }
 
-        if (!empty($open_from)) {
-            $business->open_from = $open_from;
-        }
-
-        if (!empty($open_to)) {
-            $business->open_to = $open_to;
+        if (!empty($operation_hours)) {
+            $business->operation_hours = $operation_hours;
         }
 
         if (!empty($lat)) {

@@ -19,7 +19,7 @@ class BusinessSearch extends Business
     {
         return [
             [['id', 'country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
-            [['name', 'nameAr', 'address', 'addressAr', 'phone', 'open_from', 'open_to', 'lat', 'lng', 'main_image', 'rating', 'price', 'website', 'fb_page', 'description', 'descriptionAr', 'featured', 'verified', 'show_in_home', 'created', 'updated'], 'safe'],
+            [['name', 'nameAr', 'address', 'addressAr', 'phone', 'operation_hours', 'lat', 'lng', 'main_image', 'rating', 'price', 'website', 'fb_page', 'description', 'descriptionAr', 'featured', 'verified', 'show_in_home', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -73,8 +73,7 @@ class BusinessSearch extends Business
             ->andFilterWhere(['like', 'address', $this->address])
             ->andFilterWhere(['like', 'addressAr', $this->addressAr])
             ->andFilterWhere(['like', 'phone', $this->phone])
-            ->andFilterWhere(['like', 'open_from', $this->open_from])
-            ->andFilterWhere(['like', 'open_to', $this->open_to])
+            ->andFilterWhere(['like', 'operation_hours', $this->operation_hours])
             ->andFilterWhere(['like', 'lat', $this->lat])
             ->andFilterWhere(['like', 'lng', $this->lng])
             ->andFilterWhere(['like', 'main_image', $this->main_image])

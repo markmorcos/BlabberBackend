@@ -2,7 +2,6 @@
 
 namespace app\models;
 
-use Yii;
 use yii\helpers\Url;
 
 /**
@@ -16,8 +15,7 @@ use yii\helpers\Url;
  * @property integer $country_id
  * @property integer $city_id
  * @property string $phone
- * @property string $open_from
- * @property string $open_to
+ * @property string $operation_hours
  * @property string $lat
  * @property string $lng
  * @property string $main_image
@@ -56,10 +54,9 @@ class Business extends \yii\db\ActiveRecord
             [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
+            [['name', 'nameAr', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
             [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
             [['phone'], 'string', 'max' => 20],
-            [['open_from', 'open_to'], 'string', 'max' => 10],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
         ];
     }
@@ -78,8 +75,7 @@ class Business extends \yii\db\ActiveRecord
             'country_id' => 'Country',
             'city_id' => 'City',
             'phone' => 'Phone',
-            'open_from' => 'Open From',
-            'open_to' => 'Open To',
+            'operation_hours' => 'Operation Hours',
             'lat' => 'Lat',
             'lng' => 'Lng',
             'main_image' => 'Main Image',

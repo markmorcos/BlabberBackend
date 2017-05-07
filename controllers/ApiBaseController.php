@@ -310,7 +310,7 @@ class ApiBaseController extends Controller
         $business['city_id'] = $model['city_id'];
         $business['city'] = $model['city']['name'.$this->lang];
         $business['phone'] = $model['phone'];
-        $business['open_from'] = $model['open_from'];
+        $business['operation_hours'] = $model['operation_hours'];
         $business['open_to'] = $model['open_to'];
         $business['lat'] = $model['lat'];
         $business['lng'] = $model['lng'];
@@ -571,7 +571,7 @@ class ApiBaseController extends Controller
                 $model->$image_name = $file_path;
 
                 if (!$model->save()) {
-                    throw new HttpException(200, $this->_getErrors($user));
+                    throw new HttpException(200, $this->_getErrors($model));
                 }
             }
         }

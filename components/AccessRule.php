@@ -2,7 +2,6 @@
  
 namespace app\components;
  
-use app\models\User;
 class AccessRule extends \yii\filters\AccessRule {
  
     /**

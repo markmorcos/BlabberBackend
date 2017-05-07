@@ -3,7 +3,6 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\DetailView;
-use yii\widgets\ActiveForm;
 use yii\widgets\Pjax;
 
 /* @var $this yii\web\View */
@@ -132,10 +131,7 @@ span.interest {
                 'value' =>  ($model->city_id!=null)?Html::a($model->city->name, ['city/view', 'id' => $model->city_id]):null
             ), 
             'phone',
-            array(
-                'label' => 'Opening Time',
-                'value' =>  'From: '.$model->open_from.' - To: '.$model->open_to
-            ), 
+            'operation_hours',
             'rating',
             'price',
             'website',

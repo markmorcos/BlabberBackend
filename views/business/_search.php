@@ -31,9 +31,7 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'phone') ?>
 
-    <?php // echo $form->field($model, 'open_from') ?>
-
-    <?php // echo $form->field($model, 'open_to') ?>
+    <?php // echo $form->field($model, 'operation_hours') ?>
 
     <?php // echo $form->field($model, 'lat') ?>
 

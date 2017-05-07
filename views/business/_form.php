@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use kartik\time\TimePicker;
 use faryshta\widgets\JqueryTagsInput;
 
 /* @var $this yii\web\View */
@@ -28,13 +27,7 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
 
-    <label class="control-label">Opening Time</label>
-    <div style="clear: both; height: 44px;">
-        <p style="float: left; line-height: 34px; margin: 0 10px 0 0;">From:</p>
-        <?= TimePicker::widget(['model' => $model, 'attribute' => 'open_from', 'containerOptions' => ['style' => 'width: 30%; float: left;']]) ?>
-        <p style="float: left; line-height: 34px; margin: 0 10px 0 20px;">To:</p>
-        <?= TimePicker::widget(['model' => $model, 'attribute' => 'open_to', 'containerOptions' => ['style' => 'width: 30%; float: left;']]) ?>
-    </div>
+    <?= $form->field($model, 'operation_hours')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>
 
