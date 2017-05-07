@@ -54,9 +54,8 @@ class Business extends \yii\db\ActiveRecord
             [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
+            [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
             [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
-            [['phone'], 'string', 'max' => 20],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
         ];
     }
