@@ -6,7 +6,6 @@ use Yii;
 use app\models\Report;
 use app\models\ReportSearch;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * ReportController implements the CRUD actions for Report model.

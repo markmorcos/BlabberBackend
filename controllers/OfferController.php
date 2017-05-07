@@ -9,9 +9,7 @@ use app\models\Business;
 use app\models\Interest;
 use app\models\User;
 use app\models\UserInterest;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 

@@ -15,7 +15,6 @@ use app\models\BusinessInterest;
 use app\models\Flag;
 use app\models\BusinessFlag;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
 

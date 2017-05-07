@@ -5,9 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Sponsor;
 use app\models\SponsorSearch;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * SponsorController implements the CRUD actions for Sponsor model.

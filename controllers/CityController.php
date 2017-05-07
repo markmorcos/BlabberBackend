@@ -7,7 +7,6 @@ use app\models\City;
 use app\models\CitySearch;
 use app\models\Country;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 
 /**

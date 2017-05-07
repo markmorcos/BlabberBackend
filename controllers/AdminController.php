@@ -6,12 +6,9 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
-use app\models\LoginForm;
-use app\models\ContactForm;
 use app\components\AccessRule;
 use app\models\Media;
 use yii\web\UploadedFile;
-use yii\helpers\Url;
 
 class AdminController extends Controller
 {

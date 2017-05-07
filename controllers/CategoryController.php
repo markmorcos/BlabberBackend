@@ -6,7 +6,6 @@ use Yii;
 use app\models\Category;
 use app\models\CategorySearch;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 
 /**

@@ -6,7 +6,6 @@ use Yii;
 use app\models\Flag;
 use app\models\FlagSearch;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * FlagController implements the CRUD actions for Flag model.

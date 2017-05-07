@@ -5,9 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Media;
 use app\models\MediaSearch;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * MediaController implements the CRUD actions for Media model.

@@ -6,7 +6,6 @@ use Yii;
 use app\models\Interest;
 use app\models\InterestSearch;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * InterestController implements the CRUD actions for Interest model.

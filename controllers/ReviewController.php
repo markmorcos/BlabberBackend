@@ -5,9 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Review;
 use app\models\ReviewSearch;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * ReviewController implements the CRUD actions for Review model.
