@@ -311,7 +311,6 @@ class ApiBaseController extends Controller
         $business['city'] = $model['city']['name'.$this->lang];
         $business['phone'] = $model['phone'];
         $business['operation_hours'] = $model['operation_hours'];
-        $business['open_to'] = $model['open_to'];
         $business['lat'] = $model['lat'];
         $business['lng'] = $model['lng'];
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
