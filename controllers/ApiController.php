@@ -1454,14 +1454,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to checkin.
-     * @apiParam {String} text User's review about the place.
-     * @apiParam {String} rating User's rating about the place.
+     * @apiParam {String} text User's review about the place (optional).
+     * @apiParam {String} rating User's rating about the place (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} checkin_id the added checkin id
      */
-    public function actionCheckin($business_id, $text, $rating)
+    public function actionCheckin($business_id, $text = null, $rating = null)
     {
         $this->_addOutputs(['checkin_id']);
 

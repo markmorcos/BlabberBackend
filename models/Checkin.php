@@ -29,7 +29,7 @@ class Checkin extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['text', 'rating', 'user_id', 'business_id'], 'required'],
+            [['user_id', 'business_id'], 'required'],
             [['user_id', 'business_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['text'], 'string', 'max' => 1023],
