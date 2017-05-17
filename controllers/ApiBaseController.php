@@ -32,6 +32,7 @@ class ApiBaseController extends Controller
     ];
     public $adminEmail = 'admin@myblabber.com';
 
+    // TODO: remove on production
     public function behaviors()
     {
         $behaviors = parent::behaviors();
