@@ -32,6 +32,21 @@ class ApiBaseController extends Controller
     ];
     public $adminEmail = 'admin@myblabber.com';
 
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::className(),
+            'cors' => [
+                'Origin' => ['*'],
+                'Access-Control-Request-Method' => ['POST'],
+                'Access-Control-Request-Headers' => ['*'],
+                'Access-Control-Allow-Credentials' => true,
+            ],
+        ];
+        return $behaviors;
+    }
+
     public function beforeAction($action)
     {
         $this->enableCsrfValidation = false;

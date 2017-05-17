@@ -54,15 +54,6 @@ $config = [
             'enablePrettyUrl' => true,
             'baseUrl' => '/',
        ],
-        'corsFilter'  => [
-            'class' => \yii\filters\Cors::className(),
-            'cors'  => [
-                'Origin'                           => ['*'],
-                'Access-Control-Request-Method'    => ['POST'],
-                'Access-Control-Allow-Credentials' => true,
-                'Access-Control-Max-Age'           => 3600,
-            ],
-        ],
     ],
     'params' => $params,
 ];
