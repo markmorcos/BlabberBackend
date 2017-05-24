@@ -472,7 +472,7 @@ class ApiController extends ApiBaseController
         $model = new Friendship;
         $model->user_id = $this->logged_user['id'];
         $model->friend_id = $friend_id;
-        $model->status = 0;
+        $model->status = '0';
 
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
@@ -510,7 +510,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['requests']);
 
         $query = Friendship::find()
-            ->where(['user_id' => $this->logged_user['id'], 'status' => 0]);
+            ->where(['user_id' => $this->logged_user['id'], 'status' => '0']);
         $model = $this->_getModelWithPagination($query);
 
         $requests = array();
@@ -536,13 +536,13 @@ class ApiController extends ApiBaseController
     public function actionCancelFriendRequest($request_id)
     {
         $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => 0])
+            ->where(['id' => $request_id, 'status' => '0'])
             ->one();
         if (empty($request)) {
             throw new HttpException(200, "no pending request with this id");
         }
 
-        $request->status = 3;
+        $request->status = '3';
         if (!$request->save()) {
             throw new HttpException(200, $this->_getErrors($request));
         }
@@ -566,7 +566,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['requests']);
 
         $query = Friendship::find()
-            ->where(['friend_id' => $this->logged_user['id'], 'status' => 0]);
+            ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
         $model = $this->_getModelWithPagination($query);
 
         $requests = array();
@@ -593,13 +593,13 @@ class ApiController extends ApiBaseController
     {
         // accept request
         $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => 0])
+            ->where(['id' => $request_id, 'status' => '0'])
             ->one();
         if (empty($request)) {
             throw new HttpException(200, "no pending request with this id");
         }
 
-        $request->status = 1;
+        $request->status = '1';
         if (!$request->save()) {
             throw new HttpException(200, $this->_getErrors($request));
         }
@@ -608,7 +608,7 @@ class ApiController extends ApiBaseController
         $friendship_model = new Friendship;
         $friendship_model->user_id = $request->friend_id;
         $friendship_model->friend_id = $request->user_id;
-        $friendship_model->status = 1;
+        $friendship_model->status = '1';
         if (!$friendship_model->save()) {
             throw new HttpException(200, $this->_getErrors($friendship_model));
         }
@@ -640,13 +640,13 @@ class ApiController extends ApiBaseController
     public function actionRejectFriendRequest($request_id)
     {
         $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => 0])
+            ->where(['id' => $request_id, 'status' => '0'])
             ->one();
         if (empty($request)) {
             throw new HttpException(200, "no pending request with this id");
         }
 
-        $request->status = 2;
+        $request->status = '2';
         if (!$request->save()) {
             throw new HttpException(200, $this->_getErrors($request));
         }
@@ -667,18 +667,18 @@ class ApiController extends ApiBaseController
     public function actionRemoveFriend($friend_id)
     {
         $friendship1 = Friendship::find()
-            ->where(['friend_id' => $this->logged_user['id'], 'user_id' => $friend_id, 'status' => 1])
+            ->where(['friend_id' => $this->logged_user['id'], 'user_id' => $friend_id, 'status' => '1'])
             ->one();
         $friendship2 = Friendship::find()
-            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user['id'], 'status' => 1])
+            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user['id'], 'status' => '1'])
             ->one();
 
         if (!isset($friendship1) || !isset($friendship2)) {
             throw new HttpException(200, 'problem occured');
         }
 
-        $friendship1->status = 4;
-        $friendship2->status = 4;
+        $friendship1->status = '4';
+        $friendship2->status = '4';
 
         if (!$friendship1->save() || !$friendship2->save()) {
             throw new HttpException(200, $this->_getErrors($friendship1) + $this->_getErrors($friendship2));
@@ -703,7 +703,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['friends']);
 
         $query = Friendship::find()
-            ->where(['user_id' => $this->logged_user['id'], 'status' => 1]);
+            ->where(['user_id' => $this->logged_user['id'], 'status' => '1']);
         $model = $this->_getModelWithPagination($query);
 
         $friends = array();
