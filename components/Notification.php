@@ -38,7 +38,7 @@ class Notification {
             echo curl_error($ch);
         }
 
-        // var_dump($firebase_token, $title, $body, $data, $response);
+        // var_dump($firebase_token, $title, $body, $data, $response); //TODO: remove in production
         return json_decode($response, TRUE);
     }
 }
