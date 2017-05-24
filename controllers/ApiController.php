@@ -432,7 +432,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['users']);
 
         $query = User::find()
-            ->where(['like', 'name', $name])
+            ->where(['like', 'name', $name.'%', false])
             ->andWhere(['!=', 'id', $this->logged_user['id']])
             ->orderBy(['id' => SORT_DESC]);
         $model = $this->_getModelWithPagination($query);
