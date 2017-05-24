@@ -83,6 +83,11 @@ span.interest {
             $all_images .= newImage($media);
         }
 
+        $all_images .= '<br />Menus:<br />';
+        foreach ($model->menus as $media) {
+            $all_images .= newImage($media);
+        }
+
         $all_images .= '<br />Products:<br />';
         foreach ($model->products as $media) { 
             $all_images .= newImage($media);
