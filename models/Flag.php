@@ -2,13 +2,12 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "flag".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
+ * @property string $nameAr
  * @property string $icon
  * @property string $created
  * @property string $updated
@@ -29,9 +28,8 @@ class Flag extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
             [['created', 'updated'], 'safe'],
-            [['name'], 'string', 'max' => 1023],
+            [['name', 'nameAr'], 'string', 'max' => 255],
         ];
     }
 
@@ -43,6 +41,7 @@ class Flag extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'icon' => 'Icon',
             'created' => 'Created',
             'updated' => 'Updated',

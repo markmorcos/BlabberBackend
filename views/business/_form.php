@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use kartik\time\TimePicker;
 use faryshta\widgets\JqueryTagsInput;
 
 /* @var $this yii\web\View */
@@ -16,7 +15,11 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'address')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'addressAr')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'country_id')->dropDownList($countries_for_dropdown) ?>
 
@@ -24,13 +27,7 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
 
-    <label class="control-label">Opening Time</label>
-    <div style="clear: both; height: 44px;">
-        <p style="float: left; line-height: 34px; margin: 0 10px 0 0;">From:</p>
-        <?= TimePicker::widget(['model' => $model, 'attribute' => 'open_from', 'containerOptions' => ['style' => 'width: 30%; float: left;']]) ?>
-        <p style="float: left; line-height: 34px; margin: 0 10px 0 20px;">To:</p>
-        <?= TimePicker::widget(['model' => $model, 'attribute' => 'open_to', 'containerOptions' => ['style' => 'width: 30%; float: left;']]) ?>
-    </div>
+    <?= $form->field($model, 'operation_hours')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>
 
@@ -39,8 +36,10 @@ use faryshta\widgets\JqueryTagsInput;
     <?= $form->field($model, 'website')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'fb_page')->textInput(['maxlength' => true]) ?>
-    
+
     <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'descriptionAr')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'featured')->checkbox(['maxlength' => true]) ?>
 

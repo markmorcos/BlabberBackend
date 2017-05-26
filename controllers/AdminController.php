@@ -6,12 +6,9 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
-use app\models\LoginForm;
-use app\models\ContactForm;
 use app\components\AccessRule;
 use app\models\Media;
 use yii\web\UploadedFile;
-use yii\helpers\Url;
 
 class AdminController extends Controller
 {
@@ -46,6 +43,14 @@ class AdminController extends Controller
         ];
     }
 
+    public function runAction($id, $params = [])
+    {
+        // Extract the params from the request and bind them to params
+        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+        
+        return parent::runAction($id, $params);
+    }
+
     protected function uploadPhoto($model, $object_type, $media_type, $image_name){
         if( !empty($_FILES[$object_type]) && 
             !empty($_FILES[$object_type]['size']) && 
@@ -70,10 +75,10 @@ class AdminController extends Controller
                     $model->$image_name = $file_path;
 
                     if(!$model->save()){
-                        die($this->_getErrors($model)); //TODO: change this one to use output
+                        echo $this->_getErrors($model);
                     }
                 }else{
-                    die($this->_getErrors($media)); //TODO: change this one to use output
+                    echo $this->_getErrors($media);
                 }
             }
         }

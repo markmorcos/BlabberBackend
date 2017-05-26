@@ -2,16 +2,14 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "checkin".
  *
- * @property string $id
+ * @property integer $id
  * @property string $text
  * @property string $rating
- * @property string $user_id
- * @property string $business_id
+ * @property integer $user_id
+ * @property integer $business_id
  * @property string $created
  * @property string $updated
  */
@@ -31,7 +29,7 @@ class Checkin extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['text', 'rating', 'user_id', 'business_id'], 'required'],
+            [['user_id', 'business_id'], 'required'],
             [['user_id', 'business_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['text'], 'string', 'max' => 1023],

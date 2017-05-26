@@ -2,14 +2,14 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "sponsor".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
+ * @property string $nameAr
  * @property string $description
+ * @property string $descriptionAr
  * @property string $main_image
  * @property string $link
  * @property string $created
@@ -31,10 +31,10 @@ class Sponsor extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'description', 'link'], 'required'],
+            [['link'], 'required'],
             [['created', 'updated'], 'safe'],
-            [['name', 'main_image'], 'string', 'max' => 255],
-            [['description', 'link'], 'string', 'max' => 1023],
+            [['name', 'nameAr', 'main_image'], 'string', 'max' => 255],
+            [['description', 'descriptionAr', 'link'], 'string', 'max' => 1023],
         ];
     }
 
@@ -46,7 +46,9 @@ class Sponsor extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'description' => 'Description',
+            'descriptionAr' => 'Description Ar',
             'main_image' => 'Main Image',
             'link' => 'Link',
             'created' => 'Created',

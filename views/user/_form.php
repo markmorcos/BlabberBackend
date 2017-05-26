@@ -17,13 +17,15 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'password_confirmation')->passwordInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'role')->dropDownList([ 'user' => 'User', 'business' => 'Business', 'admin' => 'Admin', ], ['prompt' => '']) ?>
+    <?= $form->field($model, 'role')->dropDownList([ 'user' => 'User', 'business' => 'Business', 'admin' => 'Admin']) ?>
 
     <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'mobile')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'gender')->dropDownList([ 'male' => 'Male', 'female' => 'Female', ], ['prompt' => '']) ?>
+    <?= $form->field($model, 'gender')->dropDownList([ 'male' => 'Male', 'female' => 'Female']) ?>
 
     <?= $form->field($model, 'birthdate')->widget(\yii\jui\DatePicker::classname(), [
         'dateFormat' => 'yyyy-MM-dd',

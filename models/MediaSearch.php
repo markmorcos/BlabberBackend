@@ -2,10 +2,8 @@
 
 namespace app\models;
 
-use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Media;
 
 /**
  * MediaSearch represents the model behind the search form about `app\models\Media`.
@@ -19,7 +17,7 @@ class MediaSearch extends Media
     {
         return [
             [['id', 'user_id', 'object_id'], 'integer'],
-            [['url', 'type', 'object_type', 'created', 'updated'], 'safe'],
+            [['url', 'type', 'object_type', 'caption', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -68,7 +66,8 @@ class MediaSearch extends Media
 
         $query->andFilterWhere(['like', 'url', $this->url])
             ->andFilterWhere(['like', 'type', $this->type])
-            ->andFilterWhere(['like', 'object_type', $this->object_type]);
+            ->andFilterWhere(['like', 'object_type', $this->object_type])
+            ->andFilterWhere(['like', 'caption', $this->caption]);
 
         return $dataProvider;
     }

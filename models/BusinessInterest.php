@@ -2,15 +2,14 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "business_interest".
  *
- * @property string $id
- * @property string $interest_id
- * @property string $business_id
+ * @property integer $id
+ * @property integer $business_id
+ * @property integer $interest_id
  * @property string $created
+ * @property string $updated
  */
 class BusinessInterest extends \yii\db\ActiveRecord
 {
@@ -28,9 +27,9 @@ class BusinessInterest extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['interest_id', 'business_id'], 'required'],
-            [['interest_id', 'business_id'], 'integer'],
-            [['created'], 'safe'],
+            [['business_id', 'interest_id'], 'required'],
+            [['business_id', 'interest_id'], 'integer'],
+            [['created', 'updated'], 'safe'],
         ];
     }
 
@@ -41,9 +40,10 @@ class BusinessInterest extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'interest_id' => 'Flag ID',
             'business_id' => 'Business ID',
+            'interest_id' => 'Interest ID',
             'created' => 'Created',
+            'updated' => 'Updated',
         ];
     }
 

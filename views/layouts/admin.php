@@ -28,7 +28,7 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'Blabber Administration',
+        'brandLabel' => 'Blabber',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
@@ -45,7 +45,9 @@ AppAsset::register($this);
             ['label' => 'Interests', 'url' => ['/interest/index']],
             ['label' => 'Flags', 'url' => ['/flag/index']],
             ['label' => 'Sponsors', 'url' => ['/sponsor/index']],
+            ['label' => 'Reviews', 'url' => ['/review/index']],
             ['label' => 'Reports', 'url' => ['/report/index']],
+            ['label' => 'Offers', 'url' => ['/offer/index']],
             Yii::$app->user->isGuest ? (
                 ['label' => 'Login', 'url' => ['/site/login']]
             ) : (

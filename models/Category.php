@@ -2,18 +2,18 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "category".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
+ * @property string $nameAr
  * @property string $description
+ * @property string $descriptionAr
  * @property string $main_image
  * @property string $icon
  * @property string $badge
- * @property string $parent_id
+ * @property integer $parent_id
  * @property string $created
  * @property string $updated
  */
@@ -33,11 +33,10 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'description'], 'required'],
             [['parent_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name'], 'string', 'max' => 255],
-            [['description'], 'string', 'max' => 1023],
+            [['name', 'nameAr'], 'string', 'max' => 255],
+            [['description', 'descriptionAr'], 'string', 'max' => 1023],
         ];
     }
 
@@ -49,7 +48,9 @@ class Category extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'description' => 'Description',
+            'descriptionAr' => 'Description Ar',
             'main_image' => 'Main Image',
             'icon' => 'Icon',
             'badge' => 'Badge',

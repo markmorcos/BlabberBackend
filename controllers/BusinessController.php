@@ -15,7 +15,6 @@ use app\models\BusinessInterest;
 use app\models\Flag;
 use app\models\BusinessFlag;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
 
@@ -30,13 +29,6 @@ class BusinessController extends AdminController
      */
     public function actionIndex()
     {
-        (new \yii\db\Query())
-                        ->select(['id', '( 6371 * acos( cos( radians(37) ) * cos( radians( 28.625032392 ) ) * cos( radians( 31.585693 ) - radians(-122) ) + sin( radians(37) ) * sin( radians( 28.625032392 ) ) ) ) AS distance'])
-                        ->from('business')
-                        ->having('distance < 2000')
-                        ->orderBy(['distance' => SORT_ASC])
-                        ->limit(20)
-                        ->all();
         $searchModel = new BusinessSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
@@ -48,7 +40,7 @@ class BusinessController extends AdminController
 
     /**
      * Displays a single Business model.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionView($id)
@@ -103,7 +95,7 @@ class BusinessController extends AdminController
     /**
      * Updates an existing Business model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionUpdate($id)
@@ -154,20 +146,22 @@ class BusinessController extends AdminController
     /**
      * Deletes an existing Business model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        
+        if (!Yii::$app->request->isAjax) {
+            return $this->redirect(['index']);
+        }
     }
 
     /**
      * Finds the Business model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id
+     * @param integer $id
      * @return Business the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
@@ -210,17 +204,6 @@ class BusinessController extends AdminController
             }
         }else{
             echo 'no file input';
-        }
-
-        echo 'done';
-    }
-
-    public function actionDeleteMedia()
-    {
-        $model = Media::findOne($_POST['media_id']);
-
-        if(!unlink($model->url) || !$model->delete()){
-            echo 'error';
         }
 
         echo 'done';

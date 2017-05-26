@@ -5,7 +5,7 @@ namespace app\models;
 /**
  * This is the model class for table "user".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
  * @property string $password
  * @property string $role
@@ -19,6 +19,9 @@ namespace app\models;
  * @property string $cover_photo
  * @property string $facebook_id
  * @property string $firebase_token
+ * @property integer $approved
+ * @property integer $blocked
+ * @property integer $private
  * @property string $created
  * @property string $updated
  */
@@ -44,11 +47,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['password'], 'required', 'on' => 'create'],
             [['role', 'gender'], 'string'],
             [['birthdate', 'created', 'updated'], 'safe'],
-            [['name', 'password', 'email', 'username', 'facebook_id', 'firebase_token'], 'string', 'max' => 255],
-            [['auth_key'], 'string', 'max' => 16],
+            [['approved', 'blocked', 'private'], 'boolean'],
+            [['name', 'password', 'email', 'username', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token'], 'string', 'max' => 255],
+            [['mobile'], 'string', 'max' => 20],
             [['email', 'mobile'], 'unique'],
             [['email'], 'email'],
-            [['mobile'], 'string', 'max' => 20],
             ['password_confirmation', 'compare', 'compareAttribute'=>'password', 'skipOnEmpty' => false, 'on' => ['create', 'update'], 'message'=>"Passwords don't match"],
         ];
     }
@@ -74,6 +77,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'cover_photo' => 'Cover Photo',
             'facebook_id' => 'Facebook ID',
             'firebase_token' => 'Firebase Token',
+            'approved' => 'Approved',
+            'blocked' => 'Blocked',
+            'private' => 'Private',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

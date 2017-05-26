@@ -2,10 +2,8 @@
 
 namespace app\models;
 
-use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Interest;
 
 /**
  * InterestSearch represents the model behind the search form about `app\models\Interest`.
@@ -19,7 +17,7 @@ class InterestSearch extends Interest
     {
         return [
             [['id'], 'integer'],
-            [['name', 'created', 'updated'], 'safe'],
+            [['name', 'nameAr', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -64,7 +62,8 @@ class InterestSearch extends Interest
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name]);
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'nameAr', $this->nameAr]);
 
         return $dataProvider;
     }

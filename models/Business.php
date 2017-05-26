@@ -2,20 +2,20 @@
 
 namespace app\models;
 
-use Yii;
 use yii\helpers\Url;
 
 /**
  * This is the model class for table "business".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
+ * @property string $nameAr
  * @property string $address
- * @property string $country_id
- * @property string $city_id
+ * @property string $addressAr
+ * @property integer $country_id
+ * @property integer $city_id
  * @property string $phone
- * @property string $open_from
- * @property string $open_to
+ * @property string $operation_hours
  * @property string $lat
  * @property string $lng
  * @property string $main_image
@@ -24,11 +24,12 @@ use yii\helpers\Url;
  * @property string $website
  * @property string $fb_page
  * @property string $description
+ * @property string $descriptionAr
  * @property string $featured
  * @property string $verified
  * @property string $show_in_home
- * @property string $category_id
- * @property string $admin_id
+ * @property integer $category_id
+ * @property integer $admin_id
  * @property string $created
  * @property string $updated
  */
@@ -50,13 +51,11 @@ class Business extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'address', 'lat', 'lng', 'price', 'category_id', 'admin_id'], 'required'],
+            [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
-            [['address', 'description'], 'string', 'max' => 1023],
-            [['phone'], 'string', 'max' => 20],
-            [['open_from', 'open_to'], 'string', 'max' => 10],
+            [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
+            [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
         ];
     }
@@ -69,12 +68,13 @@ class Business extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'address' => 'Address',
+            'addressAr' => 'Address Ar',
             'country_id' => 'Country',
             'city_id' => 'City',
             'phone' => 'Phone',
-            'open_from' => 'Open From',
-            'open_to' => 'Open To',
+            'operation_hours' => 'Operation Hours',
             'lat' => 'Lat',
             'lng' => 'Lng',
             'main_image' => 'Main Image',
@@ -83,6 +83,7 @@ class Business extends \yii\db\ActiveRecord
             'website' => 'Website',
             'fb_page' => 'Facebook Page',
             'description' => 'Description',
+            'descriptionAr' => 'Description Ar',
             'featured' => 'Featured',
             'verified' => 'Verified',
             'show_in_home' => 'Show In Home',

@@ -4,19 +4,19 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\SponsorSearch */
+/* @var $searchModel app\models\ReviewSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Sponsors';
+$this->title = 'Reviews';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="sponsor-index">
+<div class="review-index">
 
     <h1><?= Html::encode($this->title) ?></h1>
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a('Create Sponsor', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Create Review', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -25,10 +25,10 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'name',
-            'description',
-            'main_image',
-            'link',
+            'text',
+            'rating',
+            'user_id',
+            'business_id',
             // 'created',
             // 'updated',
 

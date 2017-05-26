@@ -14,6 +14,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'icon')->fileInput() ?>
 
     <div class="form-group">

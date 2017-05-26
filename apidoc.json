@@ -43,6 +43,7 @@
 		"EditBusiness",
 		"GetHomescreenBusinesses",
 		"GetBusinesses",
+		"GetBusinessesByOwner",
 		"SearchBusinesses",
 		"SearchBusinessesByType",
 		"GetBusinessData",
@@ -53,6 +54,7 @@
 		"DeleteCheckin",
 		"GetCheckins",
 		"ReviewBusiness",
+		"EditReview",
 		"DeleteReview",
 		"GetReviews",
 		"GetHomescreenReviews",
@@ -60,12 +62,19 @@
 		"DeleteMedia",
 		"GetMedia",
 		"GetHomescreenImages",
+		"Comment",
+		"EditComment",
+		"DeleteComment",
+		"GetComments",
+
 
 		"Sponsors",
 		"GetSponsors",
 
 		"Notifications",
-		"SendNotification",
+		"GetUnseenNotificationsCount",
+		"GetAllNotifications",
+		"MarkNotificationSeen",
 
 		"Reporting",
 		"Report"

@@ -2,14 +2,13 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "city".
  *
- * @property string $id
+ * @property integer $id
  * @property string $name
- * @property string $country_id
+ * @property string $nameAr
+ * @property integer $country_id
  * @property string $created
  * @property string $updated
  */
@@ -29,10 +28,10 @@ class City extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
+            [['country_id'], 'required'],
             [['country_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name'], 'string', 'max' => 255],
+            [['name', 'nameAr'], 'string', 'max' => 255],
         ];
     }
 
@@ -44,6 +43,7 @@ class City extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'nameAr' => 'Name Ar',
             'country_id' => 'Country',
             'created' => 'Created',
             'updated' => 'Updated',

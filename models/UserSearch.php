@@ -2,10 +2,8 @@
 
 namespace app\models;
 
-use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\User;
 
 /**
  * UserSearch represents the model behind the search form about `app\models\User`.
@@ -19,7 +17,8 @@ class UserSearch extends User
     {
         return [
             [['id'], 'integer'],
-            [['name', 'password', 'role', 'email', 'mobile', 'gender', 'birthdate', 'auth_key', 'profile_photo', 'cover_photo', 'facebook_id', 'created', 'updated'], 'safe'],
+            [['approved', 'blocked', 'private'], 'boolean'],
+            [['name', 'password', 'role', 'email', 'username', 'mobile', 'gender', 'birthdate', 'auth_key', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token', 'approved', 'blocked', 'private', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -61,6 +60,9 @@ class UserSearch extends User
         $query->andFilterWhere([
             'id' => $this->id,
             'birthdate' => $this->birthdate,
+            'approved' => $this->approved,
+            'blocked' => $this->blocked,
+            'private' => $this->private,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
@@ -69,12 +71,14 @@ class UserSearch extends User
             ->andFilterWhere(['like', 'password', $this->password])
             ->andFilterWhere(['like', 'role', $this->role])
             ->andFilterWhere(['like', 'email', $this->email])
+            ->andFilterWhere(['like', 'username', $this->username])
             ->andFilterWhere(['like', 'mobile', $this->mobile])
             ->andFilterWhere(['like', 'gender', $this->gender])
             ->andFilterWhere(['like', 'auth_key', $this->auth_key])
             ->andFilterWhere(['like', 'profile_photo', $this->profile_photo])
             ->andFilterWhere(['like', 'cover_photo', $this->cover_photo])
-            ->andFilterWhere(['like', 'facebook_id', $this->facebook_id]);
+            ->andFilterWhere(['like', 'facebook_id', $this->facebook_id])
+            ->andFilterWhere(['like', 'firebase_token', $this->firebase_token]);
 
         return $dataProvider;
     }

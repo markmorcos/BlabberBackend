@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\widgets\Pjax;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\User */
@@ -25,7 +26,9 @@ $this->params['breadcrumbs'][] = $this->title;
         ]) ?>
     </p>
 
+    <?php Pjax::begin(['id' => 'pjax_widget', 'timeout' => false]); ?>
     <?= DetailView::widget([
+        'id' => 'DetailView',
         'model' => $model,
         'attributes' => [
             'id',
@@ -33,6 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'password',
             'role',
             'email:email',
+            'username',
             'mobile',
             'gender',
             'birthdate',
@@ -44,9 +48,110 @@ $this->params['breadcrumbs'][] = $this->title;
             ), 
             // 'cover_photo',
             // 'facebook_id',
+            'firebase_token',
+            array(
+                'attribute' => 'approved',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    if($data->approved === 0){
+                        $html = "No" . "&nbsp;&nbsp;&nbsp;<button onclick='approve(".$data->id.")'>Approve</button>" . "&nbsp;&nbsp;&nbsp;<button onclick='disapprove(".$data->id.")'>Disapprove</button>";
+                    }else{
+                        $html = "Yes";
+                    }
+                    return $html;
+                },
+            ), 
+            array(
+                'attribute' => 'blocked',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    if($data->blocked === 0){
+                        $html = "No" . "&nbsp;&nbsp;&nbsp;<button onclick='block(".$data->id.")'>Block</button>";
+                    }else{
+                        $html = "Yes" . "&nbsp;&nbsp;&nbsp;<button onclick='unblock(".$data->id.")'>Unblock</button>";
+                    }
+                    return $html;
+                },
+            ), 
+            array(
+                'attribute' => 'private',
+                'format' => 'raw',
+                'value' => ($model->private === 0) ? "No" : "Yes"
+            ), 
             'created',
             'updated',
         ],
     ]) ?>
+    <?php Pjax::end(); ?>
 
+    <script type="text/javascript">
+    function approve(id){
+        $.ajax( {
+            url: 'approve',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    function disapprove(id){
+        $.ajax( {
+            url: 'disapprove',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    function block(id){
+        $.ajax( {
+            url: 'block',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    function unblock(id){
+        $.ajax( {
+            url: 'unblock',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    </script>
 </div>

@@ -30,13 +30,15 @@ $this->params['breadcrumbs'][] = $this->title;
         'attributes' => [
             'id',
             'name',
+            'nameAr',
             'description',
-            'link',
+            'descriptionAr',
             array(
                 'attribute' => 'main_image',
                 'format' => 'raw',
                 'value' =>  ($model->main_image!=null)?Html::img('@web/'.$model->main_image, ['style'=>'max-width: 300px;']):null
             ),
+            'link',
             'created',
             'updated',
         ],

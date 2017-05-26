@@ -19,6 +19,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name') ?>
 
+    <?= $form->field($model, 'nameAr') ?>
+
     <?= $form->field($model, 'created') ?>
 
     <?= $form->field($model, 'updated') ?>

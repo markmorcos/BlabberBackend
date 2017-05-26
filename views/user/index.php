@@ -29,6 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'password',
             'role',
             'email:email',
+            // 'username',
             // 'mobile',
             // 'gender',
             // 'birthdate',
@@ -36,6 +37,13 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'profile_photo',
             // 'cover_photo',
             // 'facebook_id',
+            // 'firebase_token',
+            array(
+                'attribute' => 'approved',
+                'format'=>'boolean', 
+            ),
+            // 'blocked',
+            // 'private',
             'created',
             // 'updated',
 

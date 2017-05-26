@@ -4,11 +4,11 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\SponsorSearch */
+/* @var $model app\models\ReviewSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="sponsor-search">
+<div class="review-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -17,13 +17,13 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'id') ?>
 
-    <?= $form->field($model, 'name') ?>
+    <?= $form->field($model, 'text') ?>
 
-    <?= $form->field($model, 'description') ?>
+    <?= $form->field($model, 'rating') ?>
 
-    <?= $form->field($model, 'main_image') ?>
+    <?= $form->field($model, 'user_id') ?>
 
-    <?= $form->field($model, 'link') ?>
+    <?= $form->field($model, 'business_id') ?>
 
     <?php // echo $form->field($model, 'created') ?>
 

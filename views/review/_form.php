@@ -4,21 +4,21 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\Sponsor */
+/* @var $model app\models\Review */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="sponsor-form">
+<div class="review-form">
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'text')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'main_image')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'user_id')->textInput() ?>
 
-    <?= $form->field($model, 'link')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'business_id')->textInput() ?>
 
     <?= $form->field($model, 'created')->textInput() ?>
 

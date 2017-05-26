@@ -26,12 +26,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'name',
+            'nameAr',
             // 'address',
+            // 'addressAr',
             // 'country_id',
             // 'city_id',
             // 'phone',
-            // 'open_from',
-            // 'open_to',
+            // 'operation_hours',
             // 'lat',
             // 'lng',
             // 'main_image',
@@ -40,9 +41,17 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'website',
             // 'fb_page',
             // 'description',
+            // 'descriptionAr',
             // 'featured',
             // 'verified',
             // 'show_in_home',
+            array(
+                'attribute' => 'country_id',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return ($data->country_id!=null)?Html::a($data->country->name, ['country/view', 'id' => $data->country_id]):null;
+                },
+            ), 
             array(
                 'attribute' => 'category_id',
                 'format' => 'raw',

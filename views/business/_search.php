@@ -19,21 +19,23 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name') ?>
 
+    <?= $form->field($model, 'nameAr') ?>
+
     <?= $form->field($model, 'address') ?>
+
+    <?= $form->field($model, 'addressAr') ?>
 
     <?php // echo $form->field($model, 'country_id') ?>
 
     <?php // echo $form->field($model, 'city_id') ?>
 
-    <?= $form->field($model, 'phone') ?>
+    <?php // echo $form->field($model, 'phone') ?>
 
-    <?php // echo $form->field($model, 'open_from') ?>
+    <?php // echo $form->field($model, 'operation_hours') ?>
 
-    <?php // echo $form->field($model, 'open_to') ?>
+    <?php // echo $form->field($model, 'lat') ?>
 
-    <?= $form->field($model, 'lat') ?>
-
-    <?= $form->field($model, 'lng') ?>
+    <?php // echo $form->field($model, 'lng') ?>
 
     <?php // echo $form->field($model, 'main_image') ?>
 
@@ -47,12 +49,14 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'description') ?>
 
+    <?php // echo $form->field($model, 'descriptionAr') ?>
+
     <?php // echo $form->field($model, 'featured') ?>
 
     <?php // echo $form->field($model, 'verified') ?>
 
     <?php // echo $form->field($model, 'show_in_home') ?>
-    
+
     <?php // echo $form->field($model, 'category_id') ?>
 
     <?php // echo $form->field($model, 'admin_id') ?>

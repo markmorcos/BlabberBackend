@@ -2,14 +2,12 @@
 
 namespace app\models;
 
-use Yii;
-
 /**
  * This is the model class for table "business_view".
  *
- * @property string $id
- * @property string $business_id
- * @property string $user_id
+ * @property integer $id
+ * @property integer $business_id
+ * @property integer $user_id
  * @property string $created
  */
 class BusinessView extends \yii\db\ActiveRecord

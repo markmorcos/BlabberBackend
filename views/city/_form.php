@@ -14,6 +14,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'country_id')->dropDownList($countries_for_dropdown) ?>
 
     <div class="form-group">

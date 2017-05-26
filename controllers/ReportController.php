@@ -6,7 +6,6 @@ use Yii;
 use app\models\Report;
 use app\models\ReportSearch;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * ReportController implements the CRUD actions for Report model.
@@ -86,8 +85,10 @@ class ReportController extends AdminController
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        
+        if (!Yii::$app->request->isAjax) {
+            return $this->redirect(['index']);
+        }
     }
 
     /**

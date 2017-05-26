@@ -2,10 +2,8 @@
 
 namespace app\models;
 
-use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Flag;
 
 /**
  * FlagSearch represents the model behind the search form about `app\models\Flag`.
@@ -19,7 +17,7 @@ class FlagSearch extends Flag
     {
         return [
             [['id'], 'integer'],
-            [['name', 'created', 'updated'], 'safe'],
+            [['name', 'nameAr', 'icon', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -64,7 +62,9 @@ class FlagSearch extends Flag
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name]);
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'nameAr', $this->nameAr])
+            ->andFilterWhere(['like', 'icon', $this->icon]);
 
         return $dataProvider;
     }
