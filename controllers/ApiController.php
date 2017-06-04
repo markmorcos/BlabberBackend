@@ -485,7 +485,7 @@ class ApiController extends ApiBaseController
         $body = $model->user->name . ' wants to add you as a friend';
         $data = [
             'request_id' => $model->id,
-            'friend_id' => $model->user_id,
+            'user_data' => $this->_getUserData($model->user),
             'type' => 1,
         ];
         $this->_addNotification($model->friend_id, $title, $body, $data);
@@ -618,7 +618,7 @@ class ApiController extends ApiBaseController
         $body = $request->friend->name . ' accepted your friend request';
         $data = [
             'request_id' => $request->id,
-            'friend_id' => $request->friend_id,
+            'user_data' => $this->_getUserData($request->friend),
             'type' => 2,
         ];
         $this->_addNotification($request->user_id, $title, $body, $data);
@@ -1596,7 +1596,8 @@ class ApiController extends ApiBaseController
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
                     'review_id' => $review->id,
-                    'business_id' => $review->business_id,
+                    'user_data' => $this->_getUserData($review->user),
+                    'business_data' => $this->_getBusinessData($review->business),
                     'type' => 3,
                 ];
                 $this->_addNotification($user->id, $title, $body, $data);
@@ -1669,7 +1670,8 @@ class ApiController extends ApiBaseController
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
                     'review_id' => $review->id,
-                    'business_id' => $review->business_id,
+                    'user_data' => $this->_getUserData($review->user),
+                    'business_data' => $this->_getBusinessData($review->business),
                     'type' => 3,
                 ];
                 $this->_addNotification($user->id, $title, $body, $data);
@@ -1924,6 +1926,7 @@ class ApiController extends ApiBaseController
             'comment_id' => $comment->id,
             'object_id' => $comment->object_id,
             'object_type' => $comment->object_type,
+            'user_data' => $this->_getUserData($comment->user),
             'type' => 4,
         ];
         $this->_addNotification($comment->user_id, $title, $body, $data);
@@ -1944,6 +1947,7 @@ class ApiController extends ApiBaseController
                     'comment_id' => $comment->id,
                     'object_id' => $comment->object_id,
                     'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
                     'type' => 4,
                 ];
                 $this->_addNotification($user->id, $title, $body, $data);
@@ -2007,6 +2011,7 @@ class ApiController extends ApiBaseController
             'comment_id' => $comment->id,
             'object_id' => $comment->object_id,
             'object_type' => $comment->object_type,
+            'user_data' => $this->_getUserData($comment->user),
             'type' => 4,
         ];
         $this->_addNotification($comment->user_id, $title, $body, $data);
@@ -2027,6 +2032,7 @@ class ApiController extends ApiBaseController
                     'comment_id' => $comment->id,
                     'object_id' => $comment->object_id,
                     'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
                     'type' => 4,
                 ];
                 $this->_addNotification($user->id, $title, $body, $data);
