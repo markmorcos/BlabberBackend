@@ -1954,7 +1954,7 @@ class ApiController extends ApiBaseController
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'type' => 4,
+                    'type' => 6,
                     'payload' => [
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
@@ -2020,7 +2020,7 @@ class ApiController extends ApiBaseController
         $title = 'Edit Comment';
         $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
         $data = [
-            'type' => 4,
+            'type' => 5,
             'payload' => [
                 'comment_id' => $comment->id,
                 'object_id' => $comment->object_id,
@@ -2043,7 +2043,7 @@ class ApiController extends ApiBaseController
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'type' => 4,
+                    'type' => 6,
                     'payload' => [
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
