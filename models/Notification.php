@@ -35,7 +35,7 @@ class Notification extends \yii\db\ActiveRecord
             [['created', 'updated'], 'safe'],
             [['title'], 'string', 'max' => 255],
             [['body'], 'string', 'max' => 511],
-            [['data'], 'string', 'max' => 1023],
+            [['data'], 'string', 'max' => 5110],
         ];
     }
 
