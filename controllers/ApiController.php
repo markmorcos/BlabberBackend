@@ -1847,6 +1847,26 @@ class ApiController extends ApiBaseController
     }
 
     /**
+     * @api {post} /api/get-media-by-ids Get media by specific ids
+     * @apiName GetMediaByIds
+     * @apiGroup Business
+     *
+     * @apiParam {String} ids Media's ids (ex. 3,7,8).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} media media details.
+     */
+    public function actionGetMediaByIds($ids)
+    {
+        $this->_addOutputs(['media']);
+
+        $conditions['id'] = explode(',', $ids);
+        $this->output['media'] = $this->_getMedia($conditions);
+    }
+
+    /**
      * @api {post} /api/get-homescreen-images Get images for homescreen
      * @apiName GetHomescreenImages
      * @apiGroup Business
