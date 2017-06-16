@@ -40,9 +40,9 @@ class ApiBaseController extends Controller
             'class' => \yii\filters\Cors::className(),
             'cors' => [
                 'Origin' => ['*'],
-                'Access-Control-Request-Method' => ['POST'],
+                'Access-Control-Request-Method' => ['POST', 'GET'],
                 'Access-Control-Request-Headers' => ['*'],
-                'Access-Control-Allow-Credentials' => true,
+                'Access-Control-Allow-Credentials' => false,
             ],
         ];
         return $behaviors;
