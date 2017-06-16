@@ -1947,20 +1947,22 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-        // send notification
-        $title = 'New Comment';
-        $body = $commenter_name . ' added new comment to your ' . $object_type;
-        $data = [
-            'type' => 4,
-            'payload' => [
-                'comment_id' => $comment->id,
-                'object_id' => $comment->object_id,
-                'object_type' => $comment->object_type,
-                'user_data' => $this->_getUserData($comment->user),
-            ]
-        ];
-        $this->_addNotification($comment->user_id, $title, $body, $data);
-        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
+        // send notification (if not the owner)
+        if ($object->user_id != $this->logged_user['id']) {
+            $title = 'New Comment';
+            $body = $commenter_name . ' added new comment to your ' . $object_type;
+            $data = [
+                'type' => 4,
+                'payload' => [
+                    'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
+                ]
+            ];
+            $this->_addNotification($object->user_id, $title, $body, $data);
+            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+        }
 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
@@ -2036,20 +2038,29 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-        // send notification
-        $title = 'Edit Comment';
-        $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
-        $data = [
-            'type' => 5,
-            'payload' => [
-                'comment_id' => $comment->id,
-                'object_id' => $comment->object_id,
-                'object_type' => $comment->object_type,
-                'user_data' => $this->_getUserData($comment->user),
-            ]
-        ];
-        $this->_addNotification($comment->user_id, $title, $body, $data);
-        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
+
+        if ($comment->object_type === 'review') {
+            $object = Review::findOne($comment->object_id);
+        } else if ($comment->object_type === 'media') {
+            $object = Media::findOne($comment->object_id);
+        }
+
+        // send notification (if not the owner)
+        if ($object->user_id != $this->logged_user['id']) {
+            $title = 'Edit Comment';
+            $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
+            $data = [
+                'type' => 4,
+                'payload' => [
+                    'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
+                ]
+            ];
+            $this->_addNotification($object->user_id, $title, $body, $data);
+            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+        }
 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
