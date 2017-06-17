@@ -2237,11 +2237,14 @@ class ApiController extends ApiBaseController
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
         $model = $this->_getModelWithPagination($query);
 
+        $requests = [];
         foreach ($model as $key => $request) {
             $requests[] = array('request_id' => $request->id, 'user_data' => $this->_getUserData($request->user));
         }
 
-        $notifications['newFriendRequest'] = $requests;
+        if (!empty($requests)) {
+            $notifications['newFriendRequest'] = $requests;
+        }
 
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
