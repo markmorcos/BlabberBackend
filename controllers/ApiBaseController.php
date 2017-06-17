@@ -596,10 +596,11 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _addNotification($user_id, $title, $body, $data = null)
+    protected function _addNotification($user_id, $type, $title, $body, $data = null)
     {
         $notification = new Notification;
         $notification->user_id = $user_id;
+        $notification->type = $type;
         $notification->title = $title;
         $notification->body = $body;
         $notification->data = json_encode($data);

@@ -17,7 +17,6 @@ class Notification {
                 'title' => $title,
                 'body' => $body,
                 'sound' => 'default',
-                'tag' => $data, // TODO: remove this one asap
             ],
             'data' => $data,
         ];

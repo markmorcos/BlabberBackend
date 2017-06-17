@@ -481,16 +481,16 @@ class ApiController extends ApiBaseController
         $this->output['request'] = $model->attributes;
 
         // send notification
+        $type = 'new_friend_request';
         $title = 'New Friend Request';
         $body = $model->user->name . ' wants to add you as a friend';
         $data = [
-            'type' => 1,
+            'type' => $type,
             'payload' => [
                 'request_id' => $model->id,
                 'user_data' => $this->_getUserData($model->user),
             ]
         ];
-        $this->_addNotification($model->friend_id, $title, $body, $data);
         $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
     }
 
@@ -616,16 +616,17 @@ class ApiController extends ApiBaseController
         }
 
         // send notification
+        $type = 'friend_request_accepted';
         $title = 'Friend Request Accepted';
         $body = $request->friend->name . ' accepted your friend request';
         $data = [
-            'type' => 2,
+            'type' => $type,
             'payload' => [
                 'request_id' => $request->id,
                 'user_data' => $this->_getUserData($request->friend),
             ]
         ];
-        $this->_addNotification($request->user_id, $title, $body, $data);
+        $this->_addNotification($request->user_id, $type, $title, $body, $data);
         $this->_sendNotification($request->user->firebase_token, $title, $body, $data);
     }
 
@@ -1596,17 +1597,18 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'new_review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
-                    'type' => 3,
+                    'type' => $type,
                     'payload' => [
                         'review_id' => $review->id,
                         'user_data' => $this->_getUserData($review->user),
                         'business_id' => $review->business_id,
                     ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -1672,17 +1674,18 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'new_review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
-                    'type' => 3,
+                    'type' => $type,
                     'payload' => [
                         'review_id' => $review->id,
                         'user_data' => $this->_getUserData($review->user),
                         'business_id' => $review->business_id,
                     ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -1949,10 +1952,11 @@ class ApiController extends ApiBaseController
 
         // send notification (if not the owner)
         if ($object->user_id != $this->logged_user['id']) {
+            $type = 'new_comment';
             $title = 'New Comment';
             $body = $commenter_name . ' added new comment to your ' . $object_type;
             $data = [
-                'type' => 4,
+                'type' => $type,
                 'payload' => [
                     'comment_id' => $comment->id,
                     'object_id' => $comment->object_id,
@@ -1960,7 +1964,7 @@ class ApiController extends ApiBaseController
                     'user_data' => $this->_getUserData($comment->user),
                 ]
             ];
-            $this->_addNotification($object->user_id, $title, $body, $data);
+            $this->_addNotification($object->user_id, $type, $title, $body, $data);
             $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
         }
 
@@ -1973,10 +1977,11 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'new_comment_tag';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'type' => 6,
+                    'type' => $type,
                     'payload' => [
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
@@ -1984,7 +1989,7 @@ class ApiController extends ApiBaseController
                         'user_data' => $this->_getUserData($comment->user),
                     ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -2047,10 +2052,11 @@ class ApiController extends ApiBaseController
 
         // send notification (if not the owner)
         if ($object->user_id != $this->logged_user['id']) {
+            $type = 'edit_comment';
             $title = 'Edit Comment';
             $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
             $data = [
-                'type' => 4,
+                'type' => $type,
                 'payload' => [
                     'comment_id' => $comment->id,
                     'object_id' => $comment->object_id,
@@ -2058,7 +2064,7 @@ class ApiController extends ApiBaseController
                     'user_data' => $this->_getUserData($comment->user),
                 ]
             ];
-            $this->_addNotification($object->user_id, $title, $body, $data);
+            $this->_addNotification($object->user_id, $type, $title, $body, $data);
             $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
         }
 
@@ -2071,10 +2077,11 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'new_comment_tag';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'type' => 6,
+                    'type' => $type,
                     'payload' => [
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
@@ -2082,7 +2089,7 @@ class ApiController extends ApiBaseController
                         'user_data' => $this->_getUserData($comment->user),
                     ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -2224,21 +2231,31 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
+        $notifications = [];
+
+        $query = Friendship::find()
+            ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
+        $model = $this->_getModelWithPagination($query);
+
+        foreach ($model as $key => $request) {
+            $requests[] = array('request_id' => $request->id, 'user_data' => $this->_getUserData($request->user));
+        }
+
+        $notifications['newFriendRequest'] = $requests;
+
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
             ->orderBy(['id' => SORT_DESC]);
-
         $model = $this->_getModelWithPagination($query);
 
-        $notifications = [];
         foreach ($model as $key => $notification) {
-            $temp['id'] = $notification['id'];
+            $temp['notification_id'] = $notification['id'];
             $temp['title'] = $notification['title'];
             $temp['body'] = $notification['body'];
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            $notifications[] = $temp;
+            $notifications[$notification['type']][] = $temp;
         }
 
         $this->output['notifications'] = $notifications;
