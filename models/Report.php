@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use yii\db\Exception;
 use yii\helpers\Url;
 
 /**
@@ -57,24 +58,35 @@ class Report extends \yii\db\ActiveRecord
     public function getPreview()
     {
         if( $this->object_type === 'image' ){
-            $image = Media::findOne($this->object_id);
-            $preview = '<img src="'.Url::base(true).'/'.$image['url'].'" style="max-width: 700px;" />';
+            $object = Media::findOne($this->object_id);
+            if (!empty($object)) {
+                return '<img src="' . Url::base(true) . '/' . $object['url'] . '" style="max-width: 700px;" />';
+            }
         }else if( $this->object_type === 'review' ){
-            $review = Review::findOne($this->object_id);
-            $preview = $review->text;
+            $object = Review::findOne($this->object_id);
+            if (!empty($object)) {
+                return $object->text;
+            }
+        }else if( $this->object_type === 'comment' ){
+            $object = Comment::findOne($this->object_id);
+            if (!empty($object)) {
+                return $object->text;
+            }
         }
-        
-        return $preview;
+
+        return 'not exits';
     }
 
     public function getLink()
     {
-        if( $this->object_type === 'image' ){
-            $link = "<a href='".Url::to(['media/view', 'id' => $this->object_id], true)."'>Link</a>";
-        }else if( $this->object_type === 'review' ){
-            $link = "<a href='".Url::to([$this->object_type.'/view', 'id' => $this->object_id], true)."'>Link</a>";
+        if ($this->preview === 'not exits'){
+            return '';
         }
-        
-        return $link;
+
+        if( $this->object_type === 'image' ){
+            return "<a href='".Url::to(['media/view', 'id' => $this->object_id], true)."'>Link</a>";
+        }else{
+            return "<a href='".Url::to([$this->object_type.'/view', 'id' => $this->object_id], true)."'>Link</a>";
+        }
     }
 }
