@@ -1777,17 +1777,31 @@ class ApiController extends ApiBaseController
      * @apiParam {String} type Media's type (image, video, menu or product).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
+     * @apiParam {String} rating Media's rating (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $type, $caption = null)
+    public function actionAddMedia($business_id, $type, $caption = null, $rating = null)
     {
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
 
-        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption);
+        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption, $rating);
+
+        if (!empty($rating)) {
+            $business = Business::find()
+                ->where(['id' => $business_id])
+                ->one();
+            if ($business === null) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            $business->rating = $this->_calcRating($business_id);
+            if (!$business->save()) {
+                throw new HttpException(200, $this->_getErrors($business));
+            }
+        }
     }
 
     /**

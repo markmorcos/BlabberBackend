@@ -505,8 +505,13 @@ class ApiBaseController extends Controller
         $review_rating = $reviews->sum('rating');
         $review_no = count($reviews->all());
 
-        $total_rating = $checkin_rating + $review_rating;
-        $total_no = $checkin_no + $review_no;
+        $medias = Media::find()->where(['object_type' => 'Business', 'object_id' => $business_id]);
+        $media_rating = $medias->sum('rating');
+        $media_no = count($medias->all());
+
+        $total_rating = $checkin_rating + $review_rating + $media_rating;
+        $total_no = $checkin_no + $review_no + $media_no;
+
         $total_no = ($total_no == 0) ? 1 : $total_no;
 
         return strval(round($total_rating / $total_no));
@@ -540,6 +545,7 @@ class ApiBaseController extends Controller
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
             $temp['caption'] = $value['caption'];
+            $temp['rating'] = $value['rating'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
 
@@ -560,7 +566,7 @@ class ApiBaseController extends Controller
         return $media;
     }
 
-    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null)
+    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)
     {
         $media = new Media;
         $media->file = UploadedFile::getInstance($media, 'file');
@@ -578,6 +584,10 @@ class ApiBaseController extends Controller
 
             if (!empty($caption)) {
                 $media->caption = $caption;
+            }
+
+            if (!empty($rating)) {
+                $media->rating = $rating;
             }
 
             if (!$media->save()) {

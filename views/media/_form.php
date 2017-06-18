@@ -24,6 +24,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'caption')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'created')->textInput() ?>
 
     <?= $form->field($model, 'updated')->textInput() ?>

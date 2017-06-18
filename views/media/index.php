@@ -31,6 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'object_id',
             // 'object_type',
             // 'caption',
+            // 'rating',
             // 'created',
             // 'updated',
 

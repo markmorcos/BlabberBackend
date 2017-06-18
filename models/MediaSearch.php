@@ -17,7 +17,7 @@ class MediaSearch extends Media
     {
         return [
             [['id', 'user_id', 'object_id'], 'integer'],
-            [['url', 'type', 'object_type', 'caption', 'created', 'updated'], 'safe'],
+            [['url', 'type', 'object_type', 'caption', 'rating', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -67,7 +67,8 @@ class MediaSearch extends Media
         $query->andFilterWhere(['like', 'url', $this->url])
             ->andFilterWhere(['like', 'type', $this->type])
             ->andFilterWhere(['like', 'object_type', $this->object_type])
-            ->andFilterWhere(['like', 'caption', $this->caption]);
+            ->andFilterWhere(['like', 'caption', $this->caption])
+            ->andFilterWhere(['like', 'rating', $this->rating]);
 
         return $dataProvider;
     }

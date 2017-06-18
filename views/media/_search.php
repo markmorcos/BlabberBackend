@@ -29,6 +29,8 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'caption') ?>
 
+    <?php // echo $form->field($model, 'rating') ?>
+
     <?php // echo $form->field($model, 'created') ?>
 
     <?php // echo $form->field($model, 'updated') ?>
