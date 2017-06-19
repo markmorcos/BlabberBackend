@@ -1597,7 +1597,7 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
-                $type = 'new_review_tag';
+                $type = 'review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
@@ -1674,7 +1674,7 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
-                $type = 'new_review_tag';
+                $type = 'review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
@@ -1966,7 +1966,7 @@ class ApiController extends ApiBaseController
 
         // send notification (if not the owner)
         if ($object->user_id != $this->logged_user['id']) {
-            $type = 'new_comment';
+            $type = 'comment';
             $title = 'New Comment';
             $body = $commenter_name . ' added new comment to your ' . $object_type;
             $data = [
@@ -1991,7 +1991,7 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
-                $type = 'new_comment_tag';
+                $type = 'comment';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
@@ -2066,7 +2066,7 @@ class ApiController extends ApiBaseController
 
         // send notification (if not the owner)
         if ($object->user_id != $this->logged_user['id']) {
-            $type = 'edit_comment';
+            $type = 'comment';
             $title = 'Edit Comment';
             $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
             $data = [
@@ -2091,7 +2091,7 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
-                $type = 'new_comment_tag';
+                $type = 'comment';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
@@ -2251,7 +2251,10 @@ class ApiController extends ApiBaseController
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
         $requests_model = $this->_getModelWithPagination($query);
         foreach ($requests_model as $key => $request) {
-            $notifications['newFriendRequest'] = array('request_id' => $request->id, 'user_data' => $this->_getUserData($request->user));
+            $notifications['newFriendRequest'][] = array(
+                'request_id' => $request->id,
+                'user_data' => $this->_getUserData($request->user)
+            );
         }
 
         $query = Notification::find()
