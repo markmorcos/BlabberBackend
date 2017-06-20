@@ -2245,13 +2245,18 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = [];
+        $notifications = [
+            'new_friend_request' => [],
+            'friend_request_accepted' => [],
+            'review_tag' => [],
+            'comment' => [],
+        ];
 
         $query = Friendship::find()
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
         $requests_model = $this->_getModelWithPagination($query);
         foreach ($requests_model as $key => $request) {
-            $notifications['newFriendRequest'][] = array(
+            $notifications['new_friend_request'][] = array(
                 'request_id' => $request->id,
                 'user_data' => $this->_getUserData($request->user)
             );
