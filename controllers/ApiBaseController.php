@@ -344,7 +344,11 @@ class ApiBaseController extends Controller
         $business['verified'] = $model['verified'];
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
-        $business['category'] = $model['category']->attributes;
+        if (isset($model['category'])) {
+            $business['category'] = $model['category']->attributes;
+        } else {
+            $business['category'] = null;
+        }
         $business['admin_id'] = $model['admin_id'];
         $business['flags'] = $model['flagsList'];
         $business['interests'] = $model['interestsList'];
