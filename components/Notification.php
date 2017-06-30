@@ -9,6 +9,11 @@ class Notification {
      */
     public static function sendNotification($firebase_token, $title, $body, $data = null)
     {
+        if (isset($data) && isset($data['payload'])) {
+            $data = array_merge($data, $data['payload']);
+            unset($data['payload']);
+        }
+
         $server_key = 'AAAAqGzljtM:APA91bGRz5hiS-IyHW6HPnK-yrIJRFkzqP85PzByvWlI0YYCfLF_NH94Rybgg31bDs2d0EfxzD_zYmb4fNwSH1x6HOXFY_a-solzKgn7xiSi336sUYQjrXZuCWrk29ioaHBZLL7p0LfO';
         $postData = [
             'to' => $firebase_token,
@@ -17,7 +22,6 @@ class Notification {
                 'title' => $title,
                 'body' => $body,
                 'sound' => 'default',
-                'tag' => $data, // TODO: remove this one asap
             ],
             'data' => $data,
         ];

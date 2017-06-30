@@ -40,9 +40,9 @@ class ApiBaseController extends Controller
             'class' => \yii\filters\Cors::className(),
             'cors' => [
                 'Origin' => ['*'],
-                'Access-Control-Request-Method' => ['POST'],
+                'Access-Control-Request-Method' => ['POST', 'GET'],
                 'Access-Control-Request-Headers' => ['*'],
-                'Access-Control-Allow-Credentials' => true,
+                'Access-Control-Allow-Credentials' => false,
             ],
         ];
         return $behaviors;
@@ -55,7 +55,8 @@ class ApiBaseController extends Controller
         $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
-            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-homescreen-images', 'get-comments', 'get-sponsors',
+            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images',
+            'get-comments', 'get-sponsors',
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -330,6 +331,7 @@ class ApiBaseController extends Controller
         $business['city'] = $model['city']['name'.$this->lang];
         $business['phone'] = $model['phone'];
         $business['operation_hours'] = $model['operation_hours'];
+        $business['is_open'] = $model['isOpen'];
         $business['lat'] = $model['lat'];
         $business['lng'] = $model['lng'];
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
@@ -504,8 +506,13 @@ class ApiBaseController extends Controller
         $review_rating = $reviews->sum('rating');
         $review_no = count($reviews->all());
 
-        $total_rating = $checkin_rating + $review_rating;
-        $total_no = $checkin_no + $review_no;
+        $medias = Media::find()->where(['object_type' => 'Business', 'object_id' => $business_id]);
+        $media_rating = $medias->sum('rating');
+        $media_no = count($medias->all());
+
+        $total_rating = $checkin_rating + $review_rating + $media_rating;
+        $total_no = $checkin_no + $review_no + $media_no;
+
         $total_no = ($total_no == 0) ? 1 : $total_no;
 
         return strval(round($total_rating / $total_no));
@@ -539,6 +546,7 @@ class ApiBaseController extends Controller
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
             $temp['caption'] = $value['caption'];
+            $temp['rating'] = $value['rating'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
 
@@ -559,7 +567,7 @@ class ApiBaseController extends Controller
         return $media;
     }
 
-    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null)
+    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)
     {
         $media = new Media;
         $media->file = UploadedFile::getInstance($media, 'file');
@@ -579,6 +587,10 @@ class ApiBaseController extends Controller
                 $media->caption = $caption;
             }
 
+            if (!empty($rating)) {
+                $media->rating = $rating;
+            }
+
             if (!$media->save()) {
                 throw new HttpException(200, $this->_getErrors($media));
             }
@@ -595,10 +607,11 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _addNotification($user_id, $title, $body, $data = null)
+    protected function _addNotification($user_id, $type, $title, $body, $data = null)
     {
         $notification = new Notification;
         $notification->user_id = $user_id;
+        $notification->type = $type;
         $notification->title = $title;
         $notification->body = $body;
         $notification->data = json_encode($data);

@@ -32,7 +32,7 @@ $config = [
                 'class' => 'Swift_SmtpTransport',
                 'host' => 'smtp.gmail.com',
                 'username' => 'support@myblabber.com',
-                'password' => 'C@gfb36d7P571',
+                'password' => 'obcwscxoabpxeshj',
                 'port' => '587',
                 'encryption' => 'tls',
             ],

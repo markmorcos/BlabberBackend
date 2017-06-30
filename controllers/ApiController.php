@@ -481,14 +481,16 @@ class ApiController extends ApiBaseController
         $this->output['request'] = $model->attributes;
 
         // send notification
+        $type = 'new_friend_request';
         $title = 'New Friend Request';
         $body = $model->user->name . ' wants to add you as a friend';
         $data = [
-            'request_id' => $model->id,
-            'friend_id' => $model->user_id,
-            'type' => 1,
+            'type' => $type,
+            'payload' => [
+                'request_id' => $model->id,
+                'user_data' => $this->_getUserData($model->user),
+            ]
         ];
-        $this->_addNotification($model->friend_id, $title, $body, $data);
         $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
     }
 
@@ -614,14 +616,17 @@ class ApiController extends ApiBaseController
         }
 
         // send notification
+        $type = 'friend_request_accepted';
         $title = 'Friend Request Accepted';
         $body = $request->friend->name . ' accepted your friend request';
         $data = [
-            'request_id' => $request->id,
-            'friend_id' => $request->friend_id,
-            'type' => 2,
+            'type' => $type,
+            'payload' => [
+                'request_id' => $request->id,
+                'user_data' => $this->_getUserData($request->friend),
+            ]
         ];
-        $this->_addNotification($request->user_id, $title, $body, $data);
+        $this->_addNotification($request->user_id, $type, $title, $body, $data);
         $this->_sendNotification($request->user->firebase_token, $title, $body, $data);
     }
 
@@ -1592,14 +1597,18 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
-                    'review_id' => $review->id,
-                    'business_id' => $review->business_id,
-                    'type' => 3,
+                    'type' => $type,
+                    'payload' => [
+                        'review_id' => $review->id,
+                        'user_data' => $this->_getUserData($review->user),
+                        'business_id' => $review->business_id,
+                    ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -1665,14 +1674,18 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'review_tag';
                 $title = 'New Review Tag';
                 $body = $review->user->name . ' has tagged you in review for ' . $review->business->name;
                 $data = [
-                    'review_id' => $review->id,
-                    'business_id' => $review->business_id,
-                    'type' => 3,
+                    'type' => $type,
+                    'payload' => [
+                        'review_id' => $review->id,
+                        'user_data' => $this->_getUserData($review->user),
+                        'business_id' => $review->business_id,
+                    ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -1764,17 +1777,31 @@ class ApiController extends ApiBaseController
      * @apiParam {String} type Media's type (image, video, menu or product).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
+     * @apiParam {String} rating Media's rating (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $type, $caption = null)
+    public function actionAddMedia($business_id, $type, $caption = null, $rating = null)
     {
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
 
-        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption);
+        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption, $rating);
+
+        if (!empty($rating)) {
+            $business = Business::find()
+                ->where(['id' => $business_id])
+                ->one();
+            if ($business === null) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            $business->rating = $this->_calcRating($business_id);
+            if (!$business->save()) {
+                throw new HttpException(200, $this->_getErrors($business));
+            }
+        }
     }
 
     /**
@@ -1833,6 +1860,26 @@ class ApiController extends ApiBaseController
             $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
             $conditions .= "type != 'profile_photo'";
         }
+        $this->output['media'] = $this->_getMedia($conditions);
+    }
+
+    /**
+     * @api {post} /api/get-media-by-ids Get media by specific ids
+     * @apiName GetMediaByIds
+     * @apiGroup Business
+     *
+     * @apiParam {String} ids Media's ids (ex. 3,7,8).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} media media details.
+     */
+    public function actionGetMediaByIds($ids)
+    {
+        $this->_addOutputs(['media']);
+
+        $conditions['id'] = explode(',', $ids);
         $this->output['media'] = $this->_getMedia($conditions);
     }
 
@@ -1917,17 +1964,23 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-        // send notification
-        $title = 'New Comment';
-        $body = $commenter_name . ' added new comment to your ' . $object_type;
-        $data = [
-            'comment_id' => $comment->id,
-            'object_id' => $comment->object_id,
-            'object_type' => $comment->object_type,
-            'type' => 4,
-        ];
-        $this->_addNotification($comment->user_id, $title, $body, $data);
-        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
+        // send notification (if not the owner)
+        if ($object->user_id != $this->logged_user['id']) {
+            $type = 'comment';
+            $title = 'New Comment';
+            $body = $commenter_name . ' added new comment to your ' . $object_type;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
+                ]
+            ];
+            $this->_addNotification($object->user_id, $type, $title, $body, $data);
+            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+        }
 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
@@ -1938,15 +1991,19 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'comment';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'comment_id' => $comment->id,
-                    'object_id' => $comment->object_id,
-                    'object_type' => $comment->object_type,
-                    'type' => 4,
+                    'type' => $type,
+                    'payload' => [
+                        'comment_id' => $comment->id,
+                        'object_id' => $comment->object_id,
+                        'object_type' => $comment->object_type,
+                        'user_data' => $this->_getUserData($comment->user),
+                    ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -2000,17 +2057,30 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-        // send notification
-        $title = 'Edit Comment';
-        $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
-        $data = [
-            'comment_id' => $comment->id,
-            'object_id' => $comment->object_id,
-            'object_type' => $comment->object_type,
-            'type' => 4,
-        ];
-        $this->_addNotification($comment->user_id, $title, $body, $data);
-        $this->_sendNotification($comment->user->firebase_token, $title, $body, $data);
+
+        if ($comment->object_type === 'review') {
+            $object = Review::findOne($comment->object_id);
+        } else if ($comment->object_type === 'media') {
+            $object = Media::findOne($comment->object_id);
+        }
+
+        // send notification (if not the owner)
+        if ($object->user_id != $this->logged_user['id']) {
+            $type = 'comment';
+            $title = 'Edit Comment';
+            $body = $commenter_name . ' edited comment to your ' . $comment->object_type;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
+                    'user_data' => $this->_getUserData($comment->user),
+                ]
+            ];
+            $this->_addNotification($object->user_id, $type, $title, $body, $data);
+            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+        }
 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
@@ -2021,15 +2091,19 @@ class ApiController extends ApiBaseController
                     continue;
                 }
 
+                $type = 'comment';
                 $title = 'New Comment Tag';
                 $body = $commenter_name . ' has tagged you in comment';
                 $data = [
-                    'comment_id' => $comment->id,
-                    'object_id' => $comment->object_id,
-                    'object_type' => $comment->object_type,
-                    'type' => 4,
+                    'type' => $type,
+                    'payload' => [
+                        'comment_id' => $comment->id,
+                        'object_id' => $comment->object_id,
+                        'object_type' => $comment->object_type,
+                        'user_data' => $this->_getUserData($comment->user),
+                    ]
                 ];
-                $this->_addNotification($user->id, $title, $body, $data);
+                $this->_addNotification($user->id, $type, $title, $body, $data);
                 $this->_sendNotification($user->firebase_token, $title, $body, $data);
             }
         }
@@ -2171,21 +2245,35 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
+        $notifications = [
+            'new_friend_request' => [],
+            'friend_request_accepted' => [],
+            'review_tag' => [],
+            'comment' => [],
+        ];
+
+        $query = Friendship::find()
+            ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
+        $requests_model = $this->_getModelWithPagination($query);
+        foreach ($requests_model as $key => $request) {
+            $notifications['new_friend_request'][] = array(
+                'request_id' => $request->id,
+                'user_data' => $this->_getUserData($request->user)
+            );
+        }
+
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
             ->orderBy(['id' => SORT_DESC]);
-
-        $model = $this->_getModelWithPagination($query);
-
-        $notifications = [];
-        foreach ($model as $key => $notification) {
-            $temp['id'] = $notification['id'];
+        $notifications_model = $this->_getModelWithPagination($query);
+        foreach ($notifications_model as $key => $notification) {
+            $temp['notification_id'] = $notification['id'];
             $temp['title'] = $notification['title'];
             $temp['body'] = $notification['body'];
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            $notifications[] = $temp;
+            $notifications[$notification['type']][] = $temp;
         }
 
         $this->output['notifications'] = $notifications;

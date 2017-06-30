@@ -203,4 +203,31 @@ class Business extends \yii\db\ActiveRecord
         return $this->hasMany(Review::className(), ['business_id' => 'id'])
             ->orderBy(['id' => SORT_DESC]);
     }
+
+    public function getIsOpen()
+    {
+        //TODO: add support to different days & timezones
+        $isOpen = False;
+        $operation_hours = $this->operation_hours;
+        $operation_hours_array = explode(',', $operation_hours);
+
+        foreach ($operation_hours_array as $operation_hour) {
+            if (empty($operation_hour)){
+                continue;
+            }
+
+            if (preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9]/', $operation_hour, $matches)) {
+                if (!empty($matches[0]) && count($matches[0]) == 2) {
+                    $from = new \DateTime($matches[0][0]);
+                    $to = new \DateTime($matches[0][1]);
+                    $now = new \DateTime(date('H:i'));
+
+                    return ($now >= $from && $now <= $to);
+                }
+            }
+
+        }
+
+        return $isOpen;
+    }
 }

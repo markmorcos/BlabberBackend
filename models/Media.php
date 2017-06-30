@@ -14,6 +14,7 @@ use yii\helpers\Url;
  * @property integer $object_id
  * @property string $object_type
  * @property string $caption
+ * @property string $rating
  * @property string $created
  * @property string $updated
  */
@@ -44,6 +45,7 @@ class Media extends \yii\db\ActiveRecord
             [['created', 'updated'], 'safe'],
             [['url'], 'string', 'max' => 255],
             [['caption'], 'string', 'max' => 511],
+            [['rating'], 'string', 'max' => 1],
             [['file'], 'file', 'skipOnEmpty' => false, 'extensions' => 'png, jpg, mp4, pdf'],
         ];
     }
@@ -61,6 +63,7 @@ class Media extends \yii\db\ActiveRecord
             'object_id' => 'Object ID',
             'object_type' => 'Object Type',
             'caption' => 'Caption',
+            'rating' => 'Rating',
             'preview' => 'Preview',
             'created' => 'Created',
             'updated' => 'Updated',

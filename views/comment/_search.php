@@ -4,11 +4,11 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\MediaSearch */
+/* @var $model app\models\CommentSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="media-search">
+<div class="comment-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -17,19 +17,15 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'id') ?>
 
-    <?= $form->field($model, 'url') ?>
-
-    <?= $form->field($model, 'type') ?>
+    <?= $form->field($model, 'text') ?>
 
     <?= $form->field($model, 'user_id') ?>
 
     <?= $form->field($model, 'object_id') ?>
 
-    <?php // echo $form->field($model, 'object_type') ?>
+    <?= $form->field($model, 'object_type') ?>
 
-    <?php // echo $form->field($model, 'caption') ?>
-
-    <?php // echo $form->field($model, 'rating') ?>
+    <?php // echo $form->field($model, 'business_identity') ?>
 
     <?php // echo $form->field($model, 'created') ?>
 

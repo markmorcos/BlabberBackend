@@ -45,6 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'Action',
                 'format' => 'raw',
                 'value' => function ($data) {
+                    if ($data->preview === 'not exits') return '';
                     return Html::a('Delete Item', '#', [
                         'id' => 'item_delete_btn',
                         'class' => 'btn btn-danger',

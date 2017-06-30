@@ -7,6 +7,7 @@ namespace app\models;
  *
  * @property integer $id
  * @property integer $user_id
+ * @property string $type
  * @property string $title
  * @property string $body
  * @property string $data
@@ -30,12 +31,12 @@ class Notification extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'title', 'body', 'data'], 'required'],
+            [['user_id', 'type', 'title', 'body', 'data'], 'required'],
             [['user_id', 'seen'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['title'], 'string', 'max' => 255],
+            [['type', 'title'], 'string', 'max' => 255],
             [['body'], 'string', 'max' => 511],
-            [['data'], 'string', 'max' => 1023],
+            [['data'], 'string', 'max' => 5110],
         ];
     }
 
@@ -47,6 +48,7 @@ class Notification extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
+            'type' => 'Type',
             'title' => 'Title',
             'body' => 'Body',
             'data' => 'Data',

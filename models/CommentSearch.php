@@ -2,13 +2,15 @@
 
 namespace app\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use app\models\Comment;
 
 /**
- * MediaSearch represents the model behind the search form about `app\models\Media`.
+ * CommentSearch represents the model behind the search form about `app\models\Comment`.
  */
-class MediaSearch extends Media
+class CommentSearch extends Comment
 {
     /**
      * @inheritdoc
@@ -16,8 +18,8 @@ class MediaSearch extends Media
     public function rules()
     {
         return [
-            [['id', 'user_id', 'object_id'], 'integer'],
-            [['url', 'type', 'object_type', 'caption', 'rating', 'created', 'updated'], 'safe'],
+            [['id', 'user_id', 'object_id', 'business_identity'], 'integer'],
+            [['text', 'object_type', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -39,7 +41,7 @@ class MediaSearch extends Media
      */
     public function search($params)
     {
-        $query = Media::find();
+        $query = Comment::find();
 
         // add conditions that should always apply here
 
@@ -60,15 +62,13 @@ class MediaSearch extends Media
             'id' => $this->id,
             'user_id' => $this->user_id,
             'object_id' => $this->object_id,
+            'business_identity' => $this->business_identity,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'url', $this->url])
-            ->andFilterWhere(['like', 'type', $this->type])
-            ->andFilterWhere(['like', 'object_type', $this->object_type])
-            ->andFilterWhere(['like', 'caption', $this->caption])
-            ->andFilterWhere(['like', 'rating', $this->rating]);
+        $query->andFilterWhere(['like', 'text', $this->text])
+            ->andFilterWhere(['like', 'object_type', $this->object_type]);
 
         return $dataProvider;
     }
