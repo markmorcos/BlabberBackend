@@ -367,7 +367,7 @@ class ApiController extends ApiBaseController
             $user->name = $name;
         }
 
-        if (!empty($username)) {
+        if (!empty($username) && $username !== $user->username) {
             $this->_validateUsername($username);
             $user->username = $username;
         }
