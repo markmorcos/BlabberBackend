@@ -132,7 +132,6 @@ class ApiBaseController extends Controller
     protected function _verifyUserAndSetID()
     {
         $request = Yii::$app->request;
-        $name = $request->post('name');
 
         if (empty($request->post('user_id')) || empty($request->post('auth_key'))) {
             return false;
