@@ -17,6 +17,7 @@ use app\models\BusinessFlag;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
+use yii\helpers\Json;
 
 /**
  * BusinessController implements the CRUD actions for Business model.
@@ -178,10 +179,10 @@ class BusinessController extends AdminController
     {
         if( !empty($_FILES['Media']) ){
             $media = new Media;
-            $media->file = UploadedFile::getInstance($media,'file');
+            $media->file = UploadedFile::getInstance($media,'file'.$_GET['media_type']);
             if( isset($media->file) ){
-                $media_type = $_POST['media_type'];
-                $business_id = $_POST['business_id'];
+                $media_type = $_GET['media_type'];
+                $business_id = $_GET['business_id'];
                 $file_path = 'uploads/'.$media_type.'/'.$business_id.'.'.pathinfo($media->file->name, PATHINFO_EXTENSION);
 
                 // get unique name to the file
@@ -198,15 +199,12 @@ class BusinessController extends AdminController
 
                 if($media->save()){
                     $media->file->saveAs($file_path);
-                }else{
-                    echo 'error';
+                    return Json::encode(['files' => []]);
                 }
             }
-        }else{
-            echo 'no file input';
         }
 
-        echo 'done';
+        return '';
     }
 
     private function _addInterests($interests_input, $business_id){
@@ -233,5 +231,11 @@ class BusinessController extends AdminController
             $business_flag->flag_id = $id;
             $business_flag->save();
         }
+    }
+
+    public function actionGetImages($id, $type)
+    {
+        $model = Business::find($id)->with($type)->asArray()->one();
+        return json_encode($model[$type]);
     }
 }

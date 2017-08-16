@@ -132,7 +132,6 @@ class ApiBaseController extends Controller
     protected function _verifyUserAndSetID()
     {
         $request = Yii::$app->request;
-        $name = $request->post('name');
 
         if (empty($request->post('user_id')) || empty($request->post('auth_key'))) {
             return false;
@@ -279,6 +278,19 @@ class ApiBaseController extends Controller
         return $categories;
     }
 
+    protected function _getAllCategoryTreeIds($category_id)
+    {
+        $categoryTree[] = $category_id;
+        $categories = Category::find()
+            ->where(['parent_id' => $category_id])
+            ->all();
+        foreach ($categories as $category) {
+            $categoryTree = array_merge($categoryTree, $this->_getAllCategoryTreeIds($category->id));
+        }
+
+        return $categoryTree;
+    }
+
     protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
@@ -300,8 +312,8 @@ class ApiBaseController extends Controller
             $lng = $lat_lng[1];
 
             $query
-                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance'])
-                ->having('distance < 100');
+                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
+//                ->having('distance < 100');
             $order += ['distance' => SORT_ASC];
         }
 

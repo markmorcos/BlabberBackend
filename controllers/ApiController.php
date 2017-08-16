@@ -367,7 +367,7 @@ class ApiController extends ApiBaseController
             $user->name = $name;
         }
 
-        if (!empty($username)) {
+        if (!empty($username) && $username !== $user->username) {
             $this->_validateUsername($username);
             $user->username = $username;
         }
@@ -387,7 +387,7 @@ class ApiController extends ApiBaseController
             $user->firebase_token = $firebase_token;
         }
 
-        if (isset($private)) {
+        if (isset($private) && $private !== '') {
             $user->private = $private;
         }
 
@@ -1184,7 +1184,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions['category_id'] = $category_id;
+        $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
         $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
     }
 
@@ -1243,10 +1243,12 @@ class ApiController extends ApiBaseController
         $andConditions[] = 'and';
 
         if (!empty($name)) {
-            $conditions[] = ['like', 'name'.$this->lang, $name];
+            $conditions[] = ['like', 'name', $name];
+            $conditions[] = ['like', 'nameAr', $name];
         }
         if (!empty($address)) {
-            $andConditions[] = ['like', 'address'.$this->lang, $address];
+            $andConditions[] = ['like', 'address', $address];
+            $andConditions[] = ['like', 'addressAr', $address];
         }
         if (!empty($city)) {
             $model = City::find()->where(['like', 'name'.$this->lang, $city])->all();
@@ -1265,7 +1267,13 @@ class ApiController extends ApiBaseController
             $conditions[] = ['category_id' => $category_id];
         }
         if (!empty($flag)) {
-            $model = Flag::find()->where(['like', 'name'.$this->lang, $flag])->all();
+            $flags = explode(' ', $flag);
+            $subCondition[] = 'or';
+            foreach ($flags as $flag) {
+                $subCondition[] = ['like', 'name', $flag];
+                $subCondition[] = ['like', 'nameAr', $flag];
+            }
+            $model = Flag::find()->where($subCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
@@ -1277,7 +1285,13 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
         if (!empty($interest)) {
-            $model = Interest::find()->where(['like', 'name'.$this->lang, $interest])->all();
+            $interests = explode(' ', $interest);
+            $subCondition[] = 'or';
+            foreach ($interests as $interest) {
+                $subCondition[] = ['like', 'name', $interest];
+                $subCondition[] = ['like', 'nameAr', $interest];
+            }
+            $model = Interest::find()->where($subCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
