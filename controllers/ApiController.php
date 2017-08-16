@@ -387,7 +387,7 @@ class ApiController extends ApiBaseController
             $user->firebase_token = $firebase_token;
         }
 
-        if (isset($private)) {
+        if (isset($private) && $private !== '') {
             $user->private = $private;
         }
 
