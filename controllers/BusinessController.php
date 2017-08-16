@@ -235,7 +235,7 @@ class BusinessController extends AdminController
 
     public function actionGetImages($id, $type)
     {
-        $model = Business::find($id)->with($type)->asArray()->one();
+        $model = Business::find()->where(['id' => $id])->with($type)->asArray()->one();
         return json_encode($model[$type]);
     }
 }
