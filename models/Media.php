@@ -24,6 +24,9 @@ class Media extends \yii\db\ActiveRecord
      * @var UploadedFile
      */
     public $file;
+    public $fileimage;
+    public $filemenu;
+    public $fileproduct;
 
     /**
      * @inheritdoc
