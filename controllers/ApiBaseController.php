@@ -278,6 +278,19 @@ class ApiBaseController extends Controller
         return $categories;
     }
 
+    protected function _getAllCategoryTreeIds($category_id)
+    {
+        $categoryTree[] = $category_id;
+        $categories = Category::find()
+            ->where(['parent_id' => $category_id])
+            ->all();
+        foreach ($categories as $category) {
+            $categoryTree = array_merge($categoryTree, $this->_getAllCategoryTreeIds($category->id));
+        }
+
+        return $categoryTree;
+    }
+
     protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
