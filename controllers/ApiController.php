@@ -1268,12 +1268,12 @@ class ApiController extends ApiBaseController
         }
         if (!empty($flag)) {
             $flags = explode(' ', $flag);
-            $subCondition[] = 'or';
+            $flagsSubCondition[] = 'or';
             foreach ($flags as $flag) {
-                $subCondition[] = ['like', 'name', $flag];
-                $subCondition[] = ['like', 'nameAr', $flag];
+                $flagsSubCondition[] = ['like', 'name', $flag];
+                $flagsSubCondition[] = ['like', 'nameAr', $flag];
             }
-            $model = Flag::find()->where($subCondition)->all();
+            $model = Flag::find()->where($flagsSubCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
@@ -1286,12 +1286,12 @@ class ApiController extends ApiBaseController
         }
         if (!empty($interest)) {
             $interests = explode(' ', $interest);
-            $subCondition[] = 'or';
+            $interestsSubCondition[] = 'or';
             foreach ($interests as $interest) {
-                $subCondition[] = ['like', 'name', $interest];
-                $subCondition[] = ['like', 'nameAr', $interest];
+                $interestsSubCondition[] = ['like', 'name', $interest];
+                $interestsSubCondition[] = ['like', 'nameAr', $interest];
             }
-            $model = Interest::find()->where($subCondition)->all();
+            $model = Interest::find()->where($interestsSubCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
