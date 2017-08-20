@@ -10,6 +10,7 @@ use app\models\Comment;
 use app\models\Friendship;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Reaction;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\User;
@@ -56,7 +57,7 @@ class ApiBaseController extends Controller
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
             'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images',
-            'get-comments', 'get-sponsors',
+            'get-comments', 'get-reactions', 'get-sponsors',
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -474,6 +475,9 @@ class ApiBaseController extends Controller
             $temp['user'] = $this->_getUserMinimalData($review->user);
             $temp['business'] = $this->_getBusinessMinimalData($review->business);
 
+            $temp['likes'] = count($review['likes']);
+            $temp['dislikes'] = count($review['dislikes']);
+
             $reviews[] = $temp;
         }
 
@@ -506,10 +510,45 @@ class ApiBaseController extends Controller
                 }
             }
 
+            $temp['likes'] = count($comment['likes']);
+            $temp['dislikes'] = count($comment['dislikes']);
+
             $comments[] = $temp;
         }
 
         return $comments;
+    }
+
+    protected function _getReactions($conditions)
+    {
+        $query = Reaction::find()
+            ->where($conditions)
+            ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $reactions = [];
+        foreach ($model as $key => $reaction) {
+            $temp['id'] = $reaction['id'];
+            $temp['type'] = $reaction['type'];
+            $temp['object_id'] = $reaction['object_id'];
+            $temp['object_type'] = $reaction['object_type'];
+            $temp['created'] = $reaction['created'];
+            $temp['updated'] = $reaction['updated'];
+
+            $temp['user'] = $this->_getUserMinimalData($reaction->user);
+
+            if (!empty($reaction->business_identity)) {
+                $model = Business::findOne($reaction->business_identity);
+                if (!empty($model)) {
+                    $temp['business_data'] = $this->_getBusinessMinimalData($model);
+                }
+            }
+
+            $reactions[] = $temp;
+        }
+
+        return $reactions;
     }
 
     protected function _calcRating($business_id)
@@ -576,6 +615,9 @@ class ApiBaseController extends Controller
 
                 $temp['business'] = $this->_getBusinessMinimalData($business);
             }
+
+            $temp['likes'] = count($value['likes']);
+            $temp['dislikes'] = count($value['dislikes']);
 
             $media[] = $temp;
         }

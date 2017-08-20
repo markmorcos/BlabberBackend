@@ -18,7 +18,7 @@ use yii\helpers\Url;
  * @property string $created
  * @property string $updated
  */
-class Media extends \yii\db\ActiveRecord
+class Media extends LikeableActiveRecored
 {
     /**
      * @var UploadedFile

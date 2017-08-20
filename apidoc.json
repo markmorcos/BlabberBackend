@@ -66,6 +66,9 @@
 		"EditComment",
 		"DeleteComment",
 		"GetComments",
+		"AddReaction",
+		"DeleteReaction",
+		"GetReactions",
 
 
 		"Sponsors",

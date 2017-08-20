@@ -16,6 +16,7 @@ use app\models\Friendship;
 use app\models\Interest;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Reaction;
 use app\models\Report;
 use app\models\Review;
 use app\models\SavedBusiness;
@@ -2177,6 +2178,169 @@ class ApiController extends ApiBaseController
         $conditions[] = ['object_id' => $object_id];
         $conditions[] = ['object_type' => $object_type];
         $this->output['comments'] = $this->_getComments($conditions);
+    }
+
+
+    /**
+     * @api {post} /api/add-reaction  Add reaction on review or media or comment
+     * @apiName AddReaction
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} type Reaction type (like or dislike).
+     * @apiParam {String} object_id Object's id to add reaction to.
+     * @apiParam {String} object_type Object's type to add reaction to (review or media or comment).
+     * @apiParam {String} business_identity Business's id to link the reaction (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} review_id the added review id
+     */
+    public function actionAddReaction($type, $object_id, $object_type, $business_identity = null)
+    {
+        $this->_addOutputs(['reaction_id']);
+
+        if ($object_type === 'review') {
+            $object = Review::findOne($object_id);
+        } else if ($object_type === 'media') {
+            $object = Media::findOne($object_id);
+        } else if ($object_type === 'comment') {
+            $object = Comment::findOne($object_id);
+        } else {
+            throw new HttpException(200, 'not supported type');
+        }
+
+        if (empty($object)) {
+            throw new HttpException(200, 'no item with this id');
+        }
+
+        if (!empty($business_identity)) {
+            $business = Business::findOne($business_identity);
+            if (empty($business)) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            if ($business->admin_id !== $this->logged_user['id']) {
+                throw new HttpException(200, 'you are not admin to this business');
+            }
+        }
+
+        $reaction = new Reaction;
+        $reaction->user_id = $this->logged_user['id'];
+        $reaction->object_id = $object_id;
+        $reaction->object_type = $object_type;
+        $reaction->type = $type;
+        $reaction->business_identity = $business_identity;
+
+        if (!$reaction->save()) {
+            throw new HttpException(200, $this->_getErrors($reaction));
+        }
+        $this->output['reaction_id'] = $reaction->id;
+
+//        $commenter_name = $reaction->user->name;
+//        if (!empty($business)) {
+//            $commenter_name = $business->name;
+//        }
+//
+//        // send notification (if not the owner)
+//        if ($object->user_id != $this->logged_user['id']) {
+//            $type = 'comment';
+//            $title = 'New Comment';
+//            $body = $commenter_name . ' added new comment to your ' . $object_type;
+//            $data = [
+//                'type' => $type,
+//                'payload' => [
+//                    'comment_id' => $comment->id,
+//                    'object_id' => $comment->object_id,
+//                    'object_type' => $comment->object_type,
+//                    'user_data' => $this->_getUserData($comment->user),
+//                ]
+//            ];
+//            $this->_addNotification($object->user_id, $type, $title, $body, $data);
+//            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+//        }
+//
+//        // send notifications
+//        if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
+//            $users = $matches[1];
+//            foreach ($users as $username) {
+//                $user = User::findOne(['username' => $username]);
+//                if (empty($user)) {
+//                    continue;
+//                }
+//
+//                $type = 'comment';
+//                $title = 'New Comment Tag';
+//                $body = $commenter_name . ' has tagged you in comment';
+//                $data = [
+//                    'type' => $type,
+//                    'payload' => [
+//                        'comment_id' => $comment->id,
+//                        'object_id' => $comment->object_id,
+//                        'object_type' => $comment->object_type,
+//                        'user_data' => $this->_getUserData($comment->user),
+//                    ]
+//                ];
+//                $this->_addNotification($user->id, $type, $title, $body, $data);
+//                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+//            }
+//        }
+    }
+
+    /**
+     * @api {post} /api/delete-reaction Delete Reaction
+     * @apiName DeleteReaction
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} reaction_id reaction's id to delete it.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionDeleteReaction($reaction_id)
+    {
+        $reaction = Reaction::findOne($reaction_id);
+
+        if ($reaction === null) {
+            throw new HttpException(200, 'no reaction with this id');
+        }
+
+        if ($reaction->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to delete this reaction');
+        }
+
+        if (!$reaction->delete()) {
+            throw new HttpException(200, $this->_getErrors($reaction));
+        }
+    }
+
+    /**
+     * @api {post} /api/get-reactions Get all reactions for object
+     * @apiName GetReactions
+     * @apiGroup Business
+     *
+     * @apiParam {String} object_id Object's id to get reactions related.
+     * @apiParam {String} object_type Object's type to get reactions related (review or media).
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} reactions reactions details.
+     */
+    public function actionGetReactions($object_id, $object_type)
+    {
+        $this->_addOutputs(['reactions']);
+
+        if ($object_type !== 'review' && $object_type !== 'media') {
+            throw new HttpException(200, 'not supported type');
+        }
+
+        $conditions = ['and'];
+        $conditions[] = ['object_id' => $object_id];
+        $conditions[] = ['object_type' => $object_type];
+        $this->output['reactions'] = $this->_getReactions($conditions);
     }
 
     /***************************************/

@@ -3,10 +3,10 @@
 namespace app\models;
 
 /**
- * This is the model class for table "comment".
+ * This is the model class for table "reaction".
  *
  * @property integer $id
- * @property string $text
+ * @property string $type
  * @property integer $user_id
  * @property integer $object_id
  * @property string $object_type
@@ -14,14 +14,14 @@ namespace app\models;
  * @property string $created
  * @property string $updated
  */
-class Comment extends LikeableActiveRecored
+class Reaction extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'comment';
+        return 'reaction';
     }
 
     /**
@@ -30,11 +30,10 @@ class Comment extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['text', 'user_id', 'object_id', 'object_type'], 'required'],
+            [['type', 'user_id', 'object_id', 'object_type'], 'required'],
+            [['type', 'object_type'], 'string'],
             [['user_id', 'object_id', 'business_identity'], 'integer'],
-            [['object_type'], 'string'],
             [['created', 'updated'], 'safe'],
-            [['text'], 'string', 'max' => 1023],
         ];
     }
 
@@ -45,7 +44,7 @@ class Comment extends LikeableActiveRecored
     {
         return [
             'id' => 'ID',
-            'text' => 'Text',
+            'type' => 'Type',
             'user_id' => 'User ID',
             'object_id' => 'Object ID',
             'object_type' => 'Object Type',
