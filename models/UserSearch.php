@@ -18,7 +18,7 @@ class UserSearch extends User
         return [
             [['id'], 'integer'],
             [['approved', 'blocked', 'private'], 'boolean'],
-            [['name', 'password', 'role', 'email', 'username', 'mobile', 'gender', 'birthdate', 'auth_key', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token', 'approved', 'blocked', 'private', 'created', 'updated'], 'safe'],
+            [['name', 'password', 'role', 'email', 'username', 'mobile', 'gender', 'birthdate', 'profile_photo', 'cover_photo', 'facebook_id', 'approved', 'blocked', 'private', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -74,11 +74,9 @@ class UserSearch extends User
             ->andFilterWhere(['like', 'username', $this->username])
             ->andFilterWhere(['like', 'mobile', $this->mobile])
             ->andFilterWhere(['like', 'gender', $this->gender])
-            ->andFilterWhere(['like', 'auth_key', $this->auth_key])
             ->andFilterWhere(['like', 'profile_photo', $this->profile_photo])
             ->andFilterWhere(['like', 'cover_photo', $this->cover_photo])
-            ->andFilterWhere(['like', 'facebook_id', $this->facebook_id])
-            ->andFilterWhere(['like', 'firebase_token', $this->firebase_token]);
+            ->andFilterWhere(['like', 'facebook_id', $this->facebook_id]);
 
         return $dataProvider;
     }

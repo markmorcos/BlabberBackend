@@ -140,7 +140,7 @@ class ApiBaseController extends Controller
 
         $user = User::findOne($request->post('user_id'));
 
-        if (isset($user) && $user->auth_key == $request->post('auth_key')) {
+        if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
             $this->logged_user = $user;
             return true;
         } else {
@@ -148,9 +148,10 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _login($email, $password, $firebase_token)
+    protected function _login($email, $password, $device_IMEI, $firebase_token)
     {
-        $user = User::login($email, $password, $firebase_token);
+        $user = User::login($email, $password, $device_IMEI, $firebase_token);
+
         if ($user === null) {
             throw new HttpException(200, 'login problem');
         }

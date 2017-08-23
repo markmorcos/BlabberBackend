@@ -23,6 +23,7 @@ use app\models\SavedBusiness;
 use app\models\Sponsor;
 use app\models\User;
 use app\models\UserInterest;
+use app\models\UserToken;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -58,19 +59,29 @@ class ApiController extends ApiBaseController
      * @apiParam {String} email User's unique email.
      * @apiParam {String} username User's unique username.
      * @apiParam {String} password User's password.
+     * @apiParam {String} device_IMEI User's device IMEI.
+     * @apiParam {String} firebase_token User's firebase token (optional).
      * @apiParam {String} type User's type (user or business) (optional).
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
-     * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignUp($name, $email, $username, $password, $type = 'user', $mobile = null, $image = null, $firebase_token = null)
-    {
+    public function actionSignUp(
+        $name,
+        $email,
+        $username,
+        $password,
+        $device_IMEI,
+        $firebase_token = null,
+        $type = 'user',
+        $mobile = null,
+        $image = null
+    ) {
         $this->_addOutputs(['user_data', 'auth_key']);
 
         $this->_validateUsername($username);
@@ -121,7 +132,7 @@ class ApiController extends ApiBaseController
                 ->send();
         }
 
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -132,15 +143,16 @@ class ApiController extends ApiBaseController
      * @apiParam {String} facebook_id User's facebook id.
      * @apiParam {String} facebook_token User's facebook token.
      * @apiParam {String} name User's full name.
-     * @apiParam {String} image User's new image url (optional).
+     * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
+     * @apiParam {String} image User's new image url (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignInFb($facebook_id, $facebook_token, $name, $image = null, $firebase_token = null)
+    public function actionSignInFb($facebook_id, $facebook_token, $name, $device_IMEI, $firebase_token = null, $image = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -167,6 +179,7 @@ class ApiController extends ApiBaseController
 
         // save name and user (if changed)
         $user->name = $name;
+
         if (!empty($image)) {
             $user->profile_photo = $image;
         }
@@ -175,7 +188,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($user));
         }
 
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -185,6 +198,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} email User's unique email.
      * @apiParam {String} password User's password.
+     * @apiParam {String} device_IMEI user device_IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -192,10 +206,10 @@ class ApiController extends ApiBaseController
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignIn($email, $password, $firebase_token = null)
+    public function actionSignIn($email, $password, $device_IMEI, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -296,15 +310,14 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} device_IMEI User's device IMEI.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionLogout()
+    public function actionLogout($device_IMEI)
     {
-        $user = User::findOne($this->logged_user['id']);
-        $user->auth_key = "";
-        if (!$user->save()) {
+        if (UserToken::deleteAll(['user_id' => $this->logged_user['id'], 'device_IMEI' => $device_IMEI]) === 0) {
             throw new HttpException(200, 'logout problem');
         }
     }
@@ -350,6 +363,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
+     * @apiParam {String} device_IMEI user device_IMEI (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
      * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
@@ -357,8 +371,17 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $private = null, $interests_ids = null)
-    {
+    public function actionEditProfile(
+        $name = null,
+        $username = null,
+        $mobile = null,
+        $gender = null,
+        $birthdate = null,
+        $device_IMEI = null,
+        $firebase_token = null,
+        $private = null,
+        $interests_ids = null
+    ) {
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
@@ -382,6 +405,10 @@ class ApiController extends ApiBaseController
 
         if (!empty($birthdate)) {
             $user->birthdate = $birthdate;
+        }
+
+        if (!empty($device_IMEI)) {
+            $user->device_IMEI = $device_IMEI;
         }
 
         if (!empty($firebase_token)) {
@@ -492,7 +519,7 @@ class ApiController extends ApiBaseController
                 'user_data' => $this->_getUserData($model->user),
             ]
         ];
-        $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
+        $this->_sendNotification($model->friend->getLastFirebaseToken(), $title, $body, $data);
     }
 
     /**
@@ -628,7 +655,7 @@ class ApiController extends ApiBaseController
             ]
         ];
         $this->_addNotification($request->user_id, $type, $title, $body, $data);
-        $this->_sendNotification($request->user->firebase_token, $title, $body, $data);
+        $this->_sendNotification($request->user->getLastFirebaseToken(), $title, $body, $data);
     }
 
     /**
@@ -1624,7 +1651,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -1701,7 +1728,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -1994,7 +2021,7 @@ class ApiController extends ApiBaseController
                 ]
             ];
             $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
         }
 
         // send notifications
@@ -2019,7 +2046,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -2094,7 +2121,7 @@ class ApiController extends ApiBaseController
                 ]
             ];
             $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
         }
 
         // send notifications
@@ -2119,7 +2146,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -2257,7 +2284,7 @@ class ApiController extends ApiBaseController
 //                ]
 //            ];
 //            $this->_addNotification($object->user_id, $type, $title, $body, $data);
-//            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+//            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
 //        }
 //
 //        // send notifications
@@ -2282,7 +2309,7 @@ class ApiController extends ApiBaseController
 //                    ]
 //                ];
 //                $this->_addNotification($user->id, $type, $title, $body, $data);
-//                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+//                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
 //            }
 //        }
     }

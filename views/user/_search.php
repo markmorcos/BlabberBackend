@@ -33,15 +33,11 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'birthdate') ?>
 
-    <?php // echo $form->field($model, 'auth_key') ?>
-
     <?php // echo $form->field($model, 'profile_photo') ?>
 
     <?php // echo $form->field($model, 'cover_photo') ?>
 
     <?php // echo $form->field($model, 'facebook_id') ?>
-
-    <?php // echo $form->field($model, 'firebase_token') ?>
 
     <?php // echo $form->field($model, 'approved') ?>
 
