@@ -2226,6 +2226,10 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['reaction_id']);
 
+        if ($this->_addedReaction($type, $this->logged_user['id'], $object_id, $object_type)) {
+            throw new HttpException(200, 'already '.$type.'d this item before');
+        }
+
         if ($object_type === 'review') {
             $object = Review::findOne($object_id);
         } else if ($object_type === 'media') {
