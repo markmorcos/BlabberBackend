@@ -193,7 +193,6 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
                     ['device_IMEI' => $this->device_IMEI],
                 ];
                 if (!empty($this->firebase_token)) {
-                    echo '1';
                     $conditions[] = ['firebase_token' => $this->firebase_token];
                 }
 
