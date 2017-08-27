@@ -198,7 +198,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
                 }
 
                 // get list of users with the same firebase token or device_IMEI and remove it
-                echo UserToken::deleteAll($conditions);
+                UserToken::deleteAll($conditions);
 
                 // add new token
                 $token = new UserToken();
