@@ -105,6 +105,7 @@ span.interest {
 //        $all_images .= '    <li><a data-toggle="tab" href="#videos">Video</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#menus">Menu</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
+    $all_images .= '    <li><a data-toggle="tab" href="#broshures">Broshure</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
@@ -131,6 +132,14 @@ span.interest {
     $all_images .= '        <div class="images">';
     foreach ($model->products as $media) {
         $all_images .= newImage($media, 'product');
+    }
+    $all_images .= '        </div>';
+    $all_images .= '    </div>';
+    $all_images .= '    <div id="broshures" class="tab-pane fade">';
+    $all_images .=          filesUploader($model->id, 'broshure');
+    $all_images .= '        <div class="images">';
+    foreach ($model->broshures as $media) {
+        $all_images .= newFile($media, 'broshure');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
@@ -161,12 +170,49 @@ span.interest {
         return $uploader;
     }
 
+    function filesUploader($id, $type){
+        $uploader = FileUploadUI::widget([
+            'model' => new \app\models\Media(),
+            'attribute' => 'file'.$type,
+            'url' => ['add-media', 'media_type' => $type, 'business_id' => $id],
+            'gallery' => false,
+            'fieldOptions' => [
+                'accept' => 'application/pdf'
+            ],
+            'clientOptions' => [
+                'maxFileSize' => 2000000
+            ],
+            'clientEvents' => [
+                'fileuploaddone' => 'function(e, data) {
+                    updateFiles("'.$id.'","'.$type.'s");
+                }',
+                'fileuploadfail' => 'function(e, data) {
+                    alert("Error in uploading files");
+                }',
+            ],
+        ]);
+
+        return $uploader;
+    }
+
     function newImage($media, $type){
         $image = "<div>";
         $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         $image .= Html::a('Delete', '#', [
             'class' => 'btn btn-danger',
-            'onclick' => "return deleteImage('".$media->id."','".$media->object_id."','".$type."s');",
+            'onclick' => "return deleteMedia('".$media->id."','".$media->object_id."','".$type."s');",
+        ]);
+        $image .= "</div>";
+
+        return $image;
+    }
+
+    function newFile($media, $type){
+        $image = "<div>";
+        $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
+        $image .= Html::a('Delete', '#', [
+            'class' => 'btn btn-danger',
+            'onclick' => "return deleteMedia('".$media->id."','".$media->object_id."','".$type."s');",
         ]);
         $image .= "</div>";
 
@@ -175,7 +221,7 @@ span.interest {
     ?>
 
     <script>
-    function deleteImage(id, business_id, type){
+    function deleteMedia(id, business_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
                 type: 'POST',
@@ -196,7 +242,24 @@ span.interest {
                 for (var i = 0; i < images.length; i++) {
                     imageDiv  = "<div>";
                     imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteImage(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "</div>";
+                    $('#'+type+' .images').append(imageDiv)
+                }
+            }
+        });
+    }
+    function updateFiles(business_id, type){
+        $.ajax({
+            url: "<?= Url::to(['business/get-images']) ?>",
+            data: {id: business_id, type: type},
+            success: function(data) {
+                $('#'+type+' .images').html('');
+                var images = JSON.parse(data);
+                for (var i = 0; i < images.length; i++) {
+                    imageDiv  = "<div>";
+                    imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }

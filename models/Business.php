@@ -185,6 +185,12 @@ class Business extends \yii\db\ActiveRecord
             ->where(['object_type' => 'Business', 'type' => 'product']);
     }
 
+    public function getBroshures()
+    {
+        return $this->hasMany(Media::className(), ['object_id' => 'id'])
+            ->where(['object_type' => 'Business', 'type' => 'broshure']);
+    }
+
     public function getViews()
     {
         return $this->hasMany(BusinessView::className(), ['business_id' => 'id'])
