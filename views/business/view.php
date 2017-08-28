@@ -200,7 +200,7 @@ span.interest {
         $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         $image .= Html::a('Delete', '#', [
             'class' => 'btn btn-danger',
-            'onclick' => "return deleteMedia('".$media->id."','".$media->object_id."','".$type."s');",
+            'onclick' => "return deleteImage('".$media->id."','".$media->object_id."','".$type."s');",
         ]);
         $image .= "</div>";
 
@@ -212,7 +212,7 @@ span.interest {
         $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
         $image .= Html::a('Delete', '#', [
             'class' => 'btn btn-danger',
-            'onclick' => "return deleteMedia('".$media->id."','".$media->object_id."','".$type."s');",
+            'onclick' => "return deleteFile('".$media->id."','".$media->object_id."','".$type."s');",
         ]);
         $image .= "</div>";
 
@@ -221,13 +221,24 @@ span.interest {
     ?>
 
     <script>
-    function deleteMedia(id, business_id, type){
+    function deleteImage(id, business_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
                 type: 'POST',
                 data: {id: id},
             }).done(function(data) {
                 updateImages(business_id,type);
+            });
+        }
+        return false;
+    }
+    function deleteFile(id, business_id, type){
+        if (confirm('Are you sure you want to delete this item?')) {
+            $.ajax('<?= Url::to(['media/delete']) ?>', {
+                type: 'POST',
+                data: {id: id},
+            }).done(function(data) {
+                updateFiles(business_id,type);
             });
         }
         return false;
@@ -242,7 +253,7 @@ span.interest {
                 for (var i = 0; i < images.length; i++) {
                     imageDiv  = "<div>";
                     imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteImage(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }
@@ -259,7 +270,7 @@ span.interest {
                 for (var i = 0; i < images.length; i++) {
                     imageDiv  = "<div>";
                     imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteFile(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }
