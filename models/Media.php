@@ -27,7 +27,7 @@ class Media extends LikeableActiveRecored
     public $fileimage;
     public $filemenu;
     public $fileproduct;
-    public $filebroshure;
+    public $filebrochure;
 
     /**
      * @inheritdoc
@@ -85,7 +85,7 @@ class Media extends LikeableActiveRecored
             $preview = '<img src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';
         }else if( $this->type === 'video' ){
             $preview = '<video src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';
-        } else if ($this->type === 'broshure') {
+        } else if ($this->type === 'brochure') {
             $preview = '<a target="_blank" href="' . Url::base(true) . '/' . $this->url .'">Open File</a>';
         }
         

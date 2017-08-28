@@ -105,7 +105,7 @@ span.interest {
 //        $all_images .= '    <li><a data-toggle="tab" href="#videos">Video</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#menus">Menu</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
-    $all_images .= '    <li><a data-toggle="tab" href="#broshures">Broshure</a></li>';
+    $all_images .= '    <li><a data-toggle="tab" href="#brochures">Brochure</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
@@ -135,11 +135,11 @@ span.interest {
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
-    $all_images .= '    <div id="broshures" class="tab-pane fade">';
-    $all_images .=          filesUploader($model->id, 'broshure');
+    $all_images .= '    <div id="brochures" class="tab-pane fade">';
+    $all_images .=          filesUploader($model->id, 'brochure');
     $all_images .= '        <div class="images">';
-    foreach ($model->broshures as $media) {
-        $all_images .= newFile($media, 'broshure');
+    foreach ($model->brochures as $media) {
+        $all_images .= newFile($media, 'brochure');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
