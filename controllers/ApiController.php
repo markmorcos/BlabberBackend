@@ -1814,7 +1814,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to add media to.
-     * @apiParam {String} type Media's type (image, video, menu or product).
+     * @apiParam {String} type Media's type (image, video, menu, product or brochure).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
      * @apiParam {String} rating Media's rating (optional).
