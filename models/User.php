@@ -18,7 +18,6 @@ namespace app\models;
  * @property string $profile_photo
  * @property string $cover_photo
  * @property string $facebook_id
- * @property string $firebase_token
  * @property integer $approved
  * @property integer $blocked
  * @property integer $private
@@ -28,6 +27,9 @@ namespace app\models;
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
     public $password_confirmation;
+    public $device_IMEI;
+    public $firebase_token;
+    public $auth_key;
 
     /**
      * @inheritdoc
@@ -48,7 +50,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['role', 'gender'], 'string'],
             [['birthdate', 'created', 'updated'], 'safe'],
             [['approved', 'blocked', 'private'], 'boolean'],
-            [['name', 'password', 'email', 'username', 'profile_photo', 'cover_photo', 'facebook_id', 'firebase_token'], 'string', 'max' => 255],
+            [['name', 'password', 'email', 'username', 'profile_photo', 'cover_photo', 'facebook_id'], 'string', 'max' => 255],
             [['mobile'], 'string', 'max' => 20],
             [['email', 'mobile'], 'unique'],
             [['email'], 'email'],
@@ -72,11 +74,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'mobile' => 'Mobile',
             'gender' => 'Gender',
             'birthdate' => 'Birthdate',
-            'auth_key' => 'Auth Key',
             'profile_photo' => 'Profile Photo',
             'cover_photo' => 'Cover Photo',
             'facebook_id' => 'Facebook ID',
-            'firebase_token' => 'Firebase Token',
             'approved' => 'Approved',
             'blocked' => 'Blocked',
             'private' => 'Private',
@@ -133,7 +133,12 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validateAuthKey($auth_key)
     {
-        return $this->auth_key === $auth_key;
+        foreach ($this->tokens as $token) {
+            if ($token->auth_key === $auth_key) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -152,28 +157,16 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      *
      * @param string $email
      * @param string $password
-     * @param string $firebase_token
      * @return static|null
      */
-    public static function login($email, $password, $firebase_token)
+    public static function login($email, $password, $device_IMEI, $firebase_token)
     {
         $user = static::findByEmail($email);
+        $user->device_IMEI = $device_IMEI;
+        $user->firebase_token = $firebase_token;
 
         if( isset($user) && $user->validatePassword($password) ){
             $user->auth_key = \Yii::$app->security->generateRandomString(16);
-            if (!empty($firebase_token)) {
-                // get list of users with the same token and reset the token for them
-                $query = static::find()
-                    ->where(['firebase_token' => $firebase_token])
-                    ->andWhere(['!=', 'id', $user->id])
-                    ->all();
-                foreach ($query as $model) {
-                    $model->firebase_token = '';
-                    $model->save();
-                }
-
-                $user->firebase_token = $firebase_token;
-            }
             if( $user->save() ){
                 return $user;
             }
@@ -193,9 +186,40 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             }else if ($this->password == $this->password_confirmation && in_array($this->scenario, ['create', 'update'])) {
                 $this->password = \Yii::$app->security->generatePasswordHash($this->password);
             }
+
+            if (!empty($this->device_IMEI)) {
+                $conditions = [
+                    'or',
+                    ['device_IMEI' => $this->device_IMEI],
+                ];
+                if (!empty($this->firebase_token)) {
+                    $conditions[] = ['firebase_token' => $this->firebase_token];
+                }
+
+                // get list of users with the same firebase token or device_IMEI and remove it
+                UserToken::deleteAll($conditions);
+
+                // add new token
+                $token = new UserToken();
+                $token->user_id = $this->id;
+                $token->device_IMEI = $this->device_IMEI;
+                $token->auth_key = $this->auth_key;
+                $token->firebase_token = $this->firebase_token;
+
+                if (!$token->save()) {
+                    return false;
+                }
+            }
+
             return true;
         }
         return false;
+    }
+
+    public function getTokens()
+    {
+        return $this->hasMany(UserToken::className(), ['user_id' => 'id'])
+            ->orderBy(['id' => SORT_DESC]);
     }
 
     public function getInterests()
@@ -219,5 +243,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         }
         
         return $interests_list;
+    }
+
+    public function getLastFirebaseToken()
+    {
+        return $this->tokens[0]->firebase_token;
     }
 }

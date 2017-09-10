@@ -13,7 +13,7 @@ namespace app\models;
  * @property string $created
  * @property string $updated
  */
-class Review extends \yii\db\ActiveRecord
+class Review extends LikeableActiveRecored
 {
     /**
      * @inheritdoc

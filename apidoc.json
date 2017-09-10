@@ -61,11 +61,15 @@
 		"AddMedia",
 		"DeleteMedia",
 		"GetMedia",
+		"GetMediaByIds",
 		"GetHomescreenImages",
 		"Comment",
 		"EditComment",
 		"DeleteComment",
 		"GetComments",
+		"AddReaction",
+		"DeleteReaction",
+		"GetReactions",
 
 
 		"Sponsors",

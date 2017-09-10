@@ -16,12 +16,14 @@ use app\models\Friendship;
 use app\models\Interest;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Reaction;
 use app\models\Report;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\Sponsor;
 use app\models\User;
 use app\models\UserInterest;
+use app\models\UserToken;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -57,19 +59,29 @@ class ApiController extends ApiBaseController
      * @apiParam {String} email User's unique email.
      * @apiParam {String} username User's unique username.
      * @apiParam {String} password User's password.
+     * @apiParam {String} device_IMEI User's device IMEI.
+     * @apiParam {String} firebase_token User's firebase token (optional).
      * @apiParam {String} type User's type (user or business) (optional).
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
-     * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignUp($name, $email, $username, $password, $type = 'user', $mobile = null, $image = null, $firebase_token = null)
-    {
+    public function actionSignUp(
+        $name,
+        $email,
+        $username,
+        $password,
+        $device_IMEI,
+        $firebase_token = null,
+        $type = 'user',
+        $mobile = null,
+        $image = null
+    ) {
         $this->_addOutputs(['user_data', 'auth_key']);
 
         $this->_validateUsername($username);
@@ -120,7 +132,7 @@ class ApiController extends ApiBaseController
                 ->send();
         }
 
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -131,15 +143,16 @@ class ApiController extends ApiBaseController
      * @apiParam {String} facebook_id User's facebook id.
      * @apiParam {String} facebook_token User's facebook token.
      * @apiParam {String} name User's full name.
-     * @apiParam {String} image User's new image url (optional).
+     * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
+     * @apiParam {String} image User's new image url (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignInFb($facebook_id, $facebook_token, $name, $image = null, $firebase_token = null)
+    public function actionSignInFb($facebook_id, $facebook_token, $name, $device_IMEI, $firebase_token = null, $image = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -162,19 +175,18 @@ class ApiController extends ApiBaseController
             $user->password = Yii::$app->security->generatePasswordHash($password);
             $user->facebook_id = $facebook_id;
             $user->approved = 1; //true
+            $user->name = $name;
+
+            if (!empty($image)) {
+                $user->profile_photo = $image;
+            }
+
+            if (!$user->save()) {
+                throw new HttpException(200, $this->_getErrors($user));
+            }
         }
 
-        // save name and user (if changed)
-        $user->name = $name;
-        if (!empty($image)) {
-            $user->profile_photo = $image;
-        }
-
-        if (!$user->save()) {
-            throw new HttpException(200, $this->_getErrors($user));
-        }
-
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -184,6 +196,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} email User's unique email.
      * @apiParam {String} password User's password.
+     * @apiParam {String} device_IMEI user device_IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -191,10 +204,10 @@ class ApiController extends ApiBaseController
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignIn($email, $password, $firebase_token = null)
+    public function actionSignIn($email, $password, $device_IMEI, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
-        $this->_login($email, $password, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token);
     }
 
     /**
@@ -295,15 +308,14 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} device_IMEI User's device IMEI.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionLogout()
+    public function actionLogout($device_IMEI)
     {
-        $user = User::findOne($this->logged_user['id']);
-        $user->auth_key = "";
-        if (!$user->save()) {
+        if (UserToken::deleteAll(['user_id' => $this->logged_user['id'], 'device_IMEI' => $device_IMEI]) === 0) {
             throw new HttpException(200, 'logout problem');
         }
     }
@@ -349,6 +361,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
+     * @apiParam {String} device_IMEI user device_IMEI (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
      * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
@@ -356,8 +369,17 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditProfile($name = null, $username = null, $mobile = null, $gender = null, $birthdate = null, $firebase_token = null, $private = null, $interests_ids = null)
-    {
+    public function actionEditProfile(
+        $name = null,
+        $username = null,
+        $mobile = null,
+        $gender = null,
+        $birthdate = null,
+        $device_IMEI = null,
+        $firebase_token = null,
+        $private = null,
+        $interests_ids = null
+    ) {
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
@@ -381,6 +403,10 @@ class ApiController extends ApiBaseController
 
         if (!empty($birthdate)) {
             $user->birthdate = $birthdate;
+        }
+
+        if (!empty($device_IMEI)) {
+            $user->device_IMEI = $device_IMEI;
         }
 
         if (!empty($firebase_token)) {
@@ -491,7 +517,7 @@ class ApiController extends ApiBaseController
                 'user_data' => $this->_getUserData($model->user),
             ]
         ];
-        $this->_sendNotification($model->friend->firebase_token, $title, $body, $data);
+        $this->_sendNotification($model->friend->getLastFirebaseToken(), $title, $body, $data);
     }
 
     /**
@@ -627,7 +653,7 @@ class ApiController extends ApiBaseController
             ]
         ];
         $this->_addNotification($request->user_id, $type, $title, $body, $data);
-        $this->_sendNotification($request->user->firebase_token, $title, $body, $data);
+        $this->_sendNotification($request->user->getLastFirebaseToken(), $title, $body, $data);
     }
 
     /**
@@ -1623,7 +1649,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -1700,7 +1726,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -1788,7 +1814,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to add media to.
-     * @apiParam {String} type Media's type (image, video, menu or product).
+     * @apiParam {String} type Media's type (image, video, menu, product or brochure).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
      * @apiParam {String} rating Media's rating (optional).
@@ -1993,7 +2019,7 @@ class ApiController extends ApiBaseController
                 ]
             ];
             $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
         }
 
         // send notifications
@@ -2018,7 +2044,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -2093,7 +2119,7 @@ class ApiController extends ApiBaseController
                 ]
             ];
             $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user->firebase_token, $title, $body, $data);
+            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
         }
 
         // send notifications
@@ -2118,7 +2144,7 @@ class ApiController extends ApiBaseController
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
-                $this->_sendNotification($user->firebase_token, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -2177,6 +2203,173 @@ class ApiController extends ApiBaseController
         $conditions[] = ['object_id' => $object_id];
         $conditions[] = ['object_type' => $object_type];
         $this->output['comments'] = $this->_getComments($conditions);
+    }
+
+
+    /**
+     * @api {post} /api/add-reaction  Add reaction on review or media or comment
+     * @apiName AddReaction
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} type Reaction type (like or dislike).
+     * @apiParam {String} object_id Object's id to add reaction to.
+     * @apiParam {String} object_type Object's type to add reaction to (review or media or comment).
+     * @apiParam {String} business_identity Business's id to link the reaction (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} review_id the added review id
+     */
+    public function actionAddReaction($type, $object_id, $object_type, $business_identity = null)
+    {
+        $this->_addOutputs(['reaction_id']);
+
+        if ($this->_addedReaction($type, $this->logged_user['id'], $object_id, $object_type)) {
+            throw new HttpException(200, 'already '.$type.'d this item before');
+        }
+
+        if ($object_type === 'review') {
+            $object = Review::findOne($object_id);
+        } else if ($object_type === 'media') {
+            $object = Media::findOne($object_id);
+        } else if ($object_type === 'comment') {
+            $object = Comment::findOne($object_id);
+        } else {
+            throw new HttpException(200, 'not supported type');
+        }
+
+        if (empty($object)) {
+            throw new HttpException(200, 'no item with this id');
+        }
+
+        if (!empty($business_identity)) {
+            $business = Business::findOne($business_identity);
+            if (empty($business)) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            if ($business->admin_id !== $this->logged_user['id']) {
+                throw new HttpException(200, 'you are not admin to this business');
+            }
+        }
+
+        $reaction = new Reaction;
+        $reaction->user_id = $this->logged_user['id'];
+        $reaction->object_id = $object_id;
+        $reaction->object_type = $object_type;
+        $reaction->type = $type;
+        $reaction->business_identity = $business_identity;
+
+        if (!$reaction->save()) {
+            throw new HttpException(200, $this->_getErrors($reaction));
+        }
+        $this->output['reaction_id'] = $reaction->id;
+
+//        $commenter_name = $reaction->user->name;
+//        if (!empty($business)) {
+//            $commenter_name = $business->name;
+//        }
+//
+//        // send notification (if not the owner)
+//        if ($object->user_id != $this->logged_user['id']) {
+//            $type = 'comment';
+//            $title = 'New Comment';
+//            $body = $commenter_name . ' added new comment to your ' . $object_type;
+//            $data = [
+//                'type' => $type,
+//                'payload' => [
+//                    'comment_id' => $comment->id,
+//                    'object_id' => $comment->object_id,
+//                    'object_type' => $comment->object_type,
+//                    'user_data' => $this->_getUserData($comment->user),
+//                ]
+//            ];
+//            $this->_addNotification($object->user_id, $type, $title, $body, $data);
+//            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
+//        }
+//
+//        // send notifications
+//        if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
+//            $users = $matches[1];
+//            foreach ($users as $username) {
+//                $user = User::findOne(['username' => $username]);
+//                if (empty($user)) {
+//                    continue;
+//                }
+//
+//                $type = 'comment';
+//                $title = 'New Comment Tag';
+//                $body = $commenter_name . ' has tagged you in comment';
+//                $data = [
+//                    'type' => $type,
+//                    'payload' => [
+//                        'comment_id' => $comment->id,
+//                        'object_id' => $comment->object_id,
+//                        'object_type' => $comment->object_type,
+//                        'user_data' => $this->_getUserData($comment->user),
+//                    ]
+//                ];
+//                $this->_addNotification($user->id, $type, $title, $body, $data);
+//                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
+//            }
+//        }
+    }
+
+    /**
+     * @api {post} /api/delete-reaction Delete Reaction
+     * @apiName DeleteReaction
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} reaction_id reaction's id to delete it.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionDeleteReaction($reaction_id)
+    {
+        $reaction = Reaction::findOne($reaction_id);
+
+        if ($reaction === null) {
+            throw new HttpException(200, 'no reaction with this id');
+        }
+
+        if ($reaction->user_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to delete this reaction');
+        }
+
+        if (!$reaction->delete()) {
+            throw new HttpException(200, $this->_getErrors($reaction));
+        }
+    }
+
+    /**
+     * @api {post} /api/get-reactions Get all reactions for object
+     * @apiName GetReactions
+     * @apiGroup Business
+     *
+     * @apiParam {String} object_id Object's id to get reactions related.
+     * @apiParam {String} object_type Object's type to get reactions related (review or media).
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} reactions reactions details.
+     */
+    public function actionGetReactions($object_id, $object_type)
+    {
+        $this->_addOutputs(['reactions']);
+
+        if ($object_type !== 'review' && $object_type !== 'media') {
+            throw new HttpException(200, 'not supported type');
+        }
+
+        $conditions = ['and'];
+        $conditions[] = ['object_id' => $object_id];
+        $conditions[] = ['object_type' => $object_type];
+        $this->output['reactions'] = $this->_getReactions($conditions);
     }
 
     /***************************************/

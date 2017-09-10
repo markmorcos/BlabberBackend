@@ -10,6 +10,7 @@ use app\models\Comment;
 use app\models\Friendship;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Reaction;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\User;
@@ -56,7 +57,7 @@ class ApiBaseController extends Controller
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
             'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images',
-            'get-comments', 'get-sponsors',
+            'get-comments', 'get-reactions', 'get-sponsors',
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -139,7 +140,7 @@ class ApiBaseController extends Controller
 
         $user = User::findOne($request->post('user_id'));
 
-        if (isset($user) && $user->auth_key == $request->post('auth_key')) {
+        if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
             $this->logged_user = $user;
             return true;
         } else {
@@ -147,9 +148,10 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _login($email, $password, $firebase_token)
+    protected function _login($email, $password, $device_IMEI, $firebase_token)
     {
-        $user = User::login($email, $password, $firebase_token);
+        $user = User::login($email, $password, $device_IMEI, $firebase_token);
+
         if ($user === null) {
             throw new HttpException(200, 'login problem');
         }
@@ -474,6 +476,12 @@ class ApiBaseController extends Controller
             $temp['user'] = $this->_getUserMinimalData($review->user);
             $temp['business'] = $this->_getBusinessMinimalData($review->business);
 
+            $temp['likes'] = count($review['likes']);
+            $temp['dislikes'] = count($review['dislikes']);
+
+            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $review['id'], 'review');
+            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $review['id'], 'review');
+
             $reviews[] = $temp;
         }
 
@@ -506,10 +514,62 @@ class ApiBaseController extends Controller
                 }
             }
 
+            $temp['likes'] = count($comment['likes']);
+            $temp['dislikes'] = count($comment['dislikes']);
+
+            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $comment['id'], 'comment');
+            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $comment['id'], 'comment');
+
             $comments[] = $temp;
         }
 
         return $comments;
+    }
+
+    protected function _getReactions($conditions)
+    {
+        $query = Reaction::find()
+            ->where($conditions)
+            ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $reactions = [];
+        foreach ($model as $key => $reaction) {
+            $temp['id'] = $reaction['id'];
+            $temp['type'] = $reaction['type'];
+            $temp['object_id'] = $reaction['object_id'];
+            $temp['object_type'] = $reaction['object_type'];
+            $temp['created'] = $reaction['created'];
+            $temp['updated'] = $reaction['updated'];
+
+            $temp['user'] = $this->_getUserMinimalData($reaction->user);
+
+            if (!empty($reaction->business_identity)) {
+                $model = Business::findOne($reaction->business_identity);
+                if (!empty($model)) {
+                    $temp['business_data'] = $this->_getBusinessMinimalData($model);
+                }
+            }
+
+            $reactions[] = $temp;
+        }
+
+        return $reactions;
+    }
+
+    protected function _addedReaction($reaction_type, $user_id, $object_id, $object_type)
+    {
+        $model = Reaction::find()
+            ->select('id')
+            ->where([
+                'type' => $reaction_type,
+                'user_id' => $user_id,
+                'object_id' => $object_id,
+                'object_type' => $object_type,
+            ])
+            ->one();
+        return !empty($model);
     }
 
     protected function _calcRating($business_id)
@@ -576,6 +636,12 @@ class ApiBaseController extends Controller
 
                 $temp['business'] = $this->_getBusinessMinimalData($business);
             }
+
+            $temp['likes'] = count($value['likes']);
+            $temp['dislikes'] = count($value['dislikes']);
+
+            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $value['id'], 'media');
+            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $value['id'], 'media');
 
             $media[] = $temp;
         }

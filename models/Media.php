@@ -18,7 +18,7 @@ use yii\helpers\Url;
  * @property string $created
  * @property string $updated
  */
-class Media extends \yii\db\ActiveRecord
+class Media extends LikeableActiveRecored
 {
     /**
      * @var UploadedFile
@@ -27,6 +27,7 @@ class Media extends \yii\db\ActiveRecord
     public $fileimage;
     public $filemenu;
     public $fileproduct;
+    public $filebrochure;
 
     /**
      * @inheritdoc
@@ -84,6 +85,8 @@ class Media extends \yii\db\ActiveRecord
             $preview = '<img src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';
         }else if( $this->type === 'video' ){
             $preview = '<video src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';
+        } else if ($this->type === 'brochure') {
+            $preview = '<a target="_blank" href="' . Url::base(true) . '/' . $this->url .'">Open File</a>';
         }
         
         return $preview;

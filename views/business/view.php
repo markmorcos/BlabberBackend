@@ -105,52 +105,61 @@ span.interest {
 //        $all_images .= '    <li><a data-toggle="tab" href="#videos">Video</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#menus">Menu</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
+    $all_images .= '    <li><a data-toggle="tab" href="#brochures">Brochure</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
     $all_images .= '    <div id="images" class="tab-pane fade in active">';
-    $all_images .=          imagesUploader($model->id, 'image');
+    $all_images .=          mediaUploader($model->id, 'image');
     $all_images .= '        <div class="images">';
     foreach ($model->images as $media) {
-        $all_images .= newImage($media, 'image');
+        $all_images .= newMedia($media, 'image');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
 //        $all_images .= '    <div id="video" class="tab-pane fade">videos';
 //        $all_images .= '    </div>';
     $all_images .= '    <div id="menus" class="tab-pane fade">';
-    $all_images .=          imagesUploader($model->id, 'menu');
+    $all_images .=          mediaUploader($model->id, 'menu');
     $all_images .= '        <div class="images">';
     foreach ($model->menus as $media) {
-        $all_images .= newImage($media, 'menu');
+        $all_images .= newMedia($media, 'menu');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
     $all_images .= '    <div id="products" class="tab-pane fade">';
-    $all_images .=          imagesUploader($model->id, 'product');
+    $all_images .=          mediaUploader($model->id, 'product');
     $all_images .= '        <div class="images">';
     foreach ($model->products as $media) {
-        $all_images .= newImage($media, 'product');
+        $all_images .= newMedia($media, 'product');
+    }
+    $all_images .= '        </div>';
+    $all_images .= '    </div>';
+    $all_images .= '    <div id="brochures" class="tab-pane fade">';
+    $all_images .=          mediaUploader($model->id, 'brochure');
+    $all_images .= '        <div class="images">';
+    foreach ($model->brochures as $media) {
+        $all_images .= newMedia($media, 'brochure');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
     $all_images .= '</div>';
 
-    function imagesUploader($id, $type){
+    function mediaUploader($id, $type){
         $uploader = FileUploadUI::widget([
             'model' => new \app\models\Media(),
             'attribute' => 'file'.$type,
             'url' => ['add-media', 'media_type' => $type, 'business_id' => $id],
             'gallery' => false,
             'fieldOptions' => [
-                'accept' => 'image/*'
+                'accept' => $type === 'brochure' ? 'application/pdf' : 'image/*'
             ],
             'clientOptions' => [
                 'maxFileSize' => 2000000
             ],
             'clientEvents' => [
                 'fileuploaddone' => 'function(e, data) {
-                    updateImages("'.$id.'","'.$type.'s");
+                    updateMedia("'.$id.'","'.$type.'s");
                 }',
                 'fileuploadfail' => 'function(e, data) {
                     alert("Error in uploading images");
@@ -161,12 +170,16 @@ span.interest {
         return $uploader;
     }
 
-    function newImage($media, $type){
+    function newMedia($media, $type){
         $image = "<div>";
-        $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
+        if ($type === 'brochure') {
+            $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
+        } else {
+            $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
+        }
         $image .= Html::a('Delete', '#', [
             'class' => 'btn btn-danger',
-            'onclick' => "return deleteImage('".$media->id."','".$media->object_id."','".$type."s');",
+            'onclick' => "return deleteMedia('".$media->id."','".$media->object_id."','".$type."s');",
         ]);
         $image .= "</div>";
 
@@ -175,18 +188,18 @@ span.interest {
     ?>
 
     <script>
-    function deleteImage(id, business_id, type){
+    function deleteMedia(id, business_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
                 type: 'POST',
                 data: {id: id},
             }).done(function(data) {
-                updateImages(business_id,type);
+                updateMedia(business_id,type);
             });
         }
         return false;
     }
-    function updateImages(business_id, type){
+    function updateMedia(business_id, type){
         $.ajax({
             url: "<?= Url::to(['business/get-images']) ?>",
             data: {id: business_id, type: type},
@@ -195,8 +208,12 @@ span.interest {
                 var images = JSON.parse(data);
                 for (var i = 0; i < images.length; i++) {
                     imageDiv  = "<div>";
-                    imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteImage(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    if (type === 'brochures') {
+                        imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
+                    } else {
+                        imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
+                    }
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }
