@@ -2238,8 +2238,8 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['reaction_id']);
 
-        if ($this->_addedReaction($type, $this->logged_user['id'], $object_id, $object_type)) {
-            throw new HttpException(200, 'already '.$type.'d this item before');
+        if ($this->_addedReaction($this->logged_user['id'], $object_id, $object_type)) {
+            throw new HttpException(200, 'already added reaction to this item before');
         }
 
         if ($object_type === 'review') {
