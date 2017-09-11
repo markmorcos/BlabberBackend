@@ -18,6 +18,7 @@ use app\models\Media;
 use app\models\Notification;
 use app\models\Reaction;
 use app\models\Report;
+use app\models\Reservation;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\Sponsor;
@@ -2389,6 +2390,68 @@ class ApiController extends ApiBaseController
         $conditions[] = ['object_id' => $object_id];
         $conditions[] = ['object_type' => $object_type];
         $this->output['reactions'] = $this->_getReactions($conditions);
+    }
+
+    /***************************************/
+    /************ Reservations *************/
+    /***************************************/
+
+    /**
+     * @api {post} /api/reserve-real-estate Reserve real estate
+     * @apiName ReserveRealEstate
+     * @apiGroup Reservations
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} business_id Business id
+     * @apiParam {String} mobile User's mobile.
+     * @apiParam {String} notes Reservation notes (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionReserveRealEstate($business_id, $mobile, $notes)
+    {
+        $user = User::findOne($this->logged_user['id']);
+        if ($user === null) {
+            throw new HttpException(200, 'no user with this id');
+        }
+
+        $business = Business::findOne($business_id);
+        if (empty($business)) {
+            throw new HttpException(200, 'no business with this id');
+        }
+        if (empty($business->email)) {
+            throw new HttpException(200, 'business has no email');
+        }
+
+        $reservation = new Reservation;
+        $reservation->user_id = $user->id;
+        $reservation->business_id = $business_id;
+        $reservation->mobile = $mobile;
+        $reservation->notes = $notes;
+        if (!$reservation->save()) {
+            throw new HttpException(200, $this->_getErrors($reservation));
+        }
+
+        $result = Yii::$app->mailer->compose()
+            ->setFrom(['info@myblabber.com' => 'MyBlabber Information'])
+            ->setTo($business->email)
+            ->setSubject('New Property Request')
+            ->setTextBody(
+                "Dear " . $business->name . ",\n\n\
+                It's a new property request!\n\n\
+                Contact details\n\
+                Name: " . $user->name . "\n\
+                Mobile: " . $mobile . "\n\
+                Notes: " . $notes . "\n\n\
+                Best always,\n\
+                Blabber"
+            )
+            ->send();
+        if ($result === null) {
+            throw new HttpException(200, 'Errors while sending email');
+        }
     }
 
     /***************************************/
