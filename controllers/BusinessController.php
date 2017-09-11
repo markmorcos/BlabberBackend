@@ -102,7 +102,6 @@ class BusinessController extends AdminController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             if( !empty(Yii::$app->request->post('Business')['flags']) ){
                 // remove old flags

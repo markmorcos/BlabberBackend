@@ -948,6 +948,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name business name.
      * @apiParam {String} address business address.
+     * @apiParam {String} email business email.
      * @apiParam {String} country_id business country id.
      * @apiParam {String} city_id business city id.
      * @apiParam {String} phone business phone.
@@ -968,7 +969,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $address, $email, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -979,6 +980,7 @@ class ApiController extends ApiBaseController
         $business = new Business;
         $business->{"name".$this->lang} = $name;
         $business->{"address".$this->lang} = $address;
+        $business->email = $email;
         $business->country_id = $country_id;
         $business->city_id = $city_id;
         $business->phone = $phone;
@@ -1045,6 +1047,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id business's id to edit.
      * @apiParam {String} name business name (optional).
      * @apiParam {String} address business address (optional).
+     * @apiParam {String} email business email (optional).
      * @apiParam {String} country_id business country id (optional).
      * @apiParam {String} city_id business city id (optional).
      * @apiParam {String} phone business phone (optional).
@@ -1064,7 +1067,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $address = null, $email = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $business = Business::find()
             ->where(['id' => $business_id])
@@ -1083,6 +1086,10 @@ class ApiController extends ApiBaseController
 
         if (!empty($address)) {
             $business->{"address".$this->lang} = $address;
+        }
+
+        if (!empty($email)) {
+            $business->email = $email;
         }
 
         if (!empty($country_id)) {

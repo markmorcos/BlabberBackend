@@ -12,6 +12,7 @@ use yii\helpers\Url;
  * @property string $nameAr
  * @property string $address
  * @property string $addressAr
+ * @property string $email
  * @property integer $country_id
  * @property integer $city_id
  * @property string $phone
@@ -54,7 +55,7 @@ class Business extends \yii\db\ActiveRecord
             [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
+            [['name', 'nameAr', 'email', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
             [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
         ];
@@ -71,6 +72,7 @@ class Business extends \yii\db\ActiveRecord
             'nameAr' => 'Name Ar',
             'address' => 'Address',
             'addressAr' => 'Address Ar',
+            'email' => 'Email',
             'country_id' => 'Country',
             'city_id' => 'City',
             'phone' => 'Phone',

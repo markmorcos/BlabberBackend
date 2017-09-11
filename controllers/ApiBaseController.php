@@ -339,6 +339,7 @@ class ApiBaseController extends Controller
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
         $business['address'] = $model['address'.$this->lang];
+        $business['email'] = $model['email'];
         $business['country_id'] = $model['country_id'];
         $business['country'] = $model['country']['name'.$this->lang];
         $business['city_id'] = $model['city_id'];

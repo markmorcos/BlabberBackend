@@ -230,6 +230,7 @@ span.interest {
             'nameAr',
             'address',
             'addressAr',
+            'email',
             array(
                 'attribute' => 'country_id',
                 'format' => 'raw',
