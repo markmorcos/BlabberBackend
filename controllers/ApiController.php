@@ -2421,6 +2421,9 @@ class ApiController extends ApiBaseController
         if (empty($business)) {
             throw new HttpException(200, 'no business with this id');
         }
+        if ($business->category->name !== 'Real Estate') {
+            throw new HttpException(200, 'only real estate businesses are allowed');
+        }
         if (empty($business->email)) {
             throw new HttpException(200, 'business has no email');
         }
