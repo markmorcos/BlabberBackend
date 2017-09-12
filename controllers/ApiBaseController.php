@@ -560,14 +560,14 @@ class ApiBaseController extends Controller
     protected function _addedReaction($user_id, $object_id, $object_type)
     {
         $model = Reaction::find()
-            ->select('id')
+            ->select(['id','type'])
             ->where([
                 'user_id' => $user_id,
                 'object_id' => $object_id,
                 'object_type' => $object_type,
             ])
             ->one();
-        return !empty($model);
+        return empty($model)?'':$model->type;
     }
 
     protected function _calcRating($business_id)
