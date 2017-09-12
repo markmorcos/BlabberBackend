@@ -155,7 +155,7 @@ span.interest {
                 'accept' => $type === 'brochure' ? 'application/pdf' : 'image/*'
             ],
             'clientOptions' => [
-                'maxFileSize' => 2000000
+                'maxFileSize' => $type === 'brochure' ? 5000000 : 2000000
             ],
             'clientEvents' => [
                 'fileuploaddone' => 'function(e, data) {
