@@ -2439,14 +2439,14 @@ class ApiController extends ApiBaseController
             ->setTo($business->email)
             ->setSubject('New Property Request')
             ->setTextBody(
-                "Dear " . $business->name . ",\n\n\
-                It's a new property request!\n\n\
-                Contact details\n\
-                Name: " . $user->name . "\n\
-                Mobile: " . $mobile . "\n\
-                Notes: " . $notes . "\n\n\
-                Best always,\n\
-                Blabber"
+                "Dear " . $business->name . ",\n\n"
+                . "It's a new property request!\n\n"
+                . "Contact details\n"
+                . "Name: " . $user->name . "\n"
+                . "Mobile: " . $mobile . "\n"
+                . ($notes ? "Notes: " . $notes . "\n" : '')
+                . "\nBest always,\n"
+                . "Blabber"
             )
             ->send();
         if ($result === null) {

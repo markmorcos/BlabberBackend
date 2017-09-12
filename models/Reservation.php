@@ -29,7 +29,7 @@ class Reservation extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'business_id', 'mobile', 'notes'], 'required'],
+            [['user_id', 'business_id', 'mobile'], 'required'],
             [['user_id', 'business_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['mobile'], 'string', 'max' => 20],
