@@ -21,6 +21,8 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'addressAr')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'country_id')->dropDownList($countries_for_dropdown) ?>
 
     <?= $form->field($model, 'city_id')->dropDownList($cities_for_dropdown) ?>
