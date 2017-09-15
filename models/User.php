@@ -247,6 +247,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 
     public function getLastFirebaseToken()
     {
-        return $this->tokens[0]->firebase_token;
+        if (count($this->tokens) > 0) {
+            return $this->tokens[0]->firebase_token;
+        }
+        return '';
     }
 }

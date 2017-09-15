@@ -339,6 +339,7 @@ class ApiBaseController extends Controller
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
         $business['address'] = $model['address'.$this->lang];
+        $business['email'] = $model['email'];
         $business['country_id'] = $model['country_id'];
         $business['country'] = $model['country']['name'.$this->lang];
         $business['city_id'] = $model['city_id'];
@@ -479,8 +480,7 @@ class ApiBaseController extends Controller
             $temp['likes'] = count($review['likes']);
             $temp['dislikes'] = count($review['dislikes']);
 
-            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $review['id'], 'review');
-            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $review['id'], 'review');
+            $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $review['id'], 'review');
 
             $reviews[] = $temp;
         }
@@ -517,8 +517,7 @@ class ApiBaseController extends Controller
             $temp['likes'] = count($comment['likes']);
             $temp['dislikes'] = count($comment['dislikes']);
 
-            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $comment['id'], 'comment');
-            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $comment['id'], 'comment');
+            $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $comment['id'], 'comment');
 
             $comments[] = $temp;
         }
@@ -558,18 +557,17 @@ class ApiBaseController extends Controller
         return $reactions;
     }
 
-    protected function _addedReaction($reaction_type, $user_id, $object_id, $object_type)
+    protected function _addedReaction($user_id, $object_id, $object_type)
     {
         $model = Reaction::find()
-            ->select('id')
+            ->select(['id','type'])
             ->where([
-                'type' => $reaction_type,
                 'user_id' => $user_id,
                 'object_id' => $object_id,
                 'object_type' => $object_type,
             ])
             ->one();
-        return !empty($model);
+        return empty($model)?'':$model->type;
     }
 
     protected function _calcRating($business_id)
@@ -640,8 +638,7 @@ class ApiBaseController extends Controller
             $temp['likes'] = count($value['likes']);
             $temp['dislikes'] = count($value['dislikes']);
 
-            $temp['is_liked'] = $this->_addedReaction('like', $this->logged_user['id'], $value['id'], 'media');
-            $temp['is_disliked'] = $this->_addedReaction('dislike', $this->logged_user['id'], $value['id'], 'media');
+            $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $value['id'], 'media');
 
             $media[] = $temp;
         }

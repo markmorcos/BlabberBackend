@@ -32,7 +32,7 @@ class UserToken extends \yii\db\ActiveRecord
             [['user_id', 'device_IMEI', 'auth_key'], 'required'],
             [['user_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['device_IMEI'], 'string', 'max' => 51],
+            [['device_IMEI'], 'string', 'max' => 36],
             [['auth_key'], 'string', 'max' => 16],
             [['firebase_token'], 'string', 'max' => 255],
         ];

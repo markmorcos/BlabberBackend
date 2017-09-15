@@ -71,6 +71,8 @@
 		"DeleteReaction",
 		"GetReactions",
 
+		"Reservations",
+		"ReserveRealEstate",
 
 		"Sponsors",
 		"GetSponsors",

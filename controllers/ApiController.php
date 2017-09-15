@@ -18,6 +18,7 @@ use app\models\Media;
 use app\models\Notification;
 use app\models\Reaction;
 use app\models\Report;
+use app\models\Reservation;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\Sponsor;
@@ -948,6 +949,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name business name.
      * @apiParam {String} address business address.
+     * @apiParam {String} email business email.
      * @apiParam {String} country_id business country id.
      * @apiParam {String} city_id business city id.
      * @apiParam {String} phone business phone.
@@ -968,7 +970,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $address, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $address, $email, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -979,6 +981,7 @@ class ApiController extends ApiBaseController
         $business = new Business;
         $business->{"name".$this->lang} = $name;
         $business->{"address".$this->lang} = $address;
+        $business->email = $email;
         $business->country_id = $country_id;
         $business->city_id = $city_id;
         $business->phone = $phone;
@@ -1045,6 +1048,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} business_id business's id to edit.
      * @apiParam {String} name business name (optional).
      * @apiParam {String} address business address (optional).
+     * @apiParam {String} email business email (optional).
      * @apiParam {String} country_id business country id (optional).
      * @apiParam {String} city_id business city id (optional).
      * @apiParam {String} phone business phone (optional).
@@ -1064,7 +1068,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBusiness($business_id, $name = null, $address = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $address = null, $email = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $business = Business::find()
             ->where(['id' => $business_id])
@@ -1083,6 +1087,10 @@ class ApiController extends ApiBaseController
 
         if (!empty($address)) {
             $business->{"address".$this->lang} = $address;
+        }
+
+        if (!empty($email)) {
+            $business->email = $email;
         }
 
         if (!empty($country_id)) {
@@ -1765,6 +1773,8 @@ class ApiController extends ApiBaseController
      * @apiName GetReviews
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
@@ -1793,6 +1803,8 @@ class ApiController extends ApiBaseController
      * @apiName GetHomescreenReviews
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} country_id Country's id to get reviews related to businesses inside.
      * @apiParam {String} page Page number (optional).
      *
@@ -1878,6 +1890,8 @@ class ApiController extends ApiBaseController
      * @apiName GetMedia
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} business_id_to_get Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} page Page number (optional).
@@ -1908,6 +1922,8 @@ class ApiController extends ApiBaseController
      * @apiName GetMediaByIds
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} ids Media's ids (ex. 3,7,8).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1928,6 +1944,8 @@ class ApiController extends ApiBaseController
      * @apiName GetHomescreenImages
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} country_id Country's id to get images related to businesses inside.
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -2183,6 +2201,8 @@ class ApiController extends ApiBaseController
      * @apiName GetComments
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} object_id Object's id to get comments related.
      * @apiParam {String} object_type Object's type to get comments related (review or media).
      * @apiParam {String} page Page number (optional).
@@ -2226,8 +2246,8 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['reaction_id']);
 
-        if ($this->_addedReaction($type, $this->logged_user['id'], $object_id, $object_type)) {
-            throw new HttpException(200, 'already '.$type.'d this item before');
+        if ($this->_addedReaction($this->logged_user['id'], $object_id, $object_type)) {
+            throw new HttpException(200, 'already added reaction to this item before');
         }
 
         if ($object_type === 'review') {
@@ -2351,7 +2371,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} object_id Object's id to get reactions related.
-     * @apiParam {String} object_type Object's type to get reactions related (review or media).
+     * @apiParam {String} object_type Object's type to get reactions related (review or media or comment).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -2362,7 +2382,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['reactions']);
 
-        if ($object_type !== 'review' && $object_type !== 'media') {
+        if ($object_type !== 'review' && $object_type !== 'media' && $object_type !== 'comment') {
             throw new HttpException(200, 'not supported type');
         }
 
@@ -2370,6 +2390,71 @@ class ApiController extends ApiBaseController
         $conditions[] = ['object_id' => $object_id];
         $conditions[] = ['object_type' => $object_type];
         $this->output['reactions'] = $this->_getReactions($conditions);
+    }
+
+    /***************************************/
+    /************ Reservations *************/
+    /***************************************/
+
+    /**
+     * @api {post} /api/reserve-real-estate Reserve real estate
+     * @apiName ReserveRealEstate
+     * @apiGroup Reservations
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} business_id Business id
+     * @apiParam {String} mobile User's mobile.
+     * @apiParam {String} notes Reservation notes (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionReserveRealEstate($business_id, $mobile, $notes)
+    {
+        $user = User::findOne($this->logged_user['id']);
+        if ($user === null) {
+            throw new HttpException(200, 'no user with this id');
+        }
+
+        $business = Business::findOne($business_id);
+        if (empty($business)) {
+            throw new HttpException(200, 'no business with this id');
+        }
+        if ($business->category->name !== 'Real Estate') {
+            throw new HttpException(200, 'only real estate businesses are allowed');
+        }
+        if (empty($business->email)) {
+            throw new HttpException(200, 'business has no email');
+        }
+
+        $reservation = new Reservation;
+        $reservation->user_id = $user->id;
+        $reservation->business_id = $business_id;
+        $reservation->mobile = $mobile;
+        $reservation->notes = $notes;
+        if (!$reservation->save()) {
+            throw new HttpException(200, $this->_getErrors($reservation));
+        }
+
+        $result = Yii::$app->mailer->compose()
+            ->setFrom(['info@myblabber.com' => 'MyBlabber Information'])
+            ->setTo($business->email)
+            ->setSubject('New Property Request')
+            ->setTextBody(
+                "Dear " . $business->name . ",\n\n"
+                . "It's a new property request!\n\n"
+                . "Contact details\n"
+                . "Name: " . $user->name . "\n"
+                . "Mobile: " . $mobile . "\n"
+                . ($notes ? "Notes: " . $notes . "\n" : '')
+                . "\nBest always,\n"
+                . "Blabber"
+            )
+            ->send();
+        if ($result === null) {
+            throw new HttpException(200, 'Errors while sending email');
+        }
     }
 
     /***************************************/
