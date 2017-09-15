@@ -2371,7 +2371,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} object_id Object's id to get reactions related.
-     * @apiParam {String} object_type Object's type to get reactions related (review or media).
+     * @apiParam {String} object_type Object's type to get reactions related (review or media or comment).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -2382,7 +2382,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['reactions']);
 
-        if ($object_type !== 'review' && $object_type !== 'media') {
+        if ($object_type !== 'review' && $object_type !== 'media' && $object_type !== 'comment') {
             throw new HttpException(200, 'not supported type');
         }
 
