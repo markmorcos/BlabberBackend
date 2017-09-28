@@ -121,8 +121,8 @@ class ApiBaseController extends Controller
     protected function _getErrors($model)
     {
         $errors = '';
-        foreach ($model->errors as $key => $element) {
-            foreach ($element as $key => $error) {
+        foreach ($model->errors as $element) {
+            foreach ($element as $error) {
                 $errors .= $error . ', ';
             }
         }
