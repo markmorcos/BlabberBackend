@@ -155,14 +155,14 @@ span.interest {
                 'accept' => $type === 'brochure' ? 'application/pdf' : 'image/*'
             ],
             'clientOptions' => [
-                'maxFileSize' => $type === 'brochure' ? 30000000 : 2000000
+                'maxFileSize' => $type === 'brochure' ? 50 * 1024 * 1024 : 2 * 1024 * 1024
             ],
             'clientEvents' => [
                 'fileuploaddone' => 'function(e, data) {
                     updateMedia("'.$id.'","'.$type.'s");
                 }',
                 'fileuploadfail' => 'function(e, data) {
-                    alert("Error in uploading images");
+                    alert("Error in uploading files");
                 }',
             ],
         ]);
