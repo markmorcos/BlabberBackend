@@ -360,9 +360,11 @@ class ApiBaseController extends Controller
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
-            $business['category'] = $model['category']->attributes;
+            $business['category'] = $model['category']->parent->attributes;
+            $business['subcategory'] = $model['category']->attributes;
         } else {
             $business['category'] = null;
+            $business['subcategory'] = null;
         }
         $business['admin_id'] = $model['admin_id'];
         $business['flags'] = $model['flagsList'];
@@ -683,6 +685,7 @@ class ApiBaseController extends Controller
                     throw new HttpException(200, $this->_getErrors($model));
                 }
             }
+            return $media;
         }
     }
 

@@ -1445,6 +1445,23 @@ class ApiController extends ApiBaseController
         if (!$savedBusiness->save()) {
             throw new HttpException(200, $this->_getErrors($savedBusiness));
         }
+
+        $user = User::findOne($model->admin_id);
+        if (!empty($user) && $user->role === 'business') {
+            $type = 'favorite';
+            $title = 'New Favorite';
+            $body = $savedBusiness->user->name . ' added ' . $savedBusiness->business->name . ' to their favorites';
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'saved_business_id' => $savedBusiness->id,
+                    'user_data' => $this->_getUserData($savedBusiness->user),
+                    'business_id' => $savedBusiness->business_id,
+                ]
+            ];
+            $this->_addNotification($user->id, $type, $title, $body, $data);
+            $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
+        }
     }
 
     /**
@@ -1541,6 +1558,23 @@ class ApiController extends ApiBaseController
         }
 
         $this->output['checkin_id'] = $checkin->id;
+
+        $user = User::findOne($model->admin_id);
+        if (!empty($user) && $user->role === 'business') {
+            $type = 'checkin';
+            $title = 'New Checkin';
+            $body = $checkin->user->name . ' checked in to ' . $checkin->business->name;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'checkin_id' => $checkin->id,
+                    'user_data' => $this->_getUserData($checkin->user),
+                    'business_id' => $checkin->business_id,
+                ]
+            ];
+            $this->_addNotification($user->id, $type, $title, $body, $data);
+            $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
+        }
     }
 
     /**
@@ -1637,6 +1671,23 @@ class ApiController extends ApiBaseController
         $this->output['review_id'] = $review->id;
 
         // send notifications
+        $user = User::findOne($business->admin_id);
+        if (!empty($user) && $user->role === 'business') {
+            $type = 'review';
+            $title = 'New Review';
+            $body = $review->user->name . ' posted a review on ' . $review->business->name;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'review_id' => $review->id,
+                    'user_data' => $this->_getUserData($review->user),
+                    'business_id' => $review->business_id,
+                ]
+            ];
+            $this->_addNotification($user->id, $type, $title, $body, $data);
+            $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
+        }
+
         if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches)) {
             $users = $matches[1];
             foreach ($users as $username) {
@@ -1840,18 +1891,38 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'no file input');
         }
 
-        $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption, $rating);
+        $media = $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption, $rating);
+
+        $business = Business::find()
+            ->where(['id' => $business_id])
+            ->one();
+        if ($business === null) {
+            throw new HttpException(200, 'no business with this id');
+        }
 
         if (!empty($rating)) {
-            $business = Business::find()
-                ->where(['id' => $business_id])
-                ->one();
-            if ($business === null) {
-                throw new HttpException(200, 'no business with this id');
-            }
             $business->rating = $this->_calcRating($business_id);
             if (!$business->save()) {
                 throw new HttpException(200, $this->_getErrors($business));
+            }
+        }
+
+        if ($type === 'image') {
+            $user = User::findOne($business->admin_id);
+            if (!empty($user) && $user->role === 'business') {
+                $type = 'image';
+                $title = 'New Image';
+                $body = $media->user->name . ' posted an image on ' . $business->name;
+                $data = [
+                    'type' => $type,
+                    'payload' => [
+                        'media_id' => $media->id,
+                        'user_data' => $this->_getUserData($media->user),
+                        'business_id' => $business->id,
+                    ]
+                ];
+                $this->_addNotification($user->id, $type, $title, $body, $data);
+                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
             }
         }
     }
@@ -2537,12 +2608,16 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = [
-            'new_friend_request' => [],
-            'friend_request_accepted' => [],
-            'review_tag' => [],
-            'comment' => [],
-        ];
+        if ($this->logged_user['role'] === 'business') {
+            $notifications = [];
+        } else {
+            $notifications = [
+                'new_friend_request' => [],
+                'friend_request_accepted' => [],
+                'review_tag' => [],
+                'comment' => [],
+            ];
+        }
 
         $query = Friendship::find()
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
@@ -2565,7 +2640,11 @@ class ApiController extends ApiBaseController
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            $notifications[$notification['type']][] = $temp;
+            if ($this->logged_user['role'] === 'business') {
+                $notifications[] = $temp;
+            } else {
+                $notifications[$notification['type']][] = $temp;
+            }
         }
 
         $this->output['notifications'] = $notifications;
