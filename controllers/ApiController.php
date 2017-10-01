@@ -1219,7 +1219,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['businesses']);
 
         $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, ['name' => SORT_ASC]);
     }
 
     /**
