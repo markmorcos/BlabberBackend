@@ -14,6 +14,7 @@ namespace app\models;
  * @property string $icon
  * @property string $badge
  * @property integer $parent_id
+ * @property integer $order
  * @property string $created
  * @property string $updated
  */
@@ -33,7 +34,7 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['parent_id'], 'integer'],
+            [['parent_id', 'order'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr'], 'string', 'max' => 255],
             [['description', 'descriptionAr'], 'string', 'max' => 1023],
@@ -55,6 +56,7 @@ class Category extends \yii\db\ActiveRecord
             'icon' => 'Icon',
             'badge' => 'Badge',
             'parent_id' => 'Parent',
+            'order' => 'Order',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
