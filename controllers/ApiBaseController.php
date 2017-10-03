@@ -361,11 +361,11 @@ class ApiBaseController extends Controller
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
-            $business['category'] = $model['category']->parent->attributes;
-            $business['subcategory'] = $model['category']->attributes;
-        } else {
-            $business['category'] = null;
-            $business['subcategory'] = null;
+            $business['subcategory'] = $business['category'] = $model['category']->attributes;
+            if (isset($model['category']->parent)) {
+                $business['subcategory'] = $business['category'];
+                $business['category'] = $model['category']->parent->attributes;
+            }
         }
         $business['admin_id'] = $model['admin_id'];
         $business['flags'] = $model['flagsList'];
