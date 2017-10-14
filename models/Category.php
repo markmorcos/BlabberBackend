@@ -66,4 +66,17 @@ class Category extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Category::className(), ['id' => 'parent_id']);
     }
+
+    public function getTopParent()
+    {
+        $parent = $this->parent;
+        while (true) {
+            if ($parent === null || $parent->parent === null) {
+                break;
+            }
+            $parent = $parent->parent;
+        }
+
+        return $parent;
+    }
 }
