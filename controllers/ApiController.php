@@ -948,7 +948,9 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name business name.
+     * @apiParam {String} nameAr business arabic name.
      * @apiParam {String} address business address.
+     * @apiParam {String} addressAr business arabic address.
      * @apiParam {String} email business email.
      * @apiParam {String} country_id business country id.
      * @apiParam {String} city_id business city id.
@@ -958,6 +960,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} lng business longitude .
      * @apiParam {String} price average business price.
      * @apiParam {String} description business description.
+     * @apiParam {String} descriptionAr business arabic description.
      * @apiParam {String} category_id Category's id to add business inside.
      * @apiParam {String} website business website. (optional)
      * @apiParam {String} fb_page business Facebook page. (optional)
@@ -970,7 +973,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $address, $email, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $nameAr, $address, $addressAr, $email, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -979,8 +982,10 @@ class ApiController extends ApiBaseController
         }
 
         $business = new Business;
-        $business->{"name".$this->lang} = $name;
-        $business->{"address".$this->lang} = $address;
+        $business->name = $name;
+        $business->nameAr = $nameAr;
+        $business->address = $address;
+        $business->addressAr = $addressAr;
         $business->email = $email;
         $business->country_id = $country_id;
         $business->city_id = $city_id;
@@ -989,7 +994,8 @@ class ApiController extends ApiBaseController
         $business->lat = $lat;
         $business->lng = $lng;
         $business->price = $price;
-        $business->{"description".$this->lang} = $description;
+        $business->description = $description;
+        $business->descriptionAr = $descriptionAr;
         $business->category_id = $category_id;
         $business->admin_id = $this->logged_user['id'];
 
@@ -1450,13 +1456,13 @@ class ApiController extends ApiBaseController
         if (!empty($user) && $user->role === 'business') {
             $type = 'favorite';
             $title = 'New Favorite';
-            $body = $savedBusiness->user->name . ' added ' . $savedBusiness->business->name . ' to their favorites';
+            $body = $savedBusiness->user->name . ' saved ' . $savedBusiness->business->name;
             $data = [
                 'type' => $type,
                 'payload' => [
                     'saved_business_id' => $savedBusiness->id,
                     'user_data' => $this->_getUserData($savedBusiness->user),
-                    'business_id' => $savedBusiness->business_id,
+                    'business_data' => $this->_getBusinessData($savedBusiness->business),
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1569,7 +1575,7 @@ class ApiController extends ApiBaseController
                 'payload' => [
                     'checkin_id' => $checkin->id,
                     'user_data' => $this->_getUserData($checkin->user),
-                    'business_id' => $checkin->business_id,
+                    'business_data' => $this->_getBusinessData($checkin->business),
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1681,7 +1687,7 @@ class ApiController extends ApiBaseController
                 'payload' => [
                     'review_id' => $review->id,
                     'user_data' => $this->_getUserData($review->user),
-                    'business_id' => $review->business_id,
+                    'business_data' => $this->_getBusinessData($review->business),
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1918,7 +1924,7 @@ class ApiController extends ApiBaseController
                     'payload' => [
                         'media_id' => $media->id,
                         'user_data' => $this->_getUserData($media->user),
-                        'business_id' => $business->id,
+                        'business_data' => $this->_getBusinessData($business),
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
