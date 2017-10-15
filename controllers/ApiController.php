@@ -2465,8 +2465,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($reservation));
         }
 
-        $result = Yii::$app->mailer->compose()
-            ->setFrom(['info@myblabber.com' => 'MyBlabber Information'])
+        $result1 = Yii::$app->mailer->compose()
+            ->setFrom(['info@myblabber.com' => 'Blabber'])
             ->setTo($business->email)
             ->setSubject('New Property Request')
             ->setTextBody(
@@ -2480,7 +2480,22 @@ class ApiController extends ApiBaseController
                 . "Blabber"
             )
             ->send();
-        if ($result === null) {
+        $result2 = Yii::$app->mailer->compose()
+            ->setFrom(['info@myblabber.com' => 'Blabber'])
+            ->setTo('info@myblabber.com')
+            ->setSubject('New Property Request')
+            ->setTextBody(
+                "Dear " . $business->name . ",\n\n"
+                . "It's a new property request!\n\n"
+                . "Contact details\n"
+                . "Name: " . $user->name . "\n"
+                . "Mobile: " . $mobile . "\n"
+                . ($notes ? "Notes: " . $notes . "\n" : '')
+                . "\nBest always,\n"
+                . "Blabber"
+            )
+            ->send();
+        if ($result1 === null || $result2 === null) {
             throw new HttpException(200, 'Errors while sending email');
         }
     }
