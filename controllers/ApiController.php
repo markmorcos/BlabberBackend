@@ -118,7 +118,7 @@ class ApiController extends ApiBaseController
 
             // upload image then save it
         } else if (!empty($_FILES['Media'])) {
-            $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
+            $this->_uploadFile($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
         }
 
         if ($type === 'business') {
@@ -294,7 +294,7 @@ class ApiController extends ApiBaseController
 
             // upload image then save it
         } else if (!empty($_FILES['Media'])) {
-            $this->_uploadPhoto($user->id, 'User', 'profile_photo', $user, 'profile_photo');
+            $this->_uploadFile($user->id, 'User', 'profile_photo', $user, 'profile_photo');
         } else {
             throw new HttpException(200, 'no url or file input');
         }
@@ -907,7 +907,7 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($_FILES['Media'])) {
-            $this->_uploadPhoto($flag->id, 'Flag', 'flag_icon', $flag, 'icon');
+            $this->_uploadFile($flag->id, 'Flag', 'flag_icon', $flag, 'icon');
         }
     }
 
@@ -1038,7 +1038,7 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($_FILES['Media'])) {
-            $this->_uploadPhoto($business->id, 'Business', 'business_image', $business, 'main_image');
+            $this->_uploadFile($business->id, 'Business', 'business_image', $business, 'main_image');
         }
 
         $this->output['business_id'] = $business->id;
@@ -1181,7 +1181,7 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($_FILES['Media'])) {
-            $this->_uploadPhoto($business->id, 'Business', 'business_image', $business, 'main_image');
+            $this->_uploadFile($business->id, 'Business', 'business_image', $business, 'main_image');
         }
     }
 
@@ -1897,7 +1897,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'no file input');
         }
 
-        $media = $this->_uploadPhoto($business_id, 'Business', $type, null, null, null, $caption, $rating);
+        $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);
 
         $business = Business::find()
             ->where(['id' => $business_id])

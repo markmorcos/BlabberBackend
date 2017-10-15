@@ -654,7 +654,7 @@ class ApiBaseController extends Controller
         return $media;
     }
 
-    protected function _uploadPhoto($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)
+    protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)
     {
         $media = new Media;
         $media->file = UploadedFile::getInstance($media, 'file');
