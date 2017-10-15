@@ -373,7 +373,7 @@ class ApiBaseController extends Controller
             $business['category']['name'] = $model['category']['name'.$this->lang];
             if (isset($model['category']->topParent)) {
                 $business['top_category'] = $model['category']->topParent->attributes;
-                $business['top_category']['name'] = $model['category']['name' . $this->lang];
+                $business['top_category']['name'] = $model['top_category']['name' . $this->lang];
             } else {
                 $business['top_category'] = null;
             }
