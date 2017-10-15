@@ -2598,11 +2598,7 @@ class ApiController extends ApiBaseController
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            if ($this->logged_user['role'] === 'business') {
-                $notifications[] = $temp;
-            } else {
-                $notifications[$notification['type']][] = $temp;
-            }
+            $notifications[$notification['type']][] = $temp;
         }
 
         $this->output['notifications'] = $notifications;
