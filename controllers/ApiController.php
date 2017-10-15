@@ -2362,55 +2362,6 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($reaction));
         }
         $this->output['reaction_id'] = $reaction->id;
-
-//        $commenter_name = $reaction->user->name;
-//        if (!empty($business)) {
-//            $commenter_name = $business->name;
-//        }
-//
-//        // send notification (if not the owner)
-//        if ($object->user_id != $this->logged_user['id']) {
-//            $type = 'comment';
-//            $title = 'New Comment';
-//            $body = $commenter_name . ' added new comment to your ' . $object_type;
-//            $data = [
-//                'type' => $type,
-//                'payload' => [
-//                    'comment_id' => $comment->id,
-//                    'object_id' => $comment->object_id,
-//                    'object_type' => $comment->object_type,
-//                    'user_data' => $this->_getUserData($comment->user),
-//                ]
-//            ];
-//            $this->_addNotification($object->user_id, $type, $title, $body, $data);
-//            $this->_sendNotification($object->user->getLastFirebaseToken(), $title, $body, $data);
-//        }
-//
-//        // send notifications
-//        if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
-//            $users = $matches[1];
-//            foreach ($users as $username) {
-//                $user = User::findOne(['username' => $username]);
-//                if (empty($user)) {
-//                    continue;
-//                }
-//
-//                $type = 'comment';
-//                $title = 'New Comment Tag';
-//                $body = $commenter_name . ' has tagged you in comment';
-//                $data = [
-//                    'type' => $type,
-//                    'payload' => [
-//                        'comment_id' => $comment->id,
-//                        'object_id' => $comment->object_id,
-//                        'object_type' => $comment->object_type,
-//                        'user_data' => $this->_getUserData($comment->user),
-//                    ]
-//                ];
-//                $this->_addNotification($user->id, $type, $title, $body, $data);
-//                $this->_sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
-//            }
-//        }
     }
 
     /**
