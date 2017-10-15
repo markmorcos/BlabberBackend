@@ -36,6 +36,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'profile_photo')->fileInput() ?>
 
+    <?= $form->field($model, 'lang')->textInput(['maxlength' => true]) ?>
+
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
     </div>

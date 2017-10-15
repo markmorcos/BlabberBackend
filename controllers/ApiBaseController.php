@@ -76,7 +76,9 @@ class ApiBaseController extends Controller
             $this->pagination['page_no'] = intval($params['page']);
         }
 
-        if (!empty($params['lang']) && $params['lang'] === 'Ar') {
+        if (isset($this->logged_user['lang'])) {
+            $this->lang = $this->logged_user['lang'];
+        } else if (!empty($params['lang']) && $params['lang'] === 'Ar') {
             $this->lang = $params['lang'];
         }
 

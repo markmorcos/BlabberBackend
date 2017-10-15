@@ -44,6 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ),
             // 'blocked',
             // 'private',
+            // 'lang',
             'created',
             // 'updated',
 
