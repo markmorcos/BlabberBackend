@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\Translation;
 use app\models\Business;
 use app\models\BusinessView;
 use app\models\Category;
@@ -23,8 +24,13 @@ use yii\web\UploadedFile;
 
 class ApiBaseController extends Controller
 {
-    public $output = ['status' => 0, 'errors' => null];
-    public $logged_user = ['id' => ''];
+    public $output = [
+        'status' => 0,
+        'errors' => null
+    ];
+    public $logged_user = [
+        'id' => '',
+    ];
     public $lang = '';
     public $pagination = [
         'page_no' => null,
@@ -49,6 +55,14 @@ class ApiBaseController extends Controller
         return $behaviors;
     }
 
+    public function runAction($id, $params = [])
+    {
+        // Extract the params from the request and bind them to params
+        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
+
+        return parent::runAction($id, $params);
+    }
+
     public function beforeAction($action)
     {
         $this->enableCsrfValidation = false;
@@ -64,16 +78,8 @@ class ApiBaseController extends Controller
             throw new HttpException(200, 'authentication error, please login again');
         }
 
-        return parent::beforeAction($action);
-    }
-
-    public function runAction($id, $params = [])
-    {
-        // Extract the params from the request and bind them to params
-        $params = \yii\helpers\BaseArrayHelper::merge(Yii::$app->getRequest()->getBodyParams(), $params);
-
-        if (!empty($params['page'])) {
-            $this->pagination['page_no'] = intval($params['page']);
+        if (!empty(Yii::$app->request->post('page'))) {
+            $this->pagination['page_no'] = intval(Yii::$app->request->post('page'));
         }
 
         if (isset($this->logged_user['lang'])) {
@@ -82,7 +88,7 @@ class ApiBaseController extends Controller
             $this->lang = $params['lang'];
         }
 
-        return parent::runAction($id, $params);
+        return parent::beforeAction($action);
     }
 
     public function afterAction($action, $result)
@@ -143,7 +149,7 @@ class ApiBaseController extends Controller
         $user = User::findOne($request->post('user_id'));
 
         if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
-            $this->logged_user = $user;
+            $this->logged_user = $user->attributes;
             return true;
         } else {
             return false;
@@ -711,8 +717,10 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _sendNotification($firebase_token, $title, $body, $data = null)
+    protected function _sendNotification($user, $title, $body, $data = null)
     {
-        \app\components\Notification::sendNotification($firebase_token, $title, $body, $data);
+        $title = Translation::get($user->lang, $title);
+        $body = Translation::get($user->lang, $body);
+        \app\components\Notification::sendNotification($user->firebase_token, $title, $body, $data);
     }
 }
