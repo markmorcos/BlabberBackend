@@ -46,4 +46,14 @@ class SavedBusiness extends \yii\db\ActiveRecord
             'updated' => 'Updated',
         ];
     }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
+
+    public function getBusiness()
+    {
+        return $this->hasOne(Business::className(), ['id' => 'business_id']);
+    }
 }

@@ -21,6 +21,7 @@ namespace app\models;
  * @property integer $approved
  * @property integer $blocked
  * @property integer $private
+ * @property string $lang
  * @property string $created
  * @property string $updated
  */
@@ -54,6 +55,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['mobile'], 'string', 'max' => 20],
             [['email', 'mobile'], 'unique'],
             [['email'], 'email'],
+            [['lang'], 'string', 'max' => 2],
             ['password_confirmation', 'compare', 'compareAttribute'=>'password', 'skipOnEmpty' => false, 'on' => ['create', 'update'], 'message'=>"Passwords don't match"],
         ];
     }
@@ -80,6 +82,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'approved' => 'Approved',
             'blocked' => 'Blocked',
             'private' => 'Private',
+            'lang' => 'Lang',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

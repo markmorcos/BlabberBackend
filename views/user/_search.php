@@ -45,6 +45,8 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'private') ?>
 
+    <?php // echo $form->field($model, 'lang') ?>
+
     <?php // echo $form->field($model, 'created') ?>
 
     <?php // echo $form->field($model, 'updated') ?>

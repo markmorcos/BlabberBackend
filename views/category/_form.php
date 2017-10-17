@@ -22,6 +22,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'parent_id')->dropDownList($categories_for_dropdown, ['prompt' => 'no parent']) ?>
 
+    <?= $form->field($model, 'order')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'main_image')->fileInput() ?>
 
     <?= $form->field($model, 'icon')->fileInput() ?>

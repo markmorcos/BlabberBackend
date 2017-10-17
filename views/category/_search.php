@@ -25,13 +25,15 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'descriptionAr') ?>
 
+    <?php // echo $form->field($model, 'parent_id') ?>
+
+    <?php // echo $form->field($model, 'order') ?>
+
     <?php // echo $form->field($model, 'main_image') ?>
 
     <?php // echo $form->field($model, 'icon') ?>
 
     <?php // echo $form->field($model, 'badge') ?>
-
-    <?php // echo $form->field($model, 'parent_id') ?>
 
     <?php // echo $form->field($model, 'created') ?>
 

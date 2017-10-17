@@ -77,7 +77,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'private',
                 'format' => 'raw',
                 'value' => ($model->private === 0) ? "No" : "Yes"
-            ), 
+            ),
+            'lang',
             'created',
             'updated',
         ],

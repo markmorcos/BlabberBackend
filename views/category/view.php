@@ -38,6 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
                 'value' =>  ($model->parent_id!=null)?Html::a($model->parent->name, ['category/view', 'id' => $model->parent_id]):null
             ), 
+            'order',
             array(
                 'attribute' => 'main_image',
                 'format' => 'raw',
