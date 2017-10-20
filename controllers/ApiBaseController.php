@@ -84,8 +84,8 @@ class ApiBaseController extends Controller
 
         if (isset($this->logged_user['lang'])) {
             $this->lang = $this->logged_user['lang'];
-        } else if (!empty($params['lang']) && $params['lang'] === 'Ar') {
-            $this->lang = $params['lang'];
+        } else if (!empty(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
+            $this->lang = Yii::$app->request->post('lang');
         }
 
         return parent::beforeAction($action);
