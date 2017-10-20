@@ -84,8 +84,8 @@ class ApiBaseController extends Controller
 
         if (isset($this->logged_user['lang'])) {
             $this->lang = $this->logged_user['lang'];
-        } else if (!empty($params['lang']) && $params['lang'] === 'Ar') {
-            $this->lang = $params['lang'];
+        } else if (!empty(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
+            $this->lang = Yii::$app->request->post('lang');
         }
 
         return parent::beforeAction($action);
@@ -373,7 +373,7 @@ class ApiBaseController extends Controller
             $business['category']['name'] = $model['category']['name'.$this->lang];
             if (isset($model['category']->topParent)) {
                 $business['top_category'] = $model['category']->topParent->attributes;
-                $business['top_category']['name'] = $model['top_category']['name' . $this->lang];
+                $business['top_category']['name'] = $model['category']->topParent['name' . $this->lang];
             } else {
                 $business['top_category'] = null;
             }
