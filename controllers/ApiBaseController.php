@@ -583,7 +583,11 @@ class ApiBaseController extends Controller
                 'object_type' => $object_type,
             ])
             ->one();
-        return empty($model)?'':$model->type;
+        if (!empty($model)) {
+            $result['id'] = $model->id;
+            $result['type'] = $model->type;
+        }
+        return empty($model)? '' : $result;
     }
 
     protected function _calcRating($business_id)
