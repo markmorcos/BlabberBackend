@@ -2347,11 +2347,11 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['reaction_id']);
 
         $added_reaction = $this->_addedReaction($this->logged_user['id'], $object_id, $object_type);
-        if ($added_reaction) {
-            if ($added_reaction->type === $type) {
+        if (!empty($added_reaction)) {
+            if ($added_reaction['type'] === $type) {
                 throw new HttpException(200, 'already added reaction to this item before');
             } else {
-                $this->actionDeleteReaction($added_reaction->id);
+                $this->actionDeleteReaction($added_reaction['id']);
             }
         }
 
