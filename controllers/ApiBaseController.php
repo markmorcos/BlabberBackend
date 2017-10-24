@@ -725,6 +725,6 @@ class ApiBaseController extends Controller
     {
         $title = Translation::get($user->lang, $title);
         $body = Translation::get($user->lang, $body);
-        \app\components\Notification::sendNotification($user->firebase_token, $title, $body, $data);
+        \app\components\Notification::sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
     }
 }

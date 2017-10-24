@@ -74,7 +74,7 @@ class OfferController extends AdminController
                 $notifications[] = [$user->id, $model->title, $model->body, json_encode($data)];
 
                 if($model->push === '1'){
-                    \app\components\Notification::sendNotification($user->firebase_token, $model->title, $model->body, $data);
+                    \app\components\Notification::sendNotification($user->getLastFirebaseToken(), $model->title, $model->body, $data);
                 }
             }
 
@@ -124,7 +124,7 @@ class OfferController extends AdminController
                 $notifications[] = [$user->id, $model->title, $model->body, json_encode($data)];
 
                 if($model->push === '1'){
-                    \app\components\Notification::sendNotification($user->firebase_token, $model->title, $model->body, $data);
+                    \app\components\Notification::sendNotification($user->getLastFirebaseToken(), $model->title, $model->body, $data);
                 }
             }
 
