@@ -2609,7 +2609,9 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = $format === 'group' ? [
+        $notifications = $format === 'list'
+        ? []
+        : [
             'new_friend_request' => [],
             'friend_request_accepted' => [],
             'favorite' => [],
@@ -2619,7 +2621,7 @@ class ApiController extends ApiBaseController
             'media' => [],
             'comment' => [],
             'comment_tag' => [],
-        ] : [];
+        ];
 
         $query = Friendship::find()
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
@@ -2642,9 +2644,11 @@ class ApiController extends ApiBaseController
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            $format === 'group'
-            ? $notifications[$notification['type']][] = $temp;
-            : $notifications[] = $temp;
+            if ($format === 'list') {
+                $notifications[] = $temp;
+            } else {
+                $notifications[$notification['type']][] = $temp;
+            }
         }
 
         $this->output['notifications'] = $notifications;
