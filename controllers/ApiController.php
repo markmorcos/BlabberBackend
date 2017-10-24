@@ -1493,34 +1493,57 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-saved-businesses Get all saved businesses
+     * @api {post} /api/get-saved-businesses Get all saved businesses for users or businesses
      * @apiName GetSavedBusinesses
      * @apiGroup Business
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} user_to_get User's id of User you want to get the saved businesses for.
+     * @apiParam {String} business_to_get Business's id of Business you want to get the saved businesses for (optional).
+     * @apiParam {String} user_to_get User's id of User you want to get the saved businesses for (optional).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetSavedBusinesses($user_to_get)
+    public function actionGetSavedBusinesses($business_to_get = null, $user_to_get = null)
     {
-        $this->_addOutputs(['businesses']);
+        if (!empty($business_to_get)) {
+            $user = User::findOne($this->logged_user['id']);
+            if ($user->role !== 'business') {
+                throw new HttpException(200, 'you are not allowed to view this list');
+            }
 
-        $model = SavedBusiness::find()
-            ->select('business_id')
-            ->where(['user_id' => $user_to_get])
-            ->all();
-        $ids_list = [];
-        foreach ($model as $key => $business) {
-            $ids_list[] = $business->business_id;
+            $this->_addOutputs(['users']);
+
+            $model = SavedBusiness::find()
+                ->select('user_id')
+                ->where(['business_id' => $business_to_get])
+                ->all();
+            $user_list = [];
+            foreach ($model as $key => $business) {
+                $user_list[] = $this->_getUserMinimalData($model);
+            }
+
+            $this->output['users'] = $user_list;
         }
 
-        $conditions = ['id' => $ids_list];
-        $this->output['businesses'] = $this->_getBusinesses($conditions);
+        if (!empty($user_to_get)) {
+            $this->_addOutputs(['businesses']);
+
+            $model = SavedBusiness::find()
+                ->select('business_id')
+                ->where(['user_id' => $user_to_get])
+                ->all();
+            $ids_list = [];
+            foreach ($model as $key => $business) {
+                $ids_list[] = $business->business_id;
+            }
+
+            $conditions = ['id' => $ids_list];
+            $this->output['businesses'] = $this->_getBusinesses($conditions);
+        }
     }
 
     /**
@@ -2575,17 +2598,18 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} format Output format (group or list)
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} notifications List of Notifications.
      */
-    public function actionGetAllNotifications()
+    public function actionGetAllNotifications($format = 'group')
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = [
+        $notifications = $format === 'group' ? [
             'new_friend_request' => [],
             'friend_request_accepted' => [],
             'favorite' => [],
@@ -2595,7 +2619,7 @@ class ApiController extends ApiBaseController
             'media' => [],
             'comment' => [],
             'comment_tag' => [],
-        ];
+        ] : [];
 
         $query = Friendship::find()
             ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
@@ -2618,7 +2642,9 @@ class ApiController extends ApiBaseController
             $temp['data'] = json_decode($notification['data']);
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            $notifications[$notification['type']][] = $temp;
+            $format === 'group'
+            ? $notifications[$notification['type']][] = $temp;
+            : $notifications[] = $temp;
         }
 
         $this->output['notifications'] = $notifications;
