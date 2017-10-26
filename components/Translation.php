@@ -25,6 +25,15 @@ class Translation {
             'Ar' => 'قام بقبول طلب الصداقة',
         ],
 
+        'new_media_title' => [
+            'En' => 'New Media',
+            'Ar' => 'اشارة جديدة فى الوسائط',
+        ],
+        'new_media_body' => [
+            'En' => 'posted an image on',
+            'Ar' => 'اضاف صورة على',
+        ],
+
         'new_favorite_title' => [
             'En' => 'New Favorite',
             'Ar' => 'اشارة جديدة فى تقييم',
