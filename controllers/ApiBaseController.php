@@ -70,7 +70,7 @@ class ApiBaseController extends Controller
         $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
-            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images',
+            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review',
             'get-comments', 'get-reactions', 'get-sponsors',
         ];
 

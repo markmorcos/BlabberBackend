@@ -1850,6 +1850,34 @@ class ApiController extends ApiBaseController
     }
 
     /**
+     * @api {post} /api/get-review Get all reviews for user or business
+     * @apiName GetReview
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {String} review_id Review's id.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} review review details.
+     */
+    public function actionGetReview($review_id)
+    {
+        $this->_addOutputs(['review']);
+        $conditions = [];
+        $conditions['id'] = $review_id;
+        if (empty($review_id)) {
+            throw new HttpException(200, 'Review id is required');
+        }
+        $reviews = $this->_getReviews($conditions);
+        if (empty($reviews)) {
+            throw new HttpException(200, 'Review not found');
+        }
+        $this->output['review'] = $reviews[0];
+    }
+
+    /**
      * @api {post} /api/get-reviews Get all reviews for user or business
      * @apiName GetReviews
      * @apiGroup Business
