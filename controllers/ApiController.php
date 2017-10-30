@@ -1523,7 +1523,7 @@ class ApiController extends ApiBaseController
                 ->all();
             $user_list = [];
             foreach ($model as $key => $business) {
-                $user_list[] = $this->_getUserMinimalData($model);
+                $user_list[] = $this->_getUserMinimalData($business);
             }
 
             $this->output['users'] = $user_list;
