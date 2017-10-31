@@ -70,7 +70,7 @@ class ApiBaseController extends Controller
         $guest_actions = ['error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags', 'get-interests',
             'get-homescreen-businesses', 'get-businesses', 'search-businesses', 'search-businesses-by-type', 'get-business-data',
-            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images',
+            'get-checkins', 'get-reviews', 'get-homescreen-reviews', 'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review',
             'get-comments', 'get-reactions', 'get-sponsors',
         ];
 
@@ -583,7 +583,11 @@ class ApiBaseController extends Controller
                 'object_type' => $object_type,
             ])
             ->one();
-        return empty($model)?'':$model->type;
+        if (!empty($model)) {
+            $result['id'] = $model->id;
+            $result['type'] = $model->type;
+        }
+        return empty($model)? '' : $result;
     }
 
     protected function _calcRating($business_id)
@@ -721,6 +725,6 @@ class ApiBaseController extends Controller
     {
         $title = Translation::get($user->lang, $title);
         $body = Translation::get($user->lang, $body);
-        \app\components\Notification::sendNotification($user->firebase_token, $title, $body, $data);
+        \app\components\Notification::sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
     }
 }
