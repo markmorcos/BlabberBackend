@@ -587,7 +587,7 @@ class ApiBaseController extends Controller
             $result['id'] = $model->id;
             $result['type'] = $model->type;
         }
-        return empty($model)? json_encode(json_decode("{}")) : $result;
+        return empty($model)? null : $result;
     }
 
     protected function _calcRating($business_id)
