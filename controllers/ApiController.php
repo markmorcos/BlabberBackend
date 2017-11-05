@@ -2680,7 +2680,7 @@ class ApiController extends ApiBaseController
             }
         }
 
-        $this->output['notifications'] = $notifications;
+        $this->output['notifications'] = $format === 'list' ? array_values($notifications) : $notification;
     }
 
     /**
