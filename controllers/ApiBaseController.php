@@ -370,15 +370,17 @@ class ApiBaseController extends Controller
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
             $business['category'] = $model['category']->attributes;
-            $business['category']['name'] = $model['category']['name'.$this->lang];
+            $business['category']['name'] = $model['category']['name' . $this->lang];
             if (isset($model['category']->topParent)) {
                 $business['top_category'] = $model['category']->topParent->attributes;
                 $business['top_category']['name'] = $model['category']->topParent['name' . $this->lang];
             } else {
-                $business['top_category'] = null;
+                $business['top_category'] = $model['category']->attributes;
+                $business['top_category']['name'] = $model['category']['name' . $this->lang];
             }
         } else {
             $business['category'] = null;
+            $business['top_category'] = null;
         }
         $business['admin_id'] = $model['admin_id'];
         $business['flags'] = $model['flagsList'];
@@ -587,7 +589,7 @@ class ApiBaseController extends Controller
             $result['id'] = $model->id;
             $result['type'] = $model->type;
         }
-        return empty($model)? '' : $result;
+        return empty($model)? null : $result;
     }
 
     protected function _calcRating($business_id)

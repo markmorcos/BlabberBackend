@@ -2674,7 +2674,7 @@ class ApiController extends ApiBaseController
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
             if ($format === 'list') {
-                $notifications[] = $temp;
+                $notifications['list'][] = $temp;
             } else {
                 $notifications[$notification['type']][] = $temp;
             }
