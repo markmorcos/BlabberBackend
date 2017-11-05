@@ -2680,7 +2680,7 @@ class ApiController extends ApiBaseController
             }
         }
 
-        $this->output['notifications'] = $notification;
+        $this->output['notifications'] = $notifications;
     }
 
     /**
