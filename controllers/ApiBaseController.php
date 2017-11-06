@@ -37,7 +37,7 @@ class ApiBaseController extends Controller
         'no_per_page' => 20,
         'total_pages_no' => null,
     ];
-    public $adminEmail = 'admin@myblabber.com';
+    public $adminEmail = 'info@myblabber.com';
 
     // TODO: remove on production
     public function behaviors()
@@ -304,6 +304,8 @@ class ApiBaseController extends Controller
 
     protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
+        $conditions['approved'] = true;
+
         $query = Business::find()
             ->where($conditions)
             ->with('category');

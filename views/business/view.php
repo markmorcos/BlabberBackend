@@ -304,10 +304,58 @@ span.interest {
             'created',
             'updated',
             'isOpen',
+            array(
+                'attribute' => 'approved',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    if($data->approved === 0){
+                        $html = "No" . "&nbsp;&nbsp;&nbsp;<button onclick='approve(".$data->id.")'>Approve</button>" . "&nbsp;&nbsp;&nbsp;<button onclick='disapprove(".$data->id.")'>Disapprove</button>";
+                    }else{
+                        $html = "Yes";
+                    }
+                    return $html;
+                },
+            ),
         ],
     ]) 
     ?>
 
+    <script type="text/javascript">
+    function approve(id){
+        $.ajax( {
+            url: 'approve',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    function disapprove(id){
+        $.ajax( {
+            url: 'disapprove',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    </script>
     <script>
         var map, position;
         function initMap() {

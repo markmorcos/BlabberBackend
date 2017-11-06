@@ -237,4 +237,47 @@ class BusinessController extends AdminController
         $model = Business::find()->where(['id' => $id])->with($type)->asArray()->one();
         return json_encode($model[$type]);
     }
+
+    public function actionApprove()
+    {
+        if( empty($_POST['id']) ){
+            echo 'no id input';
+        }
+
+        $model = $this->findModel($_POST['id']);
+        $model->approved = 1;
+
+        if ($model->save()) {
+            //send email
+            Yii::$app->mailer->compose()
+                ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+                ->setTo($model->email)
+                ->setSubject('Your Buisness Profile Approved')
+                ->setTextBody('Your business profile has been approved, you can view it in our application now')
+                ->send();
+
+            echo 'done';
+        }else{
+            echo 'failed!';
+        }
+    }
+
+    public function actionDisapprove()
+    {
+        if( empty($_POST['id']) ){
+            echo 'no id input';
+        }
+
+        $model = $this->findModel($_POST['id']);
+
+        //send email
+        Yii::$app->mailer->compose()
+            ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+            ->setTo($model->email)
+            ->setSubject('Your Buisness Account Disapproved')
+            ->setTextBody('Your business account has been disapproved, please contact the support if you need help')
+            ->send();
+
+        echo 'done';
+    }
 }

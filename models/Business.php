@@ -31,6 +31,7 @@ use yii\helpers\Url;
  * @property string $show_in_home
  * @property integer $category_id
  * @property integer $admin_id
+ * @property string $approved
  * @property string $created
  * @property string $updated
  */
@@ -52,13 +53,14 @@ class Business extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['lat', 'lng', 'price', 'country_id', 'city_id', 'category_id', 'admin_id'], 'required'],
+            [['name', 'nameAr', 'country_id', 'city_id', 'phone', 'operation_hours', 'price', 'description', 'descriptionAr', 'category_id', 'admin_id'], 'required'],
             [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr', 'email', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
             [['email'], 'email'],
             [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
+            [['approved'], 'boolean'],
         ];
     }
 
@@ -92,6 +94,7 @@ class Business extends \yii\db\ActiveRecord
             'show_in_home' => 'Show In Home',
             'category_id' => 'Category',
             'admin_id' => 'Admin',
+            'approved' => 'Approved',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
