@@ -174,6 +174,14 @@ span.interest {
         $image = "<div>";
         if ($type === 'brochure') {
             $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
+        } else if ($type === 'product') {
+            $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
+            $image .= '<input id="caption-'.$media->id.'" name="caption" placeholder="Caption" value="' . $media->caption . '" style="width:100%">';
+            $image .= '<input id="price-'.$media->id.'" name="price" placeholder="Price" value="' . $media->price . '" style="width:100%">';
+            $image .= Html::a('Update', '#', [
+                'class' => 'btn btn-primary',
+                'onclick' => "return editMedia('".$media->id."','".$media->object_id."','".$type."s');",
+            ]);
         } else {
             $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         }
@@ -188,6 +196,16 @@ span.interest {
     ?>
 
     <script>
+    function editMedia(id, business_id, type){
+        $.ajax('<?= Url::to(['media/edit']) ?>', {
+            type: 'POST',
+            data: { id: id, caption: $('#caption-' + id)[0].value, price: $('#price-' + id)[0].value },
+        }).done(function(data) {
+            if (data === 'done') updateMedia(business_id,type);
+            else alert('Unable to update details');
+        });
+        return false;
+    }
     function deleteMedia(id, business_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
@@ -210,6 +228,11 @@ span.interest {
                     imageDiv  = "<div>";
                     if (type === 'brochures') {
                         imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
+                    } else if (type === 'products') {
+                        imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
+                        imageDiv += '   <input id="caption-' + images[i]['id'] + '" name="caption" placeholder="Caption" value="' + (images[i]['caption'] || '') + '" style="width:100%">';
+                        imageDiv += '   <input id="price-' + images[i]['id'] + '" price="price" placeholder="Price" value="' + (images[i]['price'] || '') + '" style="width:100%">';
+                        imageDiv += "   <a class='btn btn-primary' href='#' onclick='return editMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Update</a>";
                     } else {
                         imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
                     }
