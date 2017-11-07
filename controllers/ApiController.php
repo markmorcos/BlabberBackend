@@ -1043,7 +1043,7 @@ class ApiController extends ApiBaseController
             $this->_uploadFile($business->id, 'Business', 'business_image', $business, 'main_image');
         }
 
-        if ($logged_user['role'] === 'business') {
+        if ($this->logged_user['role'] === 'business') {
             $link = Url::to(['business/view', 'id' => $business->id], true);
 
             Yii::$app->mailer->compose()
