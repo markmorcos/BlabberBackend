@@ -110,7 +110,7 @@ class UserController extends AdminController
         if ($model->save()) {
             //send email
             Yii::$app->mailer->compose()
-                ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+                ->setFrom(['support@myblabber.com' => 'Blabber Support'])
                 ->setTo($model->email)
                 ->setSubject('Business account Approval')
                 ->setTextBody(
@@ -144,7 +144,7 @@ class UserController extends AdminController
 
         //send email
         Yii::$app->mailer->compose()
-            ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+            ->setFrom(['support@myblabber.com' => 'Blabber Support'])
             ->setTo($model->email)
             ->setSubject('Buisness Account Disapproval')
             ->setTextBody(

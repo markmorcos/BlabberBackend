@@ -250,7 +250,7 @@ class BusinessController extends AdminController
         if ($model->save()) {
             //send email
             Yii::$app->mailer->compose()
-                ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+                ->setFrom(['support@myblabber.com' => 'Blabber Support'])
                 ->setTo($model->email)
                 ->setSubject('Business Profile Approval')
                 ->setTextBody(
@@ -284,7 +284,7 @@ class BusinessController extends AdminController
 
         //send email
         Yii::$app->mailer->compose()
-            ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+            ->setFrom(['support@myblabber.com' => 'Blabber Support'])
             ->setTo($model->email)
             ->setSubject('Business Profile Disapproval')
             ->setTextBody(

@@ -245,6 +245,7 @@ span.interest {
     }
     </script>
 
+    <?php Pjax::begin(['id' => 'pjax_widget', 'timeout' => false]); ?>
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -342,6 +343,7 @@ span.interest {
         ],
     ]) 
     ?>
+    <?php Pjax::end(); ?>
 
     <script type="text/javascript">
     function approve(id){
