@@ -261,9 +261,9 @@ class BusinessController extends AdminController
                     . "Blabber Support"
                 )
                 ->setHtmlBody(
-                    "Hello " . $model->admin->name . ",\n\n"
-                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!\n\n"
-                    . "If you have any inquiries kindly contact us on info@myblabber.com :)\n\n"
+                    "Hello " . $model->admin->name . ",<br><br>"
+                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!<br><br>"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)<br><br>"
                     . file_get_contents("../mail/layouts/signature.php")
                 )
                 ->send();
@@ -295,9 +295,9 @@ class BusinessController extends AdminController
                 . "Blabber Support"
             )
             ->setHtmlBody(
-                "Hello " . $model->admin->name . ",\n\n"
-                . "We're extremely sorry! " . $model->name . " has been disapproved.\n\n"
-                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)\n\n"
+                "Hello " . $model->admin->name . ",<br><br>"
+                . "We're extremely sorry! " . $model->name . " has been disapproved.<br><br>"
+                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)<br><br>"
                 . file_get_contents("../mail/layouts/signature.php")
             )
             ->send();

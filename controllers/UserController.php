@@ -121,9 +121,9 @@ class UserController extends AdminController
                     . "Blabber Support"
                 )
                 ->setHtmlBody(
-                    "Hello " . $model->name . ",\n\n"
-                    . "Your business account has been approved, you’re now ready to login and start blabbing!\n\n"
-                    . "If you have any inquiries kindly contact us on info@myblabber.com :)\n\n"
+                    "Hello " . $model->name . ",<br><br>"
+                    . "Your business account has been approved, you’re now ready to login and start blabbing!<br><br>"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)<br><br>"
                     . file_get_contents("../mail/layouts/signature.php")
                 )
                 ->send();
@@ -155,9 +155,9 @@ class UserController extends AdminController
                 . "Blabber Support"
             )
             ->setHtmlBody(
-                "Hello " . $model->name . ",\n\n"
-                . "We're extremely sorry! Your business account has been disapproved.\n\n"
-                . "if you feel you shouldn't receive a disapproval for you account kindly contact us on info@myblabber.com :)\n\n"
+                "Hello " . $model->name . ",<br><br>"
+                . "We're extremely sorry! Your business account has been disapproved.<br><br>"
+                . "if you feel you shouldn't receive a disapproval for you account kindly contact us on info@myblabber.com :)<br><br>"
                 . file_get_contents("../mail/layouts/signature.php")
             )
             ->send();
