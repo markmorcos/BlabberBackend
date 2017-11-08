@@ -252,8 +252,20 @@ class BusinessController extends AdminController
             Yii::$app->mailer->compose()
                 ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
                 ->setTo($model->email)
-                ->setSubject('Your Buisness Profile Approved')
-                ->setTextBody('Your business profile has been approved, you can view it in our application now')
+                ->setSubject('Business Profile Approval')
+                ->setTextBody(
+                    "Hello " . $model->admin->name . ",\n\n"
+                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!\n\n"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)\n\n"
+                    . "Best regards,\n"
+                    . "Blabber Support"
+                )
+                ->setHtmlBody(
+                    "Hello " . $model->admin->name . ",\n\n"
+                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!\n\n"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)\n\n"
+                    . file_get_contents("../mail/layouts/signature.php")
+                )
                 ->send();
 
             echo 'done';
@@ -274,8 +286,20 @@ class BusinessController extends AdminController
         Yii::$app->mailer->compose()
             ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
             ->setTo($model->email)
-            ->setSubject('Your Buisness Account Disapproved')
-            ->setTextBody('Your business account has been disapproved, please contact the support if you need help')
+            ->setSubject('Business Profile Disapproval')
+            ->setTextBody(
+                "Hello " . $model->admin->name . ",\n\n"
+                . "We're extremely sorry! " . $model->name . " has been disapproved.\n\n"
+                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)\n\n"
+                . "Best regards,\n"
+                . "Blabber Support"
+            )
+            ->setHtmlBody(
+                "Hello " . $model->admin->name . ",\n\n"
+                . "We're extremely sorry! " . $model->name . " has been disapproved.\n\n"
+                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)\n\n"
+                . file_get_contents("../mail/layouts/signature.php")
+            )
             ->send();
 
         echo 'done';
