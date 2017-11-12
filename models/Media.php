@@ -28,6 +28,7 @@ class Media extends LikeableActiveRecored
     public $filemenu;
     public $fileproduct;
     public $filebrochure;
+    public $filecigarette;
 
     /**
      * @inheritdoc
@@ -50,7 +51,7 @@ class Media extends LikeableActiveRecored
             [['url'], 'string', 'max' => 255],
             [['caption'], 'string', 'max' => 511],
             [['rating'], 'string', 'max' => 1],
-            [['file'], 'file', 'skipOnEmpty' => false, 'extensions' => 'png, jpg, mp4, pdf'],
+            [['file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, mp4, pdf'],
         ];
     }
 

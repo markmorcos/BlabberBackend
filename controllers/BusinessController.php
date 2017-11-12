@@ -237,4 +237,71 @@ class BusinessController extends AdminController
         $model = Business::find()->where(['id' => $id])->with($type)->asArray()->one();
         return json_encode($model[$type]);
     }
+
+    public function actionApprove()
+    {
+        if( empty($_POST['id']) ){
+            echo 'no id input';
+        }
+
+        $model = $this->findModel($_POST['id']);
+        $model->approved = 1;
+
+        if ($model->save()) {
+            //send email
+            Yii::$app->mailer->compose()
+                ->setFrom(['support@myblabber.com' => 'Blabber Support'])
+                ->setTo($model->email)
+                ->setSubject('Business Profile Approval')
+                ->setTextBody(
+                    "Hello " . $model->admin->name . ",\n\n"
+                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!\n\n"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)\n\n"
+                    . "Best regards,\n"
+                    . "Blabber Support"
+                )
+                ->setHtmlBody(
+                    "Hello " . $model->admin->name . ",<br><br>"
+                    . $model->name . " has been approved, you’re now ready to view it and start blabbing!<br><br>"
+                    . "If you have any inquiries kindly contact us on info@myblabber.com :)<br><br>"
+                    . file_get_contents("../mail/layouts/signature.php")
+                )
+                ->send();
+
+            echo 'done';
+        }else{
+            echo 'failed!';
+        }
+    }
+
+    public function actionDisapprove()
+    {
+        if( empty($_POST['id']) ){
+            echo 'no id input';
+        }
+
+        $model = $this->findModel($_POST['id']);
+
+        //send email
+        Yii::$app->mailer->compose()
+            ->setFrom(['support@myblabber.com' => 'Blabber Support'])
+            ->setTo($model->email)
+            ->setSubject('Business Profile Disapproval')
+            ->setTextBody(
+                "Hello " . $model->admin->name . ",\n\n"
+                . "We're extremely sorry! " . $model->name . " has been disapproved.\n\n"
+                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)\n\n"
+                . "Best regards,\n"
+                . "Blabber Support"
+            )
+            ->setHtmlBody(
+                "Hello " . $model->admin->name . ",<br><br>"
+                . "We're extremely sorry! " . $model->name . " has been disapproved.<br><br>"
+                . "if you feel you shouldn't receive a disapproval for your business profile kindly contact us on info@myblabber.com :)<br><br>"
+                . file_get_contents("../mail/layouts/signature.php")
+            )
+            ->send();
+
+        echo 'done';
+    }
 }

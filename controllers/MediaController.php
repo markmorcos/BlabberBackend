@@ -63,6 +63,24 @@ class MediaController  extends AdminController
      * @param integer $id
      * @return mixed
      */
+    public function actionEdit($id)
+    {
+        $model = $this->findModel($id);
+        $model->caption = $_POST['caption'];
+        $model->price = $_POST['price'];
+        if ($model->save()) {
+            echo 'done';
+        } else {
+            echo 'failed';
+        }
+    }
+
+    /**
+     * Updates an existing Media model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param integer $id
+     * @return mixed
+     */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);

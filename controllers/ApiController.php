@@ -999,6 +999,7 @@ class ApiController extends ApiBaseController
         $business->descriptionAr = $descriptionAr;
         $business->category_id = $category_id;
         $business->admin_id = $this->logged_user['id'];
+        $business->approved = false;
 
         if (!empty($website)) {
             $business->website = $website;
@@ -1040,6 +1041,18 @@ class ApiController extends ApiBaseController
 
         if (!empty($_FILES['Media'])) {
             $this->_uploadFile($business->id, 'Business', 'business_image', $business, 'main_image');
+        }
+
+        if ($this->logged_user['role'] === 'business') {
+            $link = Url::to(['business/view', 'id' => $business->id], true);
+
+            Yii::$app->mailer->compose()
+                ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+                ->setTo($this->adminEmail)
+                ->setSubject('New Buisness Profile (' . $business->name . ')')
+                ->setTextBody('New business profile created through the mobile application, check it from here: ' . $link)
+                ->setHtmlBody('New business profile created through the mobile application, check it from here: <a href="' . $link . '">link</a>')
+                ->send();
         }
 
         $this->output['business_id'] = $business->id;
@@ -1410,6 +1423,7 @@ class ApiController extends ApiBaseController
 
         $model = Business::find()
             ->where(['id' => $business_id])
+            ->andWhere(['approved' => true])
             ->one();
         if ($model === null) {
             throw new HttpException(200, 'no business with this id');
@@ -1936,7 +1950,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to add media to.
-     * @apiParam {String} type Media's type (image, video, menu, product or brochure).
+     * @apiParam {String} type Media's type (image, video, menu, product, brochure or cigarette).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
      * @apiParam {String} rating Media's rating (optional).

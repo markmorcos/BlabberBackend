@@ -106,6 +106,7 @@ span.interest {
     $all_images .= '    <li><a data-toggle="tab" href="#menus">Menu</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#brochures">Brochure</a></li>';
+    $all_images .= '    <li><a data-toggle="tab" href="#cigarettes">Cigarette</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
@@ -143,6 +144,14 @@ span.interest {
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
+    $all_images .= '    <div id="cigarettes" class="tab-pane fade">';
+    $all_images .=          mediaUploader($model->id, 'cigarette');
+    $all_images .= '        <div class="images">';
+    foreach ($model->cigarettes as $media) {
+        $all_images .= newMedia($media, 'cigarette');
+    }
+    $all_images .= '        </div>';
+    $all_images .= '    </div>';
     $all_images .= '</div>';
 
     function mediaUploader($id, $type){
@@ -174,6 +183,14 @@ span.interest {
         $image = "<div>";
         if ($type === 'brochure') {
             $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
+        } else if ($type === 'cigarette') {
+            $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
+            $image .= '<input id="caption-'.$media->id.'" name="caption" placeholder="Caption" value="' . $media->caption . '" style="width:100%">';
+            $image .= '<input id="price-'.$media->id.'" name="price" placeholder="Price" value="' . $media->price . '" style="width:100%">';
+            $image .= Html::a('Update', '#', [
+                'class' => 'btn btn-primary',
+                'onclick' => "return editMedia('".$media->id."','".$media->object_id."','".$type."s');",
+            ]);
         } else {
             $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         }
@@ -188,6 +205,16 @@ span.interest {
     ?>
 
     <script>
+    function editMedia(id, business_id, type){
+        $.ajax('<?= Url::to(['media/edit']) ?>', {
+            type: 'POST',
+            data: { id: id, caption: $('#caption-' + id)[0].value, price: $('#price-' + id)[0].value },
+        }).done(function(data) {
+            if (data === 'done') updateMedia(business_id,type);
+            else alert('Unable to update details');
+        });
+        return false;
+    }
     function deleteMedia(id, business_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
@@ -210,6 +237,11 @@ span.interest {
                     imageDiv  = "<div>";
                     if (type === 'brochures') {
                         imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
+                    } else if (type === 'cigarettes') {
+                        imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
+                        imageDiv += '   <input id="caption-' + images[i]['id'] + '" name="caption" placeholder="Caption" value="' + (images[i]['caption'] || '') + '" style="width:100%">';
+                        imageDiv += '   <input id="price-' + images[i]['id'] + '" price="price" placeholder="Price" value="' + (images[i]['price'] || '') + '" style="width:100%">';
+                        imageDiv += "   <a class='btn btn-primary' href='#' onclick='return editMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Update</a>";
                     } else {
                         imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
                     }
@@ -222,6 +254,7 @@ span.interest {
     }
     </script>
 
+    <?php Pjax::begin(['id' => 'pjax_widget', 'timeout' => false]); ?>
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -304,10 +337,59 @@ span.interest {
             'created',
             'updated',
             'isOpen',
+            array(
+                'attribute' => 'approved',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    if($data->approved === 0){
+                        $html = "No" . "&nbsp;&nbsp;&nbsp;<button onclick='approve(".$data->id.")'>Approve</button>" . "&nbsp;&nbsp;&nbsp;<button onclick='disapprove(".$data->id.")'>Disapprove</button>";
+                    }else{
+                        $html = "Yes";
+                    }
+                    return $html;
+                },
+            ),
         ],
     ]) 
     ?>
+    <?php Pjax::end(); ?>
 
+    <script type="text/javascript">
+    function approve(id){
+        $.ajax( {
+            url: 'approve',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    function disapprove(id){
+        $.ajax( {
+            url: 'disapprove',
+            type: 'POST',
+            data: {id: id},
+            success: function(response) {
+                if( response == 'done' ){
+                    $.pjax.reload({container: '#pjax_widget'});
+                }else{
+                    alert(response);
+                }
+            },
+            error: function(){
+                alert('ERROR at PHP side!!');
+            },
+        });
+    }
+    </script>
     <script>
         var map, position;
         function initMap() {
