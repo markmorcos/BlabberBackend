@@ -644,6 +644,7 @@ class ApiBaseController extends Controller
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
             $temp['caption'] = $value['caption'];
+            $temp['price'] = $value['price'];
             $temp['rating'] = $value['rating'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
