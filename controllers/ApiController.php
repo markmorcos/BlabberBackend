@@ -1200,6 +1200,37 @@ class ApiController extends ApiBaseController
     }
 
     /**
+     * @api {post} /api/delete-business Delete business
+     * @apiName DeleteBusiness
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} business_id Business's id to delete.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function deleteBusiness($business_id) {
+        $business = Business::find()
+            ->where(['id' => $business_id])
+            ->one();
+
+        if ($business === null) {
+            throw new HttpException(200, 'no business with this id');
+        }
+
+        if ($business->admin_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to edit this business');
+        }
+
+        $business->approved = false;
+        if (!$business->save()) {
+            throw new HttpException(200, $this->_getErrors($model));
+        }
+    }
+
+    /**
      * @api {post} /api/get-homescreen-businesses Get businesses for homescreen
      * @apiName GetHomescreenBusinesses
      * @apiGroup Business
