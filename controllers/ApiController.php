@@ -1211,7 +1211,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function deleteBusiness($business_id) {
+    public function actionDeleteBusiness($business_id) {
         $business = Business::find()
             ->where(['id' => $business_id])
             ->one();
