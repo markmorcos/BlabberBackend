@@ -306,8 +306,6 @@ class ApiBaseController extends Controller
 
     protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
-        $andConditions[] = ['approved' => true];
-
         $query = Business::find()
             ->where($conditions)
             ->with('category');
@@ -332,9 +330,8 @@ class ApiBaseController extends Controller
             $order += ['distance' => SORT_ASC];
         }
 
-        if (!empty($andConditions)) {
-            $query->andWhere($andConditions);
-        }
+        $andConditions[] = ['approved' => true];
+        $query->andWhere($andConditions);
 
         $query->orderBy($order);
         $model = $this->_getModelWithPagination($query);
