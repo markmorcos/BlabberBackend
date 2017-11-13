@@ -330,6 +330,9 @@ class ApiBaseController extends Controller
             $order += ['distance' => SORT_ASC];
         }
 
+        if (empty($andConditions)) {
+            $andConditions[] = 'and';
+        }
         $andConditions[] = ['approved' => true];
         $query->andWhere($andConditions);
 
