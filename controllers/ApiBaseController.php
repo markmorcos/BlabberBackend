@@ -306,7 +306,7 @@ class ApiBaseController extends Controller
 
     protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
-        $conditions[] = ['approved' => true];
+        $andConditions[] = ['approved' => true];
 
         $query = Business::find()
             ->where($conditions)
