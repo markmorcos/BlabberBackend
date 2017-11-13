@@ -41,6 +41,7 @@
 		"GetInterests",
 		"AddBusiness",
 		"EditBusiness",
+		"DeleteBusiness",
 		"GetHomescreenBusinesses",
 		"GetBusinesses",
 		"GetBusinessesByOwner",
