@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\Translation;
+use app\models\Blog;
 use app\models\Business;
 use app\models\BusinessFlag;
 use app\models\BusinessInterest;
@@ -2783,4 +2784,23 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($report));
         }
     }
+
+    /**
+     * @api {post} /api/get-blogs Get blogs
+     * @apiName GetBlogs
+     * @apiGroup Blog
+     *
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} blogs Blog posts.
+     */
+     public function actionGetBlogs()
+     {
+         $this->_addOutputs(['blogs']);
+         $query = Blog::find()->orderBy(['id' => SORT_DESC]);
+         $model = $this->_getModelWithPagination($query);         
+         $this->output['blogs'] = $model;
+     } 
 }
