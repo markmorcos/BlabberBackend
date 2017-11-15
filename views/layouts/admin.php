@@ -50,6 +50,7 @@ AppAsset::register($this);
             ['label' => 'Offers', 'url' => ['/offer/index']],
             ['label' => 'Media', 'url' => ['/media/index']],
             ['label' => 'Comments', 'url' => ['/comment/index']],
+            ['label' => 'Blogs', 'url' => ['/blog/index']],
             Yii::$app->user->isGuest ? (
                 ['label' => 'Login', 'url' => ['/site/login']]
             ) : (

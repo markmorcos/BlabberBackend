@@ -73,15 +73,16 @@ class ApiBaseController extends Controller
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors'
+            'get-sponsors', 'get-blogs'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
             throw new HttpException(200, 'authentication error, please login again');
         }
 
-        if (!empty(Yii::$app->request->post('page'))) {
-            $this->pagination['page_no'] = intval(Yii::$app->request->post('page'));
+        $page = Yii::$app->request->get('page') || Yii::$app->request->post('page');
+        if ($page) {
+            $this->pagination['page_no'] = intval($page);
         }
 
         if (isset($this->logged_user['lang'])) {

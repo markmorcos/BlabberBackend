@@ -22,7 +22,8 @@
         "yiisoft/yii2-jui": "~2.0.0",
         "faryshta/yii2-jquery-tagsinput": "*",
         "kartik-v/yii2-widget-select2": "@dev",
-        "2amigos/yii2-file-upload-widget": "~1.0"
+        "2amigos/yii2-file-upload-widget": "~1.0",
+        "2amigos/yii2-ckeditor-widget": "^2.1"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
