@@ -2215,6 +2215,23 @@ class ApiController extends ApiBaseController
             $this->_sendNotification($object->user, $title, $body, $data);
         }
 
+        // Send notification to admin
+        if ($object->user_id != $object->business->admin_id) {
+            $type = 'comment';
+            $title = '{new_comment_title}';
+            $body = $commenter_name . ' {new_comment_body} ' . $object_type;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'comment_id' => $comment->id,
+                    'user_data' => $this->_getUserData($comment->user),
+                    'business_data' => $this->_getBusinessData($object->business),
+                ]
+            ];
+            $this->_addNotification($object->business->admin_id, $type, $title, $body, $data);
+            $this->_sendNotification($object->business->admin, $title, $body, $data);
+        }
+
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
             $users = $matches[1];
