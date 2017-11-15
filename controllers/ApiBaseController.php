@@ -80,8 +80,10 @@ class ApiBaseController extends Controller
             throw new HttpException(200, 'authentication error, please login again');
         }
 
-        $page = Yii::$app->request->get('page') || Yii::$app->request->post('page');
-        if ($page) {
+        $page = !empty(Yii::$app->request->get('page'))
+        ? Yii::$app->request->get('page')
+        : Yii::$app->request->post('page');
+        if (!empty($page)) {
             $this->pagination['page_no'] = intval($page);
         }
 
