@@ -2215,9 +2215,10 @@ class ApiController extends ApiBaseController
             $this->_sendNotification($object->user, $title, $body, $data);
         }
 
-
         // Send notification to admin
-        $businessObject = $object_type === 'media' ? Business::findOne($object->object_id) : $object->business;
+        $businessObject = $object_type === 'media'
+        ? Business::findOne($object->object_id)
+        : $object->business;
         if ($object->user_id != $businessObject->admin_id) {
             $type = 'comment';
             $title = '{new_comment_title}';
