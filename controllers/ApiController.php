@@ -2706,7 +2706,10 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['notifications']);
 
         $notifications = $format === 'list'
-        ? []
+        ? [
+            'new_friend_request' => [],
+            'list' => [],
+        ]
         : [
             'new_friend_request' => [],
             'friend_request_accepted' => [],
