@@ -2197,6 +2197,10 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
+        $businessObject = $object_type === 'media'
+        ? Business::findOne($object->object_id)
+        : $object->business;
+
         // send notification (if not the owner)
         if ($object->user_id != $this->logged_user['id']) {
             $type = 'comment';
@@ -2209,6 +2213,7 @@ class ApiController extends ApiBaseController
                     'object_id' => $comment->object_id,
                     'object_type' => $comment->object_type,
                     'user_data' => $this->_getUserData($comment->user),
+                    'business_data' => $this->_getBusinessData($businessObject),
                 ]
             ];
             $this->_addNotification($object->user_id, $type, $title, $body, $data);
@@ -2216,9 +2221,6 @@ class ApiController extends ApiBaseController
         }
 
         // Send notification to admin
-        $businessObject = $object_type === 'media'
-        ? Business::findOne($object->object_id)
-        : $object->business;
         if ($object->user_id != $businessObject->admin_id) {
             $type = 'comment';
             $title = '{new_comment_title}';
@@ -2227,6 +2229,8 @@ class ApiController extends ApiBaseController
                 'type' => $type,
                 'payload' => [
                     'comment_id' => $comment->id,
+                    'object_id' => $comment->object_id,
+                    'object_type' => $comment->object_type,
                     'user_data' => $this->_getUserData($comment->user),
                     'business_data' => $this->_getBusinessData($businessObject),
                 ]
