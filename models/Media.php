@@ -28,7 +28,6 @@ class Media extends LikeableActiveRecored
     public $filemenu;
     public $fileproduct;
     public $filebrochure;
-    public $filecigarette;
 
     /**
      * @inheritdoc

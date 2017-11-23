@@ -106,7 +106,6 @@ span.interest {
     $all_images .= '    <li><a data-toggle="tab" href="#menus">Menu</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
     $all_images .= '    <li><a data-toggle="tab" href="#brochures">Brochure</a></li>';
-    $all_images .= '    <li><a data-toggle="tab" href="#cigarettes">Cigarette</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
@@ -144,14 +143,6 @@ span.interest {
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
-    $all_images .= '    <div id="cigarettes" class="tab-pane fade">';
-    $all_images .=          mediaUploader($model->id, 'cigarette');
-    $all_images .= '        <div class="images">';
-    foreach ($model->cigarettes as $media) {
-        $all_images .= newMedia($media, 'cigarette');
-    }
-    $all_images .= '        </div>';
-    $all_images .= '    </div>';
     $all_images .= '</div>';
 
     function mediaUploader($id, $type){
@@ -183,14 +174,6 @@ span.interest {
         $image = "<div>";
         if ($type === 'brochure') {
             $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
-        } else if ($type === 'cigarette') {
-            $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
-            $image .= '<input id="caption-'.$media->id.'" name="caption" placeholder="Caption" value="' . $media->caption . '" style="width:100%">';
-            $image .= '<input id="price-'.$media->id.'" name="price" placeholder="Price" value="' . $media->price . '" style="width:100%">';
-            $image .= Html::a('Update', '#', [
-                'class' => 'btn btn-primary',
-                'onclick' => "return editMedia('".$media->id."','".$media->object_id."','".$type."s');",
-            ]);
         } else {
             $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         }
@@ -237,11 +220,6 @@ span.interest {
                     imageDiv  = "<div>";
                     if (type === 'brochures') {
                         imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
-                    } else if (type === 'cigarettes') {
-                        imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
-                        imageDiv += '   <input id="caption-' + images[i]['id'] + '" name="caption" placeholder="Caption" value="' + (images[i]['caption'] || '') + '" style="width:100%">';
-                        imageDiv += '   <input id="price-' + images[i]['id'] + '" price="price" placeholder="Price" value="' + (images[i]['price'] || '') + '" style="width:100%">';
-                        imageDiv += "   <a class='btn btn-primary' href='#' onclick='return editMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Update</a>";
                     } else {
                         imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
                     }
