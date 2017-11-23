@@ -1331,7 +1331,7 @@ class ApiController extends ApiBaseController
         $andConditions[] = 'and';
 
         if (!empty($name)) {
-            $tokens = explode(' ', $name);
+            $tokens = explode('/\s+/', trim($name));
             $names = implode('%', $tokens);
             $conditions[] = "name like '%$names%'";
             $conditions[] = "nameAr like '%$names%'";
@@ -1396,7 +1396,7 @@ class ApiController extends ApiBaseController
         $lat_lng = empty($nearby) ? null : explode(',', $nearby);
         $businesses = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
         if (empty($businesses)) {
-            $tokens = explode(' ', $name);
+            $tokens = explode('/\s+/', trim($name));
             $first = empty($tokens) ? '' : $tokens[0];
             $conditions[] = "name like '%$first%'";
             $conditions[] = "nameAr like '%$first%'";
