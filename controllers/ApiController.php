@@ -1332,10 +1332,9 @@ class ApiController extends ApiBaseController
 
         if (!empty($name)) {
             $tokens = explode(' ', $name);
-            foreach ($tokens as $token) {
-                $conditions[] = ['like', 'name', $token];
-                $conditions[] = ['like', 'nameAr', $token];
-            }
+            $name = '%' . implode('%', $tokens) . '%';
+            $conditions[] = ['like', 'name', $name];
+            $conditions[] = ['like', 'nameAr', $name];
         }
         if (!empty($address)) {
             $andConditions[] = ['like', 'address', $address];
