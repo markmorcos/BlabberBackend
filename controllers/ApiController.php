@@ -1332,9 +1332,9 @@ class ApiController extends ApiBaseController
 
         if (!empty($name)) {
             $tokens = explode(' ', $name);
-            $name = '%' . implode('%', $tokens) . '%';
-            $conditions[] = ['like', 'name', $name];
-            $conditions[] = ['like', 'nameAr', $name];
+            $names = implode('%', $tokens);
+            $conditions[] = "name like '%$names%'";
+            $conditions[] = "nameAr like '%$names%'";
         }
         if (!empty($address)) {
             $andConditions[] = ['like', 'address', $address];
@@ -1394,7 +1394,15 @@ class ApiController extends ApiBaseController
         }
 
         $lat_lng = empty($nearby) ? null : explode(',', $nearby);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
+        $businesses = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
+        if (empty($businesses)) {
+            $tokens = explode(' ', $name);
+            $first = empty($tokens) ? '' : $tokens[0];
+            $conditions[] = "name like '%$first%'";
+            $conditions[] = "nameAr like '%$first%'";
+            $businesses = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
+        }
+        $this->output['businesses'] = $businesses;
     }
 
     /**
