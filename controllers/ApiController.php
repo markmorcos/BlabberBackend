@@ -2876,8 +2876,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'Poll not found');
         }
 
-        $options = explode(',', $poll->options));
-        if (!in_array($answer, $options) {
+        $options = explode(',', $poll->options);
+        if (!in_array($answer, $options)) {
             throw new HttpException(200, 'Invalid answer');
         }
 
