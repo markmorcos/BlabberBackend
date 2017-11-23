@@ -11,10 +11,12 @@ use app\models\Comment;
 use app\models\Friendship;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Poll;
 use app\models\Reaction;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\User;
+use app\models\Vote;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\helpers\Url;
@@ -73,7 +75,7 @@ class ApiBaseController extends Controller
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors', 'get-blogs'
+            'get-sponsors', 'get-blogs', 'get-polls'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -231,6 +233,7 @@ class ApiBaseController extends Controller
         $user['private'] = $model->private;
         $user['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
         $user['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+        $user['is_adult_and_smoker'] = $model->is_adult_and_smoker;
 
         if (!($model->private === 1 && 
             ($last_sent_friend_request === null || $last_sent_friend_request->status !== '1') && 
@@ -674,6 +677,53 @@ class ApiBaseController extends Controller
         }
 
         return $media;
+    }
+
+    protected function _getPolls($conditions)
+    {
+        $query = Poll::find()
+            ->where($conditions)
+            ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $polls = [];
+        foreach ($model as $key => $value) {
+            $temp['id'] = $value['id'];
+            $temp['business_id'] = $value['business_id'];
+            $temp['title'] = $value['title'];
+            $temp['type'] = $value['type'];
+            $temp['options'] = $value['options'];
+            $temp['correct'] = $value['correct'];
+            $temp['created'] = $value['created'];
+            $temp['updated'] = $value['updated'];
+            $options = explode(',', $value['options']);
+            foreach ($options as $option) {
+                $votes[$option] = count(Vote::find()->where(['poll_id' => $value['id'], 'answer' => $option])->all());
+            }
+            $temp['votes'] = $votes;
+            $temp['added_vote'] = $this->_addedVote($this->logged_user['id'], $value['id']);
+
+            $polls[] = $temp;
+        }
+
+        return $polls;
+    }
+
+    protected function _addedVote($user_id, $poll_id)
+    {
+        $model = Vote::find()
+            ->select(['id','answer'])
+            ->where([
+                'user_id' => $user_id,
+                'poll_id' => $poll_id,
+            ])
+            ->one();
+        if (!empty($model)) {
+            $result['id'] = $model->id;
+            $result['answer'] = $model->answer;
+        }
+        return empty($model) ? null : $result;
     }
 
     protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)

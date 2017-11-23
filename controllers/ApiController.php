@@ -18,6 +18,7 @@ use app\models\Friendship;
 use app\models\Interest;
 use app\models\Media;
 use app\models\Notification;
+use app\models\Poll;
 use app\models\Reaction;
 use app\models\Report;
 use app\models\Reservation;
@@ -27,6 +28,7 @@ use app\models\Sponsor;
 use app\models\User;
 use app\models\UserInterest;
 use app\models\UserToken;
+use app\models\Vote;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -1329,8 +1331,11 @@ class ApiController extends ApiBaseController
         $andConditions[] = 'and';
 
         if (!empty($name)) {
-            $conditions[] = ['like', 'name', $name];
-            $conditions[] = ['like', 'nameAr', $name];
+            $tokens = explode(' ', $name);
+            foreach ($token as $tokens) {
+                $conditions[] = ['like', 'name', $token];
+                $conditions[] = ['like', 'nameAr', $token];
+            }
         }
         if (!empty($address)) {
             $andConditions[] = ['like', 'address', $address];
@@ -2826,5 +2831,92 @@ class ApiController extends ApiBaseController
          $query = Blog::find()->orderBy(['id' => SORT_DESC]);
          $model = $this->_getModelWithPagination($query);         
          $this->output['blogs'] = $model;
-     } 
+     }
+
+    /**
+     * @api {post} /api/get-polls Get all media for user or business
+     * @apiName GetPolls
+     * @apiGroup Poll
+     *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {String} business_id Business's id.
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} polls List of polls.
+     */
+    public function actionGetPolls($business_id)
+    {
+        $this->_addOutputs(['polls']);
+        $conditions = ['business_id' => $business_id];
+        $this->output['polls'] = $this->_getPolls($conditions);
+    }
+
+    /**
+     * @api {post} /api/add-vote Add vote
+     * @apiName AddVote
+     * @apiGroup Poll
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} poll_id Poll's id.
+     * @apiParam {String} answer Poll answer.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} vote_id Vote id.
+     */
+     public function actionAddVote($poll_id, $answer)
+     {
+        $poll = Poll::findOne(['id' => $poll_id]);
+        if (empty($poll)) {
+            throw new HttpException(200, 'Poll not found');
+        }
+
+        $options = explode(',', $poll->options));
+        if (!in_array($answer, $options) {
+            throw new HttpException(200, 'Invalid answer');
+        }
+
+        $this->_addOutputs(['vote_id']);
+
+        $model = new Vote;
+        $model->user_id = $this->logged_user['id'];
+        $model->poll_id = $poll_id;
+        $model->answer = $answer;
+        if (!$model->save()) {
+            throw new HttpException(200, $this->_getErrors($model));
+        }
+
+        $this->output['vote_id'] = $model;
+     }
+
+    /**
+     * @api {post} /api/delete-vote Delete vote
+     * @apiName DeleteVote
+     * @apiGroup Poll
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} vote_id Vote's id.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+     public function actionDeleteVote($vote_id)
+     {
+        $vote = Vote::findOne(['id' => $vote_id]);
+        if (empty($vote)) {
+            throw new HttpException(200, 'Vote not found');
+        }
+        if ($vote->user_id !== $this->logged_user['id']) {
+            throw new HttpException(200, 'You are not allowed to delete this vote');
+        }
+        if (!$model->delete()) {
+            throw new HttpException(200, $this->_getErrors($vote));
+        }
+     }
 }

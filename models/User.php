@@ -22,6 +22,7 @@ namespace app\models;
  * @property integer $blocked
  * @property integer $private
  * @property string $lang
+ * @property integer $is_adult_and_smoker
  * @property string $created
  * @property string $updated
  */
@@ -83,6 +84,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'blocked' => 'Blocked',
             'private' => 'Private',
             'lang' => 'Lang',
+            'is_adult_and_smoker' => 'Is Adult and Smoker',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

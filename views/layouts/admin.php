@@ -51,6 +51,8 @@ AppAsset::register($this);
             ['label' => 'Media', 'url' => ['/media/index']],
             ['label' => 'Comments', 'url' => ['/comment/index']],
             ['label' => 'Blogs', 'url' => ['/blog/index']],
+            ['label' => 'Polls', 'url' => ['/poll/index']],
+            ['label' => 'Votes', 'url' => ['/vote/index']],
             Yii::$app->user->isGuest ? (
                 ['label' => 'Login', 'url' => ['/site/login']]
             ) : (
