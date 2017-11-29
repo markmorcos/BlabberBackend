@@ -29,7 +29,7 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'operation_hours')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'operation_hours')->textInput(['maxlength' => true, 'placeholder' => 'from 01:00 am to 12:30 pm']) ?>
 
     <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>
 
