@@ -9,8 +9,8 @@ use yii\helpers\Url;
  *
  * @property integer $id
  * @property integer $user_id
- * @property string $poll_id
- * @property string $answer
+ * @property string $option_id
+ * @property string $vote
  * @property string $created
  * @property string $updated
  */
@@ -30,11 +30,9 @@ class Vote extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['user_id', 'poll_id', 'answer'], 'required'],
-            [['answer'], 'string'],
-            [['user_id', 'poll_id'], 'integer'],
+            [['user_id', 'option_id'], 'required'],
+            [['user_id', 'option_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['answer'], 'string', 'max' => 255],
         ];
     }
 
@@ -46,8 +44,7 @@ class Vote extends LikeableActiveRecored
         return [
             'id' => 'ID',
             'user_id' => 'User',
-            'poll_id' => 'Poll',
-            'answer' => 'Answer',
+            'option_id' => 'Option',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -58,8 +55,8 @@ class Vote extends LikeableActiveRecored
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 
-    public function getPoll()
+    public function getOption()
     {
-        return $this->hasOne(Poll::className(), ['id' => 'poll_id']);
+        return $this->hasOne(Option::className(), ['id' => 'option_id']);
     }
 }

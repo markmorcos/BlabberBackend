@@ -52,6 +52,7 @@ AppAsset::register($this);
             ['label' => 'Comments', 'url' => ['/comment/index']],
             ['label' => 'Blogs', 'url' => ['/blog/index']],
             ['label' => 'Polls', 'url' => ['/poll/index']],
+            ['label' => 'Options', 'url' => ['/option/index']],
             ['label' => 'Votes', 'url' => ['/vote/index']],
             Yii::$app->user->isGuest ? (
                 ['label' => 'Login', 'url' => ['/site/login']]

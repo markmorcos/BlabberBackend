@@ -13,14 +13,10 @@ use yii\widgets\ActiveForm;
     <?php $form = ActiveForm::begin(); ?>
     
     <?= $form->field($model, 'business_id')->dropDownList($businesses_for_dropdown) ?>
-		
-	<?= $form->field($model, 'title')->textInput(); ?>
 
-	<?= $form->field($model, 'type')->dropDownList($types_for_dropdown); ?>
+    <?= $form->field($model, 'title')->textInput(); ?>
 
-	<?= $form->field($model, 'options')->textInput(); ?>
-
-	<?= $form->field($model, 'correct')->textInput(); ?>
+    <?= $form->field($model, 'type')->dropDownList($types_for_dropdown); ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>

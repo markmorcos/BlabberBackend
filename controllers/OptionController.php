@@ -3,25 +3,24 @@
 namespace app\controllers;
 
 use Yii;
-use app\models\User;
+use app\models\Poll;
 use app\models\Option;
-use app\models\Vote;
-use app\models\VoteSearch;
+use app\models\OptionSearch;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 
 /**
- * VoteController implements the CRUD actions for Vote model.
+ * OptionController implements the CRUD actions for Option model.
  */
-class VoteController extends AdminController
+class OptionController extends AdminController
 {
     /**
-     * Lists all Vote models.
+     * Lists all Category models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new VoteSearch();
+        $searchModel = new OptionSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
@@ -31,7 +30,7 @@ class VoteController extends AdminController
     }
 
     /**
-     * Displays a single Vote model.
+     * Displays a single Option model.
      * @param integer $id
      * @return mixed
      */
@@ -43,29 +42,27 @@ class VoteController extends AdminController
     }
 
     /**
-     * Creates a new Vote model.
+     * Creates a new Option model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        $model = new Vote();
+        $model = new Option();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
-            $users_for_dropdown = ArrayHelper::map(User::find()->all(), 'id', 'name');
-            $options_for_dropdown = ArrayHelper::map(Option::find()->all(), 'id', 'option');
+            $polls_for_dropdown = ArrayHelper::map(Poll::find()->all(), 'id', 'title');
             return $this->render('create', [
                 'model' => $model,
-                'users_for_dropdown' => $users_for_dropdown,
-                'options_for_dropdown' => $options_for_dropdown,
+                'polls_for_dropdown' => $polls_for_dropdown,
             ]);
         }
     }
 
     /**
-     * Updates an existing Vote model.
+     * Updates an existing Option model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
@@ -77,18 +74,16 @@ class VoteController extends AdminController
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
-            $users_for_dropdown = ArrayHelper::map(User::find()->all(), 'id', 'name');
-            $options_for_dropdown = ArrayHelper::map(Option::find()->all(), 'id', 'option');
+            $polls_for_dropdown = ArrayHelper::map(Poll::find()->all(), 'id', 'title');
             return $this->render('update', [
                 'model' => $model,
-                'users_for_dropdown' => $users_for_dropdown,
-                'options_for_dropdown' => $options_for_dropdown,
+                'polls_for_dropdown' => $polls_for_dropdown,
             ]);
         }
     }
 
     /**
-     * Deletes an existing Vote model.
+     * Deletes an existing Option model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
@@ -103,15 +98,15 @@ class VoteController extends AdminController
     }
 
     /**
-     * Finds the Vote model based on its primary key value.
+     * Finds the Option model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return Vote the loaded model
+     * @return Option the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Vote::findOne($id)) !== null) {
+        if (($model = Option::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

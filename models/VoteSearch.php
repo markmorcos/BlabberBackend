@@ -16,8 +16,8 @@ class VoteSearch extends Vote
     public function rules()
     {
         return [
-            [['id', 'user_id', 'poll_id'], 'integer'],
-            [['answer', 'created', 'updated'], 'safe'],
+            [['id', 'user_id', 'option_id'], 'integer'],
+            [['created', 'updated'], 'safe'],
         ];
     }
 
@@ -59,12 +59,10 @@ class VoteSearch extends Vote
         $query->andFilterWhere([
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'poll_id' => $this->poll_id,
+            'option_id' => $this->option_id,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
-
-        $query->andFilterWhere(['like', 'answer', $this->answer]);
 
         return $dataProvider;
     }

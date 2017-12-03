@@ -12,11 +12,12 @@ use app\models\Friendship;
 use app\models\Media;
 use app\models\Notification;
 use app\models\Poll;
+use app\models\Option;
+use app\models\Vote;
 use app\models\Reaction;
 use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\User;
-use app\models\Vote;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\helpers\Url;
@@ -693,16 +694,18 @@ class ApiBaseController extends Controller
             $temp['business_id'] = $value['business_id'];
             $temp['title'] = $value['title'];
             $temp['type'] = $value['type'];
-            $temp['options'] = $value['options'];
-            $temp['correct'] = $value['correct'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
-            $options = explode(',', $value['options']);
-            foreach ($options as $option) {
-                $votes[$option] = count(Vote::find()->where(['poll_id' => $value['id'], 'answer' => $option])->all());
+            $options_model = Option::find()->where(['poll_id' => $value['id']])->orderBy(['option' => SORT_ASC])->all();
+            foreach ($options_model as $option) {
+                $options[] = [
+                    'id' => $option->id,
+                    'option' => $option->option,
+                    'votes' => count(Vote::find()->where(['option_id' => $option->id])->all()),
+                    'added_vote' => $this->_addedVote($this->logged_user['id'], $option->id)
+                ];
             }
-            $temp['votes'] = $votes;
-            $temp['added_vote'] = $this->_addedVote($this->logged_user['id'], $value['id']);
+            $temp['options'] = $options;
 
             $polls[] = $temp;
         }
@@ -710,20 +713,15 @@ class ApiBaseController extends Controller
         return $polls;
     }
 
-    protected function _addedVote($user_id, $poll_id)
+    protected function _addedVote($user_id, $option_id)
     {
         $model = Vote::find()
-            ->select(['id','answer'])
             ->where([
                 'user_id' => $user_id,
-                'poll_id' => $poll_id,
+                'option_id' => $option_id,
             ])
             ->one();
-        if (!empty($model)) {
-            $result['id'] = $model->id;
-            $result['answer'] = $model->answer;
-        }
-        return empty($model) ? null : $result;
+        return !empty($model);
     }
 
     protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)

@@ -6,11 +6,11 @@ use yii\widgets\DetailView;
 /* @var $this yii\web\View */
 /* @var $model app\models\Poll */
 
-$this->title = $model->title;
-$this->params['breadcrumbs'][] = ['label' => 'Polls', 'url' => ['index']];
+$this->title = $model->option;
+$this->params['breadcrumbs'][] = ['label' => 'Options', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="poll-view">
+<div class="option-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -30,12 +30,15 @@ $this->params['breadcrumbs'][] = $this->title;
         'attributes' => [
             'id',
             [
-                'attribute' => 'business_id',
-                'value' => $model->business->name,
+                'attribute' => 'poll_id',
+                'value' => $model->poll->title,
                 'format' => 'raw'
             ],
-            'title',
-            'type',
+            'option',
+            [
+                'attribute' => 'correct',
+                'format' => 'boolean'
+            ],
             'created',
             'updated',
         ],

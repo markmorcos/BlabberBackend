@@ -31,13 +31,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => function ($data) {
                     return Html::a($data->business->name, ['business/view', 'id' => $data->business_id]);
                 },
-            ), 
+            ),
             'title',
             'type',
-            'options',
-            'correct',
             'created',
-            'updated',
+            // 'updated',
 
             ['class' => 'yii\grid\ActionColumn'],
         ],

@@ -6,9 +6,9 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * PollSearch represents the model behind the search form about `app\models\Poll`.
+ * OptionSearch represents the model behind the search form about `app\models\Option`.
  */
-class PollSearch extends Poll
+class OptionSearch extends Option
 {
     /**
      * @inheritdoc
@@ -16,8 +16,8 @@ class PollSearch extends Poll
     public function rules()
     {
         return [
-            [['id', 'business_id'], 'integer'],
-            [['title', 'type', 'created', 'updated'], 'safe'],
+            [['id', 'poll_id'], 'integer'],
+            [['option', 'correct', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -39,7 +39,7 @@ class PollSearch extends Poll
      */
     public function search($params)
     {
-        $query = Poll::find();
+        $query = Option::find();
 
         // add conditions that should always apply here
 
@@ -58,13 +58,13 @@ class PollSearch extends Poll
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'business_id' => $this->business_id,
+            'poll_id' => $this->poll_id,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'type', $this->type]);
+        $query->andFilterWhere(['like', 'option', $this->option])
+            ->andFilterWhere(['like', 'correct', $this->correct]);
 
         return $dataProvider;
     }

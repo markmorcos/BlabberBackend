@@ -4,11 +4,11 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\PollSearch */
+/* @var $model app\models\OptionSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="poll-search">
+<div class="option-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -17,13 +17,11 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'id') ?>
 
-    <?= $form->field($model, 'business_id') ?>
+    <?= $form->field($model, 'poll_id') ?>
 
-    <?= $form->field($model, 'title') ?>
+    <?= $form->field($model, 'option') ?>
 
-    <?= $form->field($model, 'type') ?>
-
-    <?= $form->field($model, 'created') ?>
+    <?= $form->field($model, 'correct') ?>
 
     <?= // $form->field($model, 'updated') ?>
 

@@ -3,20 +3,20 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `poll`.
+ * Handles the creation of table `poll_option`.
  */
-class m171121_100815_create_poll_table extends Migration
+class m171203_082754_create_option_table extends Migration
 {
     /**
      * @inheritdoc
      */
     public function up()
     {
-        $this->createTable('poll', [
+        $this->createTable('option', [
             'id' => $this->primaryKey(),
-            'business_id' => $this->integer()->notNull(),
-            'title' => $this->string(255),
-            'type' => 'ENUM("cigarette")',
+            'poll_id' => $this->integer()->notNull(),
+            'option' => $this->string(255),
+            'correct' => $this->boolean()->defaultValue(0),
             'created' => 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
             'updated' => 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
         ]);
@@ -27,6 +27,6 @@ class m171121_100815_create_poll_table extends Migration
      */
     public function down()
     {
-        $this->dropTable('poll');
+        $this->dropTable('option');
     }
 }

@@ -5,23 +5,23 @@ namespace app\models;
 use yii\helpers\Url;
 
 /**
- * This is the model class for table "poll".
+ * This is the model class for table "option".
  *
  * @property integer $id
- * @property integer $business_id
- * @property string $title
- * @property string $type
+ * @property integer $poll_id
+ * @property string $option
+ * @property string $correct
  * @property string $created
  * @property string $updated
  */
-class Poll extends LikeableActiveRecored
+class Option extends LikeableActiveRecored
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'poll';
+        return 'option';
     }
 
     /**
@@ -30,10 +30,11 @@ class Poll extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['business_id', 'title', 'type'], 'required'],
-            [['business_id'], 'integer'],
+            [['poll_id', 'option', 'correct'], 'required'],
+            [['poll_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['title', 'type'], 'string', 'max' => 255],
+            [['option'], 'string', 'max' => 255],
+            [['correct'], 'boolean'],
         ];
     }
 
@@ -44,16 +45,16 @@ class Poll extends LikeableActiveRecored
     {
         return [
             'id' => 'ID',
-            'business_id' => 'Business',
-            'title' => 'Title',
-            'type' => 'Type',
+            'poll_id' => 'Poll',
+            'option' => 'Option',
+            'correct' => 'Correct',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
     }
 
-    public function getBusiness()
+    public function getPoll()
     {
-        return $this->hasOne(Business::className(), ['id' => 'business_id']);
+        return $this->hasOne(Poll::className(), ['id' => 'poll_id']);
     }
 }

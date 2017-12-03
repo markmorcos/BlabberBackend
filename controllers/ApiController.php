@@ -19,6 +19,8 @@ use app\models\Interest;
 use app\models\Media;
 use app\models\Notification;
 use app\models\Poll;
+use app\models\Option;
+use app\models\Vote;
 use app\models\Reaction;
 use app\models\Report;
 use app\models\Reservation;
@@ -28,7 +30,6 @@ use app\models\Sponsor;
 use app\models\User;
 use app\models\UserInterest;
 use app\models\UserToken;
-use app\models\Vote;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -2841,7 +2842,7 @@ class ApiController extends ApiBaseController
      }
 
     /**
-     * @api {post} /api/get-polls Get all media for user or business
+     * @api {post} /api/get-polls Get all polls for business
      * @apiName GetPolls
      * @apiGroup Poll
      *
@@ -2869,36 +2870,37 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} poll_id Poll's id.
-     * @apiParam {String} answer Poll answer.
+     * @apiParam {String} option_id Option's id.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} vote_id Vote id.
      */
-     public function actionAddVote($poll_id, $answer)
+     public function actionAddVote($option_id)
      {
-        $poll = Poll::findOne(['id' => $poll_id]);
-        if (empty($poll)) {
-            throw new HttpException(200, 'Poll not found');
-        }
-
-        $options = explode(',', $poll->options);
-        if (!in_array($answer, $options)) {
-            throw new HttpException(200, 'Invalid answer');
+        $option = Option::findOne(['id' => $option_id]);
+        if (empty($option)) {
+            throw new HttpException(200, 'Option not found');
         }
 
         $this->_addOutputs(['vote_id']);
 
-        $model = new Vote;
-        $model->user_id = $this->logged_user['id'];
-        $model->poll_id = $poll_id;
-        $model->answer = $answer;
+        $model = Vote::findOne([
+            'user_id' => $this->logged_user['id'],
+            'option_id' => $option_id
+        ]);
+
+        if (empty($model)) {
+            $model = new Vote;
+            $model->user_id = $this->logged_user['id'];
+        }
+        
+        $model->option_id = $option_id;
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
         }
 
-        $this->output['vote_id'] = $model;
+        $this->output['vote_id'] = $model->id;
      }
 
     /**

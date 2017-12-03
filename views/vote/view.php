@@ -6,7 +6,7 @@ use yii\widgets\DetailView;
 /* @var $this yii\web\View */
 /* @var $model app\models\Vote */
 
-$this->title = $model->answer;
+$this->title = $model->option->option;
 $this->params['breadcrumbs'][] = ['label' => 'Votes', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -29,9 +29,8 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'poll.title',
             'user.name',
-            'answer',
+            'option.option',
             'created',
             'updated',
         ],

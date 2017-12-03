@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_form', [
         'model' => $model,
         'users_for_dropdown' => $users_for_dropdown,
-        'polls_for_dropdown' => $polls_for_dropdown,
+        'options_for_dropdown' => $options_for_dropdown,
     ]) ?>
 
 </div>
