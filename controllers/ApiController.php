@@ -2885,10 +2885,10 @@ class ApiController extends ApiBaseController
 
         $this->_addOutputs(['vote_id']);
 
-        $model = Vote::findOne([
-            'user_id' => $this->logged_user['id'],
-            'option_id' => $option_id
-        ]);
+        $model = Vote::find()
+            ->joinWith('option')
+            ->andWhere(['user_id' => $this->logged_user['id'], 'poll_id' => $option->poll_id])
+            ->one();
 
         if (empty($model)) {
             $model = new Vote;

@@ -9,7 +9,7 @@ use yii\helpers\Url;
  *
  * @property integer $id
  * @property integer $user_id
- * @property string $option_id
+ * @property integer $option_id
  * @property string $vote
  * @property string $created
  * @property string $updated
