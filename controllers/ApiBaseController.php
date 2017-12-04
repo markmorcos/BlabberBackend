@@ -697,6 +697,7 @@ class ApiBaseController extends Controller
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
             $options_model = Option::find()->where(['poll_id' => $value['id']])->orderBy(['option' => SORT_ASC])->all();
+            $options = [];
             foreach ($options_model as $option) {
                 $options[] = [
                     'id' => $option->id,
