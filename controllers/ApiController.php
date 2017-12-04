@@ -2894,7 +2894,7 @@ class ApiController extends ApiBaseController
             $model = new Vote;
             $model->user_id = $this->logged_user['id'];
         }
-        
+
         $model->option_id = $option_id;
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
