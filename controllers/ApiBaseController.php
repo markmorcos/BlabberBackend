@@ -739,7 +739,9 @@ class ApiBaseController extends Controller
             ->innerJoin('vote', 'option.id = option_id')
             ->andWhere(['business_id' => $business_id])
             ->all());
-        return round(100 * $correct / $total, 2);
+
+        $total = $total == 0 ? 1 : $total;
+        return strval(round(100 * $correct / $total));
     }
 
     protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)
