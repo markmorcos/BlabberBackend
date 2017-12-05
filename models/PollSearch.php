@@ -17,7 +17,7 @@ class PollSearch extends Poll
     {
         return [
             [['id', 'business_id'], 'integer'],
-            [['title', 'type', 'created', 'updated'], 'safe'],
+            [['title', 'titleAr', 'type', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -64,6 +64,7 @@ class PollSearch extends Poll
         ]);
 
         $query->andFilterWhere(['like', 'title', $this->title])
+            ->andFilterWhere(['like', 'titleAr', $this->titleAr])
             ->andFilterWhere(['like', 'type', $this->type]);
 
         return $dataProvider;

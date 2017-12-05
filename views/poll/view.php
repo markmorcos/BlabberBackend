@@ -35,6 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw'
             ],
             'title',
+            'titleAr',
             'type',
             'created',
             'updated',

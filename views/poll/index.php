@@ -33,6 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ),
             'title',
+            'titleAr',
             'type',
             'created',
             // 'updated',

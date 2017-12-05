@@ -441,6 +441,30 @@ class ApiController extends ApiBaseController
         }
     }
 
+    /**
+     * @api {post} /api/age-and-smoker-gate Age and smoker gate
+     * @apiName AgeAndSmokerGate
+     * @apiGroup User
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {Boolean} is_adult_and_smoker Passed the age and smoker gate
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionAgeAndSmokerGate($is_adult_and_smoker) {
+        $user = User::findOne($this->logged_user['id']);
+        if ($user === null) {
+            throw new HttpException(200, 'no user with this id');
+        }
+
+        $user->is_adult_and_smoker = $is_adult_and_smoker;
+        if (!$user->save()) {
+            throw new HttpException(200, $this->_getErrors($user));
+        }
+    }
+
     /***************************************/
     /************* Friendship **************/
     /***************************************/

@@ -10,6 +10,7 @@ use yii\helpers\Url;
  * @property integer $id
  * @property integer $business_id
  * @property string $title
+ * @property string $titleAr
  * @property string $type
  * @property string $created
  * @property string $updated
@@ -30,10 +31,10 @@ class Poll extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['business_id', 'title', 'type'], 'required'],
+            [['business_id', 'title', 'titleAr', 'type'], 'required'],
             [['business_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['title', 'type'], 'string', 'max' => 255],
+            [['title', 'titleAr', 'type'], 'string', 'max' => 255],
         ];
     }
 
@@ -46,6 +47,7 @@ class Poll extends LikeableActiveRecored
             'id' => 'ID',
             'business_id' => 'Business',
             'title' => 'Title',
+            'titleAr' => 'Title Ar',
             'type' => 'Type',
             'created' => 'Created',
             'updated' => 'Updated',

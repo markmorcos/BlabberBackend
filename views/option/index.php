@@ -33,6 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ),
             'option',
+            'optionAr',
             [
                 'attribute' => 'correct',
                 'format' => 'boolean'

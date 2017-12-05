@@ -10,6 +10,7 @@ use yii\helpers\Url;
  * @property integer $id
  * @property integer $poll_id
  * @property string $option
+ * @property string $optionAr
  * @property string $correct
  * @property string $created
  * @property string $updated
@@ -30,10 +31,10 @@ class Option extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['poll_id', 'option', 'correct'], 'required'],
+            [['poll_id', 'option', 'optionAr', 'correct'], 'required'],
             [['poll_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['option'], 'string', 'max' => 255],
+            [['option', 'optionAr'], 'string', 'max' => 255],
             [['correct'], 'boolean'],
         ];
     }
@@ -47,6 +48,7 @@ class Option extends LikeableActiveRecored
             'id' => 'ID',
             'poll_id' => 'Poll',
             'option' => 'Option',
+            'optionAr' => 'Option Ar',
             'correct' => 'Correct',
             'created' => 'Created',
             'updated' => 'Updated',

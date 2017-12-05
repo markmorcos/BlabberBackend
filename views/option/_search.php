@@ -21,6 +21,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'option') ?>
 
+    <?= $form->field($model, 'optionAr') ?>
+
     <?= $form->field($model, 'correct') ?>
 
     <?= // $form->field($model, 'updated') ?>

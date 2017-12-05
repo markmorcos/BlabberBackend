@@ -16,6 +16,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'option')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'optionAr')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'correct')->checkbox(['maxlength' => true]) ?>
 
     <div class="form-group">

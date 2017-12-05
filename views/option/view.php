@@ -35,6 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw'
             ],
             'option',
+            'optionAr',
             [
                 'attribute' => 'correct',
                 'format' => 'boolean'

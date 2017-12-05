@@ -16,6 +16,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'title')->textInput(); ?>
 
+    <?= $form->field($model, 'titleAr')->textInput(); ?>
+
     <?= $form->field($model, 'type')->dropDownList($types_for_dropdown); ?>
 
     <div class="form-group">

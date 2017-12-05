@@ -407,6 +407,7 @@ class ApiBaseController extends Controller
         }
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['distance'] = $model['distance'];
+        $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
@@ -692,7 +693,7 @@ class ApiBaseController extends Controller
         foreach ($model as $key => $value) {
             $temp['id'] = $value['id'];
             $temp['business_id'] = $value['business_id'];
-            $temp['title'] = $value['title'];
+            $temp['title'] = $value['title'.$this->lang];
             $temp['type'] = $value['type'];
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
@@ -701,7 +702,7 @@ class ApiBaseController extends Controller
             foreach ($options_model as $option) {
                 $options[] = [
                     'id' => $option->id,
-                    'option' => $option->option,
+                    'option' => $option->option.$this->lang,
                     'votes' => count(Vote::find()->where(['option_id' => $option->id])->all()),
                     'added_vote' => $this->_addedVote($this->logged_user['id'], $option->id)
                 ];
@@ -723,6 +724,22 @@ class ApiBaseController extends Controller
             ])
             ->one();
         return !empty($model);
+    }
+
+    protected function _correctVotesPercentage($business_id) {
+        $correct = count(Option::find()
+            ->select('*')
+            ->innerJoin('poll', 'poll.id = poll_id')
+            ->innerJoin('vote', 'option.id = option_id')
+            ->andWhere(['correct' => true, 'business_id' => $business_id])
+            ->all());
+        $total = count(Option::find()
+            ->select('*')
+            ->innerJoin('poll', 'poll.id = poll_id')
+            ->innerJoin('vote', 'option.id = option_id')
+            ->andWhere(['business_id' => $business_id])
+            ->all());
+        return round(100 * $correct / $total, 2);
     }
 
     protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)

@@ -17,7 +17,7 @@ class OptionSearch extends Option
     {
         return [
             [['id', 'poll_id'], 'integer'],
-            [['option', 'correct', 'created', 'updated'], 'safe'],
+            [['option', 'optionAr', 'correct', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -64,6 +64,7 @@ class OptionSearch extends Option
         ]);
 
         $query->andFilterWhere(['like', 'option', $this->option])
+            ->andFilterWhere(['like', 'optionAr', $this->optionAr])
             ->andFilterWhere(['like', 'correct', $this->correct]);
 
         return $dataProvider;
