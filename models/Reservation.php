@@ -9,6 +9,9 @@ namespace app\models;
  * @property integer $user_id
  * @property integer $business_id
  * @property string $mobile
+ * @property integer $guests
+ * @property string $date
+ * @property string $time
  * @property string $notes
  * @property string $created
  * @property string $updated
@@ -30,8 +33,8 @@ class Reservation extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'business_id', 'mobile'], 'required'],
-            [['user_id', 'business_id'], 'integer'],
-            [['created', 'updated'], 'safe'],
+            [['user_id', 'business_id', 'guests'], 'integer'],
+            [['date', 'time', 'created', 'updated'], 'safe'],
             [['mobile'], 'string', 'max' => 20],
             [['notes'], 'string', 'max' => 1023],
         ];
@@ -47,6 +50,9 @@ class Reservation extends \yii\db\ActiveRecord
             'user_id' => 'User',
             'business_id' => 'Business',
             'mobile' => 'Mobile',
+            'guests' => 'Guests',
+            'date' => 'Date',
+            'time' => 'Time',
             'notes' => 'Notes',
             'created' => 'Created',
             'updated' => 'Updated',

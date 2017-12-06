@@ -2610,10 +2610,12 @@ class ApiController extends ApiBaseController
         if (empty($business)) {
             throw new HttpException(200, 'no business with this id');
         }
-        if ($business->category->name !== 'Real Estate') {
+
+        $business = $this->_getBusinessData($business);
+        if ($business['top_category']['nameEn'] !== 'Real Estate') {
             throw new HttpException(200, 'only real estate businesses are allowed');
         }
-        if (empty($business->email)) {
+        if (empty($business['email'])) {
             throw new HttpException(200, 'business has no email');
         }
 
@@ -2628,10 +2630,10 @@ class ApiController extends ApiBaseController
 
         $result1 = Yii::$app->mailer->compose()
             ->setFrom(['info@myblabber.com' => 'Blabber'])
-            ->setTo($business->email)
+            ->setTo($business['email'])
             ->setSubject('New Property Request')
             ->setTextBody(
-                "Dear " . $business->name . ",\n\n"
+                "Dear " . $business['name'] . ",\n\n"
                 . "It's a new property request!\n\n"
                 . "Contact details\n"
                 . "Name: " . $user->name . "\n"
@@ -2646,7 +2648,7 @@ class ApiController extends ApiBaseController
             ->setTo('info@myblabber.com')
             ->setSubject('New Property Request')
             ->setTextBody(
-                "Dear " . $business->name . ",\n\n"
+                "Dear " . $business['name'] . ",\n\n"
                 . "It's a new property request!\n\n"
                 . "Contact details\n"
                 . "Name: " . $user->name . "\n"
@@ -2656,7 +2658,80 @@ class ApiController extends ApiBaseController
                 . "Blabber"
             )
             ->send();
-        if ($result1 === null || $result2 === null) {
+        if ($result1 === null) {
+            throw new HttpException(200, 'Errors while sending email');
+        }
+    }
+
+    /**
+     * @api {post} /api/reserve-food Reserve food
+     * @apiName ReserveFood
+     * @apiGroup Reservations
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} business_id Business id
+     * @apiParam {String} mobile User's mobile.
+     * @apiParam {Integer} guests Number of guests.
+     * @apiParam {String} date Reservation date.
+     * @apiParam {String} time Reservation time.
+     * @apiParam {String} notes Reservation notes (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionReserveFood($business_id, $mobile, $guests, $date, $time, $notes = '')
+    {
+        $user = User::findOne($this->logged_user['id']);
+        if ($user === null) {
+            throw new HttpException(200, 'no user with this id');
+        }
+
+        $business = Business::findOne($business_id);
+        if (empty($business)) {
+            throw new HttpException(200, 'no business with this id');
+        }
+
+        $business = $this->_getBusinessData($business);
+        if ($business['top_category']['nameEn'] !== 'Food') {
+            throw new HttpException(200, 'only food businesses are allowed');
+        }
+        if (empty($business['email'])) {
+            throw new HttpException(200, 'business has no email');
+        }
+
+        $reservation = new Reservation;
+        $reservation->user_id = $user->id;
+        $reservation->business_id = $business_id;
+        $reservation->mobile = $mobile;
+        $reservation->guests = $guests;
+        $reservation->date = $date;
+        $reservation->time = $time;
+        $reservation->notes = $notes;
+        $reservation->status = 'requested';
+        if (!$reservation->save()) {
+            throw new HttpException(200, $this->_getErrors($reservation));
+        }
+
+        $result = Yii::$app->mailer->compose()
+            ->setFrom(['info@myblabber.com' => 'Blabber'])
+            ->setTo($business['email'])
+            ->setSubject('New Table Reservation')
+            ->setTextBody(
+                "Dear " . $business['name'] . ",\n\n"
+                . "It's a new table reservation!\n\n"
+                . "Contact details\n"
+                . "Name: " . $user->name . "\n"
+                . "Mobile: " . $mobile . "\n"
+                . "Guests: " . $guests . "\n"
+                . "Date: " . $date . "\n"
+                . "Time: " . $time . "\n"
+                . ($notes ? "Notes: " . $notes . "\n" : '')
+                . "\nBest always,\n"
+                . "Blabber"
+            )
+            ->send();
+        if ($result === null) {
             throw new HttpException(200, 'Errors while sending email');
         }
     }
@@ -2860,8 +2935,8 @@ class ApiController extends ApiBaseController
      public function actionGetBlogs()
      {
          $this->_addOutputs(['blogs']);
-         $query = Blog::find()->orderBy(['id' => SORT_DESC]);
-         $model = $this->_getModelWithPagination($query);         
+         $conditions = ['id' => SORT_DESC];
+         $model = $this->_getBlogs($conditions);
          $this->output['blogs'] = $model;
      }
 

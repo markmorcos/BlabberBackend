@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\Translation;
+use app\models\Blog;
 use app\models\Business;
 use app\models\BusinessView;
 use app\models\Category;
@@ -385,9 +386,11 @@ class ApiBaseController extends Controller
             if (isset($model['category']->topParent)) {
                 $business['top_category'] = $model['category']->topParent->attributes;
                 $business['top_category']['name'] = $model['category']->topParent['name' . $this->lang];
+                $business['top_category']['nameEn'] = $model['category']['name'];
             } else {
                 $business['top_category'] = $model['category']->attributes;
                 $business['top_category']['name'] = $model['category']['name' . $this->lang];
+                $business['top_category']['nameEn'] = $model['category']['name'];
             }
         } else {
             $business['category'] = null;
@@ -681,6 +684,27 @@ class ApiBaseController extends Controller
         return $media;
     }
 
+    protected function _getBlogs($conditions)
+    {
+        $query = Blog::find()
+            ->where($conditions)
+            ->orderBy(['id' => SORT_DESC]);
+
+        $model = $this->_getModelWithPagination($query);
+
+        $blogs = [];
+        foreach ($model as $key => $value) {
+            $temp['id'] = $value['id'];
+            $temp['title'] = $value['title'];
+            $temp['image'] = $value['image'];
+            $temp['content'] = htmlentities($value['content']);
+            $temp['created'] = $value['created'];
+            $temp['updated'] = $value['updated'];
+            $blogs[] = $temp;
+        }
+        return $blogs;
+    }
+
     protected function _getPolls($conditions)
     {
         $query = Poll::find()
@@ -741,7 +765,7 @@ class ApiBaseController extends Controller
             ->all());
 
         $total = $total == 0 ? 1 : $total;
-        return strval(round(100 * $correct / $total));
+        return round(100 * $correct / $total);
     }
 
     protected function _uploadFile($model_id, $object_type, $media_type, $model = null, $image_name = null, $user_id = null, $caption = null, $rating = null)

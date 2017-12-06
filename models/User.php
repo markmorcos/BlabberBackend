@@ -22,7 +22,7 @@ namespace app\models;
  * @property integer $blocked
  * @property integer $private
  * @property string $lang
- * @property integer $is_adult_and_smoker
+ * @property string $is_adult_and_smoker
  * @property string $created
  * @property string $updated
  */
