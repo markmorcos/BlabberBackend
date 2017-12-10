@@ -48,7 +48,7 @@ AppAsset::register($this);
             ['label' => 'Reviews', 'url' => ['/review/index']],
             ['label' => 'Reports', 'url' => ['/report/index']],
             ['label' => 'Offers', 'url' => ['/offer/index']],
-            ['label' => 'Media', 'url' => ['/media/index']],
+            ['label' => 'Asset', 'url' => ['/asset/index']],
             ['label' => 'Comments', 'url' => ['/comment/index']],
             ['label' => 'Blogs', 'url' => ['/blog/index']],
             ['label' => 'Polls', 'url' => ['/poll/index']],

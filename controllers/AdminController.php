@@ -7,6 +7,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AccessRule;
+use app\models\Asset;
 use app\models\Media;
 use yii\web\UploadedFile;
 

@@ -1356,7 +1356,7 @@ class ApiController extends ApiBaseController
         $andConditions[] = 'and';
 
         if (!empty($name)) {
-            $tokens = explode('/\s+/', trim($name));
+            $tokens = explode(' ', trim($name));
             $names = implode('%', $tokens);
             $conditions[] = "name like '%$names%'";
             $conditions[] = "nameAr like '%$names%'";

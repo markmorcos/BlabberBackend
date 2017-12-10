@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "67d3840d010575cd2294daad9ff24b45",
+    "content-hash": "fd76c30f94afd6737ad210657245078d",
     "packages": [
         {
             "name": "2amigos/yii2-ckeditor-widget",
@@ -857,6 +857,47 @@
             "time": "2017-08-07T18:12:36+00:00"
         },
         {
+            "name": "sadovojav/yii2-ckeditor",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sadovojav/yii2-ckeditor.git",
+                "reference": "85deeb36f0a3e6b6e04fc8b4a6126928767ad3c0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sadovojav/yii2-ckeditor/zipball/85deeb36f0a3e6b6e04fc8b4a6126928767ad3c0",
+                "reference": "85deeb36f0a3e6b6e04fc8b4a6126928767ad3c0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0",
+                "yiisoft/yii2": "*"
+            },
+            "type": "yii2-extension",
+            "autoload": {
+                "psr-4": {
+                    "sadovojav\\ckeditor\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Aleksandr Sadovoj",
+                    "email": "sadovojav@gmail.com",
+                    "homepage": "https://github.com/sadovojav"
+                }
+            ],
+            "description": "Yii2 CKEditor",
+            "keywords": [
+                "CKEditor",
+                "editor",
+                "wysiwyg",
+                "yii"
+            ],
+            "time": "2016-01-07T19:09:18+00:00"
+        },
+        {
             "name": "swiftmailer/swiftmailer",
             "version": "v5.4.8",
             "source": {
@@ -1524,7 +1565,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "kartik-v/yii2-widget-select2": 20
+        "kartik-v/yii2-widget-select2": 20,
+        "sadovojav/yii2-ckeditor": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
