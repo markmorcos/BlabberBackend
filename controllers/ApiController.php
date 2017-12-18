@@ -35,8 +35,101 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\HttpException;
 
+use app\models\Branch;
+use app\models\BusinessV2;
+
 class ApiController extends ApiBaseController
 {
+    /***************************************/
+    /************** Migration **************/
+    /***************************************/
+
+    /**
+     * @api {post} /api/migrate Migrate from business to branch
+     * @apiName Migrate
+     * @apiGroup Migration
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionMigrate($page)
+    {
+        $businesses = Business::find()->limit(1000)->offset(1000 * ($page - 1))->all();
+        foreach ($businesses as $business) {
+            $name = preg_split('/[–#-]+/', $business->name);
+            $business_name = $name[0] . (count($name) >= 3 ? ' #' . $name[2] : '');
+            $branch_name = count($name) >= 2 ? $name[1] : '';
+
+            $name_ar = preg_split('/[–-]+/', $business->nameAr);
+            $business_name_ar = $name_ar[0] . (count($name_ar) >= 3 ? ' #' . $name_ar[2] : '');
+            $branch_name_ar = count($name_ar) >= 2 ? $name_ar[1] : '';
+
+            $business_v2 = BusinessV2::findOne(['name' => $business_name]);
+            if (!$business_v2) {
+                $business_v2 = new BusinessV2;
+                $business_v2->id = $business->id;
+                $business_v2->name = htmlentities($business_name);
+                $business_v2->nameAr = htmlentities($business_name_ar);
+                $business_v2->phone = $business->phone;
+                $business_v2->main_image = $business->main_image;
+                $business_v2->rating = $business->rating;
+                $business_v2->price = $business->price;
+                $business_v2->website = $business->website;
+                $business_v2->fb_page = $business->fb_page;
+                $business_v2->description = htmlentities($business->description);
+                $business_v2->descriptionAr = htmlentities($business->descriptionAr);
+                $business_v2->featured = $business->featured;
+                $business_v2->verified = $business->verified;
+                $business_v2->show_in_home = $business->show_in_home;
+                $business_v2->category_id = $business->category_id;
+                $business_v2->admin_id = $business->admin_id;
+                $business_v2->approved = $business->approved;
+                $business_v2->created = $business->created;
+                $business_v2->updated = $business->updated;
+                $business_v2->save();
+                // notification_v2 (relevant)
+                // saved_business_v2
+                // business_interests_v2
+                // business_views_v2
+            }
+            $branch = Branch::findOne($business->id);
+            if (!$branch) {
+                $branch = new Branch;
+                $branch->id = $business->id;
+                $branch->business_id = $business_v2->id;
+                $branch->name = htmlentities($branch_name);
+                $branch->nameAr = htmlentities($branch_name_ar);
+                $branch->address = htmlentities($business->address);
+                $branch->addressAr = htmlentities($business->addressAr);
+                $branch->city_id = $business->city_id;
+                $branch->phone = $business->phone;
+                $branch->operation_hours = $business->operation_hours;
+                $branch->lat = $business->lat;
+                $branch->lng = $business->lng;
+                $branch->admin_id = $business->admin_id;
+                $branch->approved = $business->approved;
+                $branch->created = $business->created;
+                $branch->updated = $business->updated;
+                $branch->save();
+            }
+            $media = Media::find(['object_id' => $business->id, 'object_type' => 'Business'])->all();
+            foreach($media as $medium) {
+                if (in_array($medium->type, ['menu', 'product', 'brochure'])) {
+                    $medium->object_id = $business_v2->id;
+                    $medium->object_type = 'BusinessV2';
+                    $medium->save();
+                } else if (in_array($medium->type, ['image'])) {
+                    $medium->object_type = 'Branch';
+                    $medium->save();
+                }
+            }
+            $saved_businesses = SavedBusiness::find(['business_id' => $business->id]);
+            foreach($saved_businesses as $saved_business) {
+                $saved_business->business_id = $branch->business->id;
+            }
+        }
+    }
+
     /***************************************/
     /**************** Users ****************/
     /***************************************/
@@ -2935,8 +3028,7 @@ class ApiController extends ApiBaseController
      public function actionGetBlogs()
      {
          $this->_addOutputs(['blogs']);
-         $conditions = ['id' => SORT_DESC];
-         $model = $this->_getBlogs($conditions);
+         $model = $this->_getBlogs();
          $this->output['blogs'] = $model;
      }
 
