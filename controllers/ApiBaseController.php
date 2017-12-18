@@ -77,7 +77,7 @@ class ApiBaseController extends Controller
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors', 'get-blogs', 'get-polls'
+            'get-sponsors', 'get-blogs', 'get-polls', 'migrate'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -684,10 +684,9 @@ class ApiBaseController extends Controller
         return $media;
     }
 
-    protected function _getBlogs($conditions)
+    protected function _getBlogs()
     {
         $query = Blog::find()
-            ->where($conditions)
             ->orderBy(['id' => SORT_DESC]);
 
         $model = $this->_getModelWithPagination($query);
