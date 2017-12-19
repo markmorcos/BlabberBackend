@@ -1,3 +1,6 @@
+apidoc.json
+config/web.php
+
 # phpstorm project files
 .idea
 
