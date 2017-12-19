@@ -26,8 +26,11 @@ phpunit.phar
 # local phpunit config
 /phpunit.xml
 
-/web/uploads/*/*
+/web/uploads
 /web/apidoc
+/web/index*.php
+
+/config/db*.php
 
 *.zip
 *.json
