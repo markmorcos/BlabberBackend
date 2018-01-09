@@ -8,6 +8,7 @@ namespace app\models;
  * @property integer $id
  * @property string $name
  * @property string $nameAr
+ * @property string $flag
  * @property string $created
  * @property string $updated
  */
@@ -28,6 +29,7 @@ class Country extends \yii\db\ActiveRecord
     {
         return [
             [['created', 'updated'], 'safe'],
+            [['name', 'nameAr'], 'required'],
             [['name', 'nameAr'], 'string', 'max' => 255],
         ];
     }
@@ -41,6 +43,7 @@ class Country extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'nameAr' => 'Name Ar',
+            'flag' => 'Flag',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

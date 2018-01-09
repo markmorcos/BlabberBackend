@@ -7,22 +7,13 @@ class Translation {
     const SUPPORTED_LANGUAGES = ['Ar'];
 
     const TERMS = [
-        'new_friend_request_title' => [
-            'En' => 'New Friend Request',
-            'Ar' => 'طلب صداقة جديد',
+        'new_follow_title' => [
+            'En' => 'New Follower',
+            'Ar' => 'متابع جدجي',
         ],
-        'new_friend_request_body' => [
-            'En' => 'wants to add you as a friend',
-            'Ar' => 'يريد اضافتك كصديق',
-        ],
-
-        'friend_request_accepted_title' => [
-            'En' => 'Friend Request Accepted',
-            'Ar' => 'تم قبول طلب صداقة',
-        ],
-        'friend_request_accepted_body' => [
-            'En' => ' accepted your friend request',
-            'Ar' => 'قام بقبول طلب الصداقة',
+        'new_follow_body' => [
+            'En' => 'started following you',
+            'Ar' => 'قام بمتابعتك',
         ],
 
         'new_media_title' => [

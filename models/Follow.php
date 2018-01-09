@@ -3,23 +3,23 @@
 namespace app\models;
 
 /**
- * This is the model class for table "friendship".
+ * This is the model class for table "follow".
  *
  * @property integer $id
  * @property integer $user_id
- * @property integer $friend_id
- * @property string $status 0 -> no action yet, 1 -> accepted, 2 -> rejected, 3 -> cancelled, 4 -> removed 
+ * @property integer $receiver_id
+ * @property string $status 0 -> requested, 1 -> accepted 
  * @property string $created
  * @property string $updated
  */
-class Friendship extends \yii\db\ActiveRecord
+class Follow extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'friendship';
+        return 'follow';
     }
 
     /**
@@ -28,8 +28,8 @@ class Friendship extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'friend_id', 'status'], 'required'],
-            [['user_id', 'friend_id'], 'integer'],
+            [['user_id', 'receiver_id', 'status'], 'required'],
+            [['user_id', 'receiver_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['status'], 'string', 'max' => 1],
         ];
@@ -43,7 +43,7 @@ class Friendship extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
-            'friend_id' => 'Friend ID',
+            'receiver_id' => 'Receiver ID',
             'status' => 'Status',
             'created' => 'Created',
             'updated' => 'Updated',
@@ -55,8 +55,8 @@ class Friendship extends \yii\db\ActiveRecord
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 
-    public function getFriend()
+    public function getReceiver()
     {
-        return $this->hasOne(User::className(), ['id' => 'friend_id']);
+        return $this->hasOne(User::className(), ['id' => 'receiver_id']);
     }
 }

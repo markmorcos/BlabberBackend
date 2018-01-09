@@ -9,7 +9,7 @@ use app\models\BusinessView;
 use app\models\Category;
 use app\models\Checkin;
 use app\models\Comment;
-use app\models\Friendship;
+use app\models\Follow;
 use app\models\Media;
 use app\models\Notification;
 use app\models\Poll;
@@ -72,7 +72,7 @@ class ApiBaseController extends Controller
         $this->enableCsrfValidation = false;
 
         $guest_actions = [
-            'error', 'is-unique-username', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
+            'error', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags',
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
@@ -165,9 +165,9 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _login($email, $password, $device_IMEI, $firebase_token)
+    protected function _login($email, $password, $device_IMEI, $firebase_token, $is_facebook)
     {
-        $user = User::login($email, $password, $device_IMEI, $firebase_token);
+        $user = User::login($email, $password, $device_IMEI, $firebase_token, $is_facebook);
 
         if ($user === null) {
             throw new HttpException(200, 'login problem');
@@ -206,42 +206,27 @@ class ApiBaseController extends Controller
         return $model;
     }
 
-    protected function _validateUsername($username)
-    {
-        if (strpos($username, ' ') !== false) {
-            throw new HttpException(200, 'username can\'t contains spaces');
-        }
-
-        $model = User::find()
-            ->where(['username' => $username])
-            ->one();
-        if (!empty($model)) {
-            throw new HttpException(200, 'this username already taken');
-        }
-    }
-
     protected function _getUserData($model)
     {
         if (empty($model)) {
             return null;
         }
 
-        $last_sent_friend_request = $this->_getLastFriendshipRequest($this->logged_user['id'], $model->id);
-        $last_received_friend_request = $this->_getLastFriendshipRequest($model->id, $this->logged_user['id']);
+        $last_sent_follow = $this->_isfOlloWing($this->logged_user['id'], $model->id);
+        $last_received_follow = $this->_isfOlloWing($model->id, $this->logged_user['id']);
 
         $user['id'] = $model->id;
         $user['name'] = $model->name;
         $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
         $user['private'] = $model->private;
-        $user['last_sent_friend_request'] = $last_sent_friend_request !== null ? $last_sent_friend_request->attributes : null;
-        $user['last_received_friend_request'] = $last_received_friend_request !== null ? $last_received_friend_request->attributes : null;
+        $user['last_sent_follow'] = $last_sent_follow !== null ? $last_sent_follow->attributes : null;
+        $user['last_received_follow'] = $last_received_follow !== null ? $last_received_follow->attributes : null;
         $user['is_adult_and_smoker'] = $model->is_adult_and_smoker;
 
         if (!($model->private === 1 && 
-            ($last_sent_friend_request === null || $last_sent_friend_request->status !== '1') && 
-            ($last_received_friend_request === null || $last_received_friend_request->status !== '1'))) {
+            ($last_sent_follow === null || $last_sent_follow->status !== '1') && 
+            ($last_received_follow === null || $last_received_follow->status !== '1'))) {
             $user['email'] = $model->email;
-            $user['username'] = $model->username;
             $user['type'] = $model->role;
             $user['mobile'] = $model->mobile;
             $user['interests'] = $model->interestsList;
@@ -268,10 +253,10 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _getLastFriendshipRequest($user_id, $friend_id)
+    protected function _isfOlloWing($user_id, $receiver_id)
     {
-        $model = Friendship::find()
-            ->where(['user_id' => $user_id, 'friend_id' => $friend_id])
+        $model = Follow::find()
+            ->where(['user_id' => $user_id, 'receiver_id' => $receiver_id])
             ->orderBy(['id' => SORT_DESC])
             ->one();
 

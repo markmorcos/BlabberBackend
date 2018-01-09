@@ -86,13 +86,9 @@ class AssetController extends AdminController
      */
     public function actionDelete($id)
     {
-        $model = $this->findModel($id);
-        $model->delete();      
+        $this->findModel($id)->delete();
+        $this->deletePhotos($id, 'Asset');
         
-        if(file_exists($model->asset)){
-            unlink($model->asset);
-        }
-
         if (!Yii::$app->request->isAjax) {
             return $this->redirect(['index']);
         }

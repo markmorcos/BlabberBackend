@@ -31,6 +31,11 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'name',
             'nameAr',
+            array(
+                'attribute' => 'flag',
+                'format' => 'raw',
+                'value' =>  ($model->flag!=null)?Html::img('@web/'.$model->flag, ['style'=>'max-width: 300px;']):null
+            ), 
             'created',
             'updated',
         ],

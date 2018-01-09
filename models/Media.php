@@ -81,7 +81,7 @@ class Media extends LikeableActiveRecored
 
     public function getPreview()
     {
-        if( in_array($this->type, ['business_image', 'category_badge', 'category_icon', 'category_image', 'flag_icon', 'image', 'menu', 'product', 'profile_photo', 'sponsor_image']) ){
+        if( in_array($this->type, ['business_image', 'category_badge', 'category_icon', 'category_image', 'flag_icon', 'image', 'menu', 'product', 'profile_photo', 'sponsor_image', 'blog_image', 'asset', 'country_flag']) ){
             $preview = '<img src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';
         }else if( $this->type === 'video' ){
             $preview = '<video src="'.Url::base(true).'/'.$this->url.'" style="max-width: 700px;" />';

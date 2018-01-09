@@ -14,7 +14,7 @@ use app\models\City;
 use app\models\Comment;
 use app\models\Country;
 use app\models\Flag;
-use app\models\Friendship;
+use app\models\Follow;
 use app\models\Interest;
 use app\models\Media;
 use app\models\Notification;
@@ -52,32 +52,43 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionMigrate($page)
+    public function actionMigrate()
     {
-        $businesses = Business::find()->limit(1000)->offset(1000 * ($page - 1))->all();
+        // set_time_limit(0);
+        $businesses = Business::find()->all();
         foreach ($businesses as $business) {
-            $name = preg_split('/[–#-]+/', $business->name);
-            $business_name = $name[0] . (count($name) >= 3 ? ' #' . $name[2] : '');
-            $branch_name = count($name) >= 2 ? $name[1] : '';
+            // $name = array_values(array_filter(preg_split('/[–#-] +/', $business->name)));
+            // $business_name = $name[0] . (count($name) >= 3 ? ' #' . $name[2] : '');
+            // $branch_name = count($name) >= 2 ? $name[1] : '';
+            // $name_ar = array_values(array_filter(preg_split('/[–#-]+/', $business->nameAr)));
+            $name = $business->name;
+            $dash_index = strripos($business->name, '-');
+            $hash_index = strripos($business->name, '#');
+            $branch_number = substr($name, $hash_index ? $hash_index : strlen($name));
+            $business_name = trim(substr($name, 0, $dash_index ? $dash_index : ($hash_index ? $hash_index : strlen($name)))) . ($branch_number ? ' ' . $branch_number : '');
+            $branch_name = $dash_index ? trim(substr($name, $dash_index + 1, $branch_number ? -strlen($branch_number) : strlen($name))) : '';
+            print_r($business_name . '___' . $branch_name); echo '<br>';
 
-            $name_ar = preg_split('/[–-]+/', $business->nameAr);
-            $business_name_ar = $name_ar[0] . (count($name_ar) >= 3 ? ' #' . $name_ar[2] : '');
-            $branch_name_ar = count($name_ar) >= 2 ? $name_ar[1] : '';
-
+            $name_ar = $business->nameAr;
+            $dash_index_ar = strripos($business->nameAr, '-');
+            $hash_index_ar = strripos($business->nameAr, '#');
+            $branch_number_ar = substr($name_ar, $hash_index_ar ? $hash_index_ar : strlen($name_ar));
+            $business_name_ar = trim(substr($name_ar, 0, $dash_index_ar ? $dash_index_ar : ($hash_index_ar ? $hash_index_ar : strlen($name_ar)))) . ($branch_number_ar ? ' ' . $branch_number_ar : '');
+            $branch_name_ar = $dash_index_ar ? trim(substr($name_ar, $dash_index_ar + 1, $branch_number_ar ? -strlen($branch_number_ar) : strlen($name_ar))) : '';
+            print_r($business_name_ar . '___' . $branch_name_ar); echo '<br>';
             $business_v2 = BusinessV2::findOne(['name' => $business_name]);
             if (!$business_v2) {
                 $business_v2 = new BusinessV2;
-                $business_v2->id = $business->id;
-                $business_v2->name = htmlentities($business_name);
-                $business_v2->nameAr = htmlentities($business_name_ar);
+                $business_v2->name = $business_name;
+                $business_v2->nameAr = $business_name_ar;
                 $business_v2->phone = $business->phone;
                 $business_v2->main_image = $business->main_image;
                 $business_v2->rating = $business->rating;
                 $business_v2->price = $business->price;
                 $business_v2->website = $business->website;
                 $business_v2->fb_page = $business->fb_page;
-                $business_v2->description = htmlentities($business->description);
-                $business_v2->descriptionAr = htmlentities($business->descriptionAr);
+                $business_v2->description = $business->description;
+                $business_v2->descriptionAr = $business->descriptionAr;
                 $business_v2->featured = $business->featured;
                 $business_v2->verified = $business->verified;
                 $business_v2->show_in_home = $business->show_in_home;
@@ -86,21 +97,21 @@ class ApiController extends ApiBaseController
                 $business_v2->approved = $business->approved;
                 $business_v2->created = $business->created;
                 $business_v2->updated = $business->updated;
-                $business_v2->save();
-                // notification_v2 (relevant)
-                // saved_business_v2
-                // business_interests_v2
-                // business_views_v2
+                if (!$business_v2->save()) {
+                    echo '<pre>';
+                    print_r($business_v2);
+                    die();
+                }
             }
             $branch = Branch::findOne($business->id);
             if (!$branch) {
                 $branch = new Branch;
                 $branch->id = $business->id;
                 $branch->business_id = $business_v2->id;
-                $branch->name = htmlentities($branch_name);
-                $branch->nameAr = htmlentities($branch_name_ar);
-                $branch->address = htmlentities($business->address);
-                $branch->addressAr = htmlentities($business->addressAr);
+                $branch->name = $branch_name;
+                $branch->nameAr = $branch_name_ar;
+                $branch->address = $business->address;
+                $branch->addressAr = $business->addressAr;
                 $branch->city_id = $business->city_id;
                 $branch->phone = $business->phone;
                 $branch->operation_hours = $business->operation_hours;
@@ -110,22 +121,41 @@ class ApiController extends ApiBaseController
                 $branch->approved = $business->approved;
                 $branch->created = $business->created;
                 $branch->updated = $business->updated;
-                $branch->save();
+                if (!$branch->save()) {
+                    echo '<pre>';
+                    print_r($branch);
+                    die();
+                }
             }
-            $media = Media::find(['object_id' => $business->id, 'object_type' => 'Business'])->all();
+            $media = Media::find()->where(['object_id' => $business->id, 'object_type' => 'Business', 'version' => 0])->all();
             foreach($media as $medium) {
-                if (in_array($medium->type, ['menu', 'product', 'brochure'])) {
+                if (in_array($medium->type, ['menu', 'product', 'brochure', 'business_image'])) {
                     $medium->object_id = $business_v2->id;
-                    $medium->object_type = 'BusinessV2';
+                    $medium->version = 1;
                     $medium->save();
                 } else if (in_array($medium->type, ['image'])) {
                     $medium->object_type = 'Branch';
+                    $medium->version = 1;
                     $medium->save();
                 }
             }
-            $saved_businesses = SavedBusiness::find(['business_id' => $business->id]);
+            $saved_businesses = SavedBusiness::find()->where(['business_id' => $business->id, 'version' => 0])->all();
             foreach($saved_businesses as $saved_business) {
-                $saved_business->business_id = $branch->business->id;
+                $saved_business->business_id = $business_v2->id;
+                $saved_business->version = 1;
+                $saved_business->save();
+            }
+            $business_interests = BusinessInterest::find()->where(['business_id' => $business->id, 'version' => 0])->all();
+            foreach($business_interests as $business_interest) {
+                $business_interest->business_id = $business_v2->id;
+                $business_interest->version = 1;
+                $business_interest->save();
+            }
+            $business_views = BusinessView::find()->where(['business_id' => $business->id, 'version' => 0])->all();
+            foreach($business_views as $business_view) {
+                $business_view->business_id = $business_v2->id;
+                $business_view->version = 1;
+                $business_view->save();
             }
         }
     }
@@ -135,28 +165,12 @@ class ApiController extends ApiBaseController
     /***************************************/
 
     /**
-     * @api {post} /api/is-unique-username Check if username is unique
-     * @apiName IsUniqueUsername
-     * @apiGroup User
-     *
-     * @apiParam {String} username Username to check if uniqe.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionIsUniqueUsername($username)
-    {
-        $this->_validateUsername($username);
-    }
-
-    /**
      * @api {post} /api/sign-up Sign up new user
      * @apiName SignUp
      * @apiGroup User
      *
      * @apiParam {String} name User's full name.
      * @apiParam {String} email User's unique email.
-     * @apiParam {String} username User's unique username.
      * @apiParam {String} password User's password.
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
@@ -173,7 +187,6 @@ class ApiController extends ApiBaseController
     public function actionSignUp(
         $name,
         $email,
-        $username,
         $password,
         $device_IMEI,
         $firebase_token = null,
@@ -183,8 +196,6 @@ class ApiController extends ApiBaseController
     ) {
         $this->_addOutputs(['user_data', 'auth_key']);
 
-        $this->_validateUsername($username);
-
         if (!in_array($type, ['user', 'business'])) {
             throw new HttpException(200, 'invalid user type');
         }
@@ -193,7 +204,6 @@ class ApiController extends ApiBaseController
         $user = new User;
         $user->name = $name;
         $user->email = $email;
-        $user->username = $username;
         $user->password = Yii::$app->security->generatePasswordHash($password);
         $user->role = $type;
         if (!empty($mobile)) {
@@ -231,7 +241,7 @@ class ApiController extends ApiBaseController
                 ->send();
         }
 
-        $this->_login($email, $password, $device_IMEI, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token, false);
     }
 
     /**
@@ -251,33 +261,29 @@ class ApiController extends ApiBaseController
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      */
-    public function actionSignInFb($facebook_id, $facebook_token, $name, $device_IMEI, $firebase_token = null, $image = null)
+    public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
 
         // verify facebook token & facebook id
-        $user_details = "https://graph.facebook.com/me?access_token=" . $facebook_token;
+        $user_details = "https://graph.facebook.com/me?fields=id,name,email,picture{url}&access_token=" . $facebook_token;
         $response = file_get_contents($user_details);
         $response = json_decode($response);
-        if (!isset($response) || !isset($response->id) || $response->id != $facebook_id) {
+        if (!isset($response) || !isset($response->id)) {
             throw new HttpException(200, 'invalid facebook token');
         }
 
-        // check if user not saved before, to add it
-        $email = $facebook_id . '@facebook.com';
-        $password = md5($facebook_id);
-        $user = User::findByEmail($email);
+        $user = User::findByEmail($response->email);
         if ($user === null) {
             // sign up
             $user = new User;
-            $user->email = $email;
-            $user->password = Yii::$app->security->generatePasswordHash($password);
-            $user->facebook_id = $facebook_id;
+            $user->email = $response->email;
+            $user->facebook_id = $response->id;
             $user->approved = 1; //true
-            $user->name = $name;
+            $user->name = $response->name;
 
-            if (!empty($image)) {
-                $user->profile_photo = $image;
+            if (!empty($response->picture->data->url)) {
+                $user->profile_photo = $response->picture->data->url;
             }
 
             if (!$user->save()) {
@@ -285,7 +291,7 @@ class ApiController extends ApiBaseController
             }
         }
 
-        $this->_login($email, $password, $device_IMEI, $firebase_token);
+        $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
     }
 
     /**
@@ -306,7 +312,7 @@ class ApiController extends ApiBaseController
     public function actionSignIn($email, $password, $device_IMEI, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key']);
-        $this->_login($email, $password, $device_IMEI, $firebase_token);
+        $this->_login($email, $password, $device_IMEI, $firebase_token, false);
     }
 
     /**
@@ -424,25 +430,21 @@ class ApiController extends ApiBaseController
      * @apiName GetProfile
      * @apiGroup User
      *
-     * @apiParam {String} user_id_to_get User's id of User profile you want to get (optional).
-     * @apiParam {String} user_username_to_get User's usernam of User profile you want to get (optional).
+     * @apiParam {String} user_id User's id of User profile you want to get (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      */
-    public function actionGetProfile($user_id_to_get = null, $user_username_to_get = null)
+    public function actionGetProfile($user_id = null)
     {
         $this->_addOutputs(['user_data']);
 
-        if (!empty($user_id_to_get)) {
-            $user = User::findOne($user_id_to_get);
-        } elseif (!empty($user_username_to_get)) {
-            $user = User::findOne(['username' => $user_username_to_get]);
+        if (!empty($user_id)) {
+            $user = User::findOne($user_id);
         }
-
         if ($user === null) {
-            throw new HttpException(200, 'no user with this id or username');
+            throw new HttpException(200, 'no user with this id');
         }
 
         $this->output['user_data'] = $this->_getUserData($user);
@@ -456,7 +458,6 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name user name (optional).
-     * @apiParam {String} username user username (optional).
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
@@ -464,20 +465,21 @@ class ApiController extends ApiBaseController
      * @apiParam {String} firebase_token user firebase_token (optional).
      * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
+     * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
     public function actionEditProfile(
         $name = null,
-        $username = null,
         $mobile = null,
         $gender = null,
         $birthdate = null,
         $device_IMEI = null,
         $firebase_token = null,
         $private = null,
-        $interests_ids = null
+        $interests_ids = null,
+        $is_adult_and_smoker = null
     ) {
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
@@ -488,10 +490,6 @@ class ApiController extends ApiBaseController
             $user->name = $name;
         }
 
-        if (!empty($username) && $username !== $user->username) {
-            $this->_validateUsername($username);
-            $user->username = $username;
-        }
         if (!empty($mobile)) {
             $user->mobile = $mobile;
         }
@@ -516,6 +514,10 @@ class ApiController extends ApiBaseController
             $user->private = $private;
         }
 
+        if (isset($user->is_adult_and_smoker)) {
+            $user->is_adult_and_smoker = $is_adult_and_smoker;
+        }
+
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
         }
@@ -534,38 +536,14 @@ class ApiController extends ApiBaseController
         }
     }
 
-    /**
-     * @api {post} /api/age-and-smoker-gate Age and smoker gate
-     * @apiName AgeAndSmokerGate
-     * @apiGroup User
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {Boolean} is_adult_and_smoker Passed the age and smoker gate
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionAgeAndSmokerGate($is_adult_and_smoker) {
-        $user = User::findOne($this->logged_user['id']);
-        if ($user === null) {
-            throw new HttpException(200, 'no user with this id');
-        }
-
-        $user->is_adult_and_smoker = $is_adult_and_smoker;
-        if (!$user->save()) {
-            throw new HttpException(200, $this->_getErrors($user));
-        }
-    }
-
     /***************************************/
-    /************* Friendship **************/
+    /*************** Follow ****************/
     /***************************************/
 
     /**
      * @api {post} /api/search-for-user Search for user by name
      * @apiName SearchForUser
-     * @apiGroup Friendship
+     * @apiGroup Follow
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
@@ -595,44 +573,43 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/add-friend Add friend by sending friend request
-     * @apiName AddFriend
-     * @apiGroup Friendship
+     * @api {post} /api/follow-user Follow user
+     * @apiName FollowUser
+     * @apiGroup Follow
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} friend_id User's id of the friend you want to add.
+     * @apiParam {String} receiver_id ID of user to be followed.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} request the added request object
      */
-    public function actionAddFriend($friend_id)
+    public function actionFollowUser($receiver_id)
     {
-        $this->_addOutputs(['request']);
+        $this->_addOutputs(['follow']);
 
-        $friendship = $this->_getLastFriendshipRequest($this->logged_user['id'], $friend_id);
+        $follow = $this->_isFollowing($this->logged_user['id'], $receiver_id);
 
-        //if there isn't friendship request or if sent old one and rejected (status:2) or cancelled (status:3) or removed (status:4)
-        if ($friendship !== null && $friendship->status !== "2" && $friendship->status !== "3" && $friendship->status !== "4") {
-            throw new HttpException(200, 'you can\'t send new friend request');
+        if ($follow !== null) {
+            throw new HttpException(200, 'You are already following this user');
         }
 
-        $model = new Friendship;
+        $model = new Follow;
         $model->user_id = $this->logged_user['id'];
-        $model->friend_id = $friend_id;
-        $model->status = '0';
+        $model->receiver_id = $receiver_id;
+        $model->status = '1';
 
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
         }
 
-        $this->output['request'] = $model->attributes;
+        $this->output['follow'] = $model->attributes;
 
         // send notification
-        $type = 'new_friend_request';
-        $title = '{new_friend_request_title}';
-        $body = $model->user->name . ' {new_friend_request_body}';
+        $type = 'new_follow';
+        $title = '{new_follow_title}';
+        $body = $model->user->name . ' {new_follow_body}';
         $data = [
             'type' => $type,
             'payload' => [
@@ -640,13 +617,13 @@ class ApiController extends ApiBaseController
                 'user_data' => $this->_getUserData($model->user),
             ]
         ];
-        $this->_sendNotification($model->friend, $title, $body, $data);
+        $this->_sendNotification($model->receiver, $title, $body, $data);
     }
 
     /**
-     * @api {post} /api/get-friend-requests-sent Get all the friend requests user sent
-     * @apiName GetFriendRequestsSent
-     * @apiGroup Friendship
+     * @api {post} /api/get-following Get all users following the current user
+     * @apiName GetFollowing
+     * @apiGroup Follow
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
@@ -656,216 +633,76 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} requests requests details.
      */
-    public function actionGetFriendRequestsSent()
+    public function actionGetFollowing()
     {
-        $this->_addOutputs(['requests']);
+        $this->_addOutputs(['users']);
 
-        $query = Friendship::find()
-            ->where(['user_id' => $this->logged_user['id'], 'status' => '0']);
-        $model = $this->_getModelWithPagination($query);
-
-        $requests = array();
-        foreach ($model as $key => $request) {
-            $requests[] = array('id' => $request->id, 'friend_data' => $this->_getUserData($request->friend));
-        }
-
-        $this->output['requests'] = $requests;
-    }
-
-    /**
-     * @api {post} /api/cancel-friend-request Cancel friend request you sent before
-     * @apiName CancelFriendRequest
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} request_id the id of the friend request.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionCancelFriendRequest($request_id)
-    {
-        $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => '0'])
-            ->one();
-        if (empty($request)) {
-            throw new HttpException(200, "no pending request with this id");
-        }
-
-        $request->status = '3';
-        if (!$request->save()) {
-            throw new HttpException(200, $this->_getErrors($request));
-        }
-    }
-
-    /**
-     * @api {post} /api/get-friend-requests-received Get all the friend requests user received
-     * @apiName GetFriendRequestsReceived
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} page Page number (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} requests requests details.
-     */
-    public function actionGetFriendRequestsReceived()
-    {
-        $this->_addOutputs(['requests']);
-
-        $query = Friendship::find()
-            ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
-        $model = $this->_getModelWithPagination($query);
-
-        $requests = array();
-        foreach ($model as $key => $request) {
-            $requests[] = array('id' => $request->id, 'user_data' => $this->_getUserData($request->user));
-        }
-
-        $this->output['requests'] = $requests;
-    }
-
-    /**
-     * @api {post} /api/accept-friend-request Accept friend request
-     * @apiName AcceptFriendRequest
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} request_id the id of the friend request.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionAcceptFriendRequest($request_id)
-    {
-        // accept request
-        $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => '0'])
-            ->one();
-        if (empty($request)) {
-            throw new HttpException(200, "no pending request with this id");
-        }
-
-        $request->status = '1';
-        if (!$request->save()) {
-            throw new HttpException(200, $this->_getErrors($request));
-        }
-
-        // add as a friend in the other user list
-        $friendship_model = new Friendship;
-        $friendship_model->user_id = $request->friend_id;
-        $friendship_model->friend_id = $request->user_id;
-        $friendship_model->status = '1';
-        if (!$friendship_model->save()) {
-            throw new HttpException(200, $this->_getErrors($friendship_model));
-        }
-
-        // send notification
-        $type = 'friend_request_accepted';
-        $title = '{friend_request_accepted_title}';
-        $body = $request->friend->name . ' {friend_request_accepted_body}';
-        $data = [
-            'type' => $type,
-            'payload' => [
-                'request_id' => $request->id,
-                'user_data' => $this->_getUserData($request->friend),
-            ]
-        ];
-        $this->_addNotification($request->user_id, $type, $title, $body, $data);
-        $this->_sendNotification($request->user, $title, $body, $data);
-    }
-
-    /**
-     * @api {post} /api/reject-friend-request Reject friend request
-     * @apiName RejectFriendRequest
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} request_id the id of the friend request.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionRejectFriendRequest($request_id)
-    {
-        $request = Friendship::find()
-            ->where(['id' => $request_id, 'status' => '0'])
-            ->one();
-        if (empty($request)) {
-            throw new HttpException(200, "no pending request with this id");
-        }
-
-        $request->status = '2';
-        if (!$request->save()) {
-            throw new HttpException(200, $this->_getErrors($request));
-        }
-    }
-
-    /**
-     * @api {post} /api/remove-friend Remove friend from friend list
-     * @apiName RemoveFriend
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} friend_id User's id of the friend you want to remove.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionRemoveFriend($friend_id)
-    {
-        $friendship1 = Friendship::find()
-            ->where(['friend_id' => $this->logged_user['id'], 'user_id' => $friend_id, 'status' => '1'])
-            ->one();
-        $friendship2 = Friendship::find()
-            ->where(['friend_id' => $friend_id, 'user_id' => $this->logged_user['id'], 'status' => '1'])
-            ->one();
-
-        if (!isset($friendship1) || !isset($friendship2)) {
-            throw new HttpException(200, 'problem occured');
-        }
-
-        $friendship1->status = '4';
-        $friendship2->status = '4';
-
-        if (!$friendship1->save() || !$friendship2->save()) {
-            throw new HttpException(200, $this->_getErrors($friendship1) + $this->_getErrors($friendship2));
-        }
-    }
-
-    /**
-     * @api {post} /api/get-friends Get all the user friends
-     * @apiName GetFriends
-     * @apiGroup Friendship
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} page Page number (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} friends friends details.
-     */
-    public function actionGetFriends()
-    {
-        $this->_addOutputs(['friends']);
-
-        $query = Friendship::find()
+        $query = Follow::find()
             ->where(['user_id' => $this->logged_user['id'], 'status' => '1']);
         $model = $this->_getModelWithPagination($query);
 
-        $friends = array();
-        foreach ($model as $key => $friendship) {
-            $friends[] = $this->_getUserData($friendship->friend);
+        $following = array();
+        foreach ($model as $key => $follow) {
+            $following[] = $this->_getUserMinimalData($follow->receiver);
         }
 
-        $this->output['friends'] = $friends;
+        $this->output['users'] = $following;
+    }
+
+    /**
+     * @api {post} /api/unfollow-user Unfollow user
+     * @apiName UnfollowUser
+     * @apiGroup Follow
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} receiver_id the ID of the user to unfollow.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionUnfollowUser($receiver_id)
+    {
+        $follow = Follow::find()
+            ->where(['user_id' => $this->logged_user['id'], 'receiver_id' => $receiver_id])
+            ->one();
+
+        if (empty($follow)) {
+            throw new HttpException(200, "You are not following this user");
+        }
+
+        if (!$follow->delete()) {
+            throw new HttpException(200, $this->_getErrors($follow));
+        }
+    }
+
+    /**
+     * @api {post} /api/get-followers Get followers
+     * @apiName GetFollowers
+     * @apiGroup Follow
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} users List of followers.
+     */
+    public function actionGetFollowers()
+    {
+        $this->_addOutputs(['users']);
+
+        $query = Follow::find()
+            ->where(['receiver_id' => $this->logged_user['id'], 'status' => '1']);
+        $model = $this->_getModelWithPagination($query);
+
+        $following = array();
+        foreach ($model as $key => $follow) {
+            $following[] = $this->_getUserMinimalData($follow->user);
+        }
+
+        $this->output['users'] = $following;
     }
 
     /***************************************/
@@ -884,27 +721,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} categories categories details.
      */
-    public function actionGetCategories()
-    {
-        $this->_addOutputs(['categories']);
-
-        $this->output['categories'] = $this->_getCategories();
-    }
-
-    /**
-     * @api {post} /api/get-sub-categories Get the sub categories of one category
-     * @apiName GetSubCategories
-     * @apiGroup Category
-     *
-     * @apiParam {String} category_id parent category id.
-     * @apiParam {String} page Page number (optional).
-     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} categories categories details.
-     */
-    public function actionGetSubCategories($category_id)
+    public function actionGetCategories($category_id = null)
     {
         $this->_addOutputs(['categories']);
 
@@ -938,6 +755,7 @@ class ApiController extends ApiBaseController
         foreach ($model as $key => $country) {
             $temp['id'] = $country['id'];
             $temp['name'] = $country['name'.$this->lang];
+            $temp['flag'] = $country['flag'.$this->lang];
             $countries[] = $temp;
         }
 
@@ -969,6 +787,11 @@ class ApiController extends ApiBaseController
         foreach ($model as $key => $city) {
             $temp['id'] = $city['id'];
             $temp['name'] = $city['name'.$this->lang];
+            $temp['branch_count'] = Branch::find()
+                ->select('business_id')
+                ->where(['city_id' => $city['id']])
+                ->groupBy(['business_id'])
+                ->count();
             $cities[] = $temp;
         }
 
@@ -1352,56 +1175,15 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-homescreen-businesses Get businesses for homescreen
-     * @apiName GetHomescreenBusinesses
-     * @apiGroup Business
-     *
-     * @apiParam {String} country_id Country's id.
-     * @apiParam {String} page Page number (optional).
-     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} businesses businesses details.
-     */
-    public function actionGetHomescreenBusinesses($country_id)
-    {
-        $this->_addOutputs(['businesses']);
-
-        $conditions['show_in_home'] = true;
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
-    }
-
-    /**
-     * @api {post} /api/get-businesses Get businesses from category
-     * @apiName GetBusinesses
-     * @apiGroup Business
-     *
-     * @apiParam {String} country_id Country's id.
-     * @apiParam {String} category_id Category's id to get businesses inside.
-     * @apiParam {String} page Page number (optional).
-     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} businesses businesses details.
-     */
-    public function actionGetBusinesses($country_id, $category_id)
-    {
-        $this->_addOutputs(['businesses']);
-
-        $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, ['name' => SORT_ASC]);
-    }
-
-    /**
-     * @api {post} /api/get-businesses-by-owner Get businesses by owner
+     * @api {post} /api/get-businesses Get businesses by category or owner
      * @apiName GetBusinessesByOwner
      * @apiGroup Business
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
+     * @apiParam {String} category_id Category's id to get businesses inside (optional).
+     * @apiParam {Boolean} admin Get only businesses this user manages (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1409,12 +1191,17 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinessesByOwner($country_id)
+    public function actionGetBusinesses($country_id, $category_id = null, $admin = false)
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions['admin_id'] = $this->logged_user['id'];
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id);
+        if ($category_id) {
+            $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
+        }
+        if ($admin_id) {
+            $conditions['admin_id'] = $this->logged_user['id'];
+        }
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, ['name' => SORT_ASC]);
     }
 
     /**
@@ -2085,26 +1872,6 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-homescreen-reviews Get reviews for homescreen
-     * @apiName GetHomescreenReviews
-     * @apiGroup Business
-     *
-     * @apiParam {String} user_id User's id (optional).
-     * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} country_id Country's id to get reviews related to businesses inside.
-     * @apiParam {String} page Page number (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} reviews reviews details.
-     */
-    public function actionGetHomescreenReviews($country_id)
-    {
-        $this->_addOutputs(['reviews']);
-        $this->output['reviews'] = $this->_getReviews(null, $country_id);
-    }
-
-    /**
      * @api {post} /api/add-media Add new business media
      * @apiName AddMedia
      * @apiGroup Business
@@ -2242,30 +2009,6 @@ class ApiController extends ApiBaseController
 
         $conditions['id'] = explode(',', $ids);
         $this->output['media'] = $this->_getMedia($conditions);
-    }
-
-    /**
-     * @api {post} /api/get-homescreen-images Get images for homescreen
-     * @apiName GetHomescreenImages
-     * @apiGroup Business
-     *
-     * @apiParam {String} user_id User's id (optional).
-     * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} country_id Country's id to get images related to businesses inside.
-     * @apiParam {String} page Page number (optional).
-     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} images images details.
-     */
-    public function actionGetHomescreenImages($country_id)
-    {
-        $this->_addOutputs(['images']);
-
-        $conditions['type'] = 'image';
-        $conditions['object_type'] = 'Business';
-        $this->output['images'] = $this->_getMedia($conditions, $country_id);
     }
 
     /**
@@ -2912,12 +2655,12 @@ class ApiController extends ApiBaseController
 
         $notifications = $format === 'list'
         ? [
-            'new_friend_request' => [],
+            'new_follow' => [],
             'list' => [],
         ]
         : [
-            'new_friend_request' => [],
-            'friend_request_accepted' => [],
+            'new_follow' => [],
+            'follow_accepted' => [],
             'favorite' => [],
             'checkin' => [],
             'review' => [],
@@ -2927,11 +2670,11 @@ class ApiController extends ApiBaseController
             'comment_tag' => [],
         ];
 
-        $query = Friendship::find()
-            ->where(['friend_id' => $this->logged_user['id'], 'status' => '0']);
+        $query = Follow::find()
+            ->where(['receiver_id' => $this->logged_user['id'], 'status' => '0']);
         $requests_model = $this->_getModelWithPagination($query);
         foreach ($requests_model as $key => $request) {
-            $notifications['new_friend_request'][] = array(
+            $notifications['new_follow'][] = array(
                 'request_id' => $request->id,
                 'user_data' => $this->_getUserData($request->user)
             );
@@ -2956,33 +2699,6 @@ class ApiController extends ApiBaseController
         }
 
         $this->output['notifications'] = $notifications;
-    }
-
-    /**
-     * @api {post} /api/mark-notification-seen Mark user notification as seen
-     * @apiName MarkNotificationSeen
-     * @apiGroup Notifications
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} notification_id Notification iD.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionMarkNotificationSeen($notification_id)
-    {
-        $notification = Notification::findOne($notification_id);
-
-        if ($notification === null) {
-            throw new HttpException(200, 'no notification with this id');
-        }
-
-        $notification->seen = 1;
-
-        if (!$notification->save()) {
-            throw new HttpException(200, $this->_getErrors($notification));
-        }
     }
 
     /***************************************/

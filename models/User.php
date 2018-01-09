@@ -10,7 +10,6 @@ namespace app\models;
  * @property string $password
  * @property string $role
  * @property string $email
- * @property string $username
  * @property string $mobile
  * @property string $gender
  * @property string $birthdate
@@ -52,7 +51,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['role', 'gender'], 'string'],
             [['birthdate', 'created', 'updated'], 'safe'],
             [['approved', 'blocked', 'private'], 'boolean'],
-            [['name', 'password', 'email', 'username', 'profile_photo', 'cover_photo', 'facebook_id'], 'string', 'max' => 255],
+            [['name', 'password', 'email', 'profile_photo', 'cover_photo', 'facebook_id'], 'string', 'max' => 255],
             [['mobile'], 'string', 'max' => 20],
             [['email', 'mobile'], 'unique'],
             [['email'], 'email'],
@@ -73,7 +72,6 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'password_confirmation' => 'Password Confirmation',
             'role' => 'Role',
             'email' => 'Email',
-            'username' => 'Username',
             'mobile' => 'Mobile',
             'gender' => 'Gender',
             'birthdate' => 'Birthdate',
@@ -164,13 +162,13 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      * @param string $password
      * @return static|null
      */
-    public static function login($email, $password, $device_IMEI, $firebase_token)
+    public static function login($email, $password, $device_IMEI, $firebase_token, $is_facebook)
     {
         $user = static::findByEmail($email);
         $user->device_IMEI = $device_IMEI;
         $user->firebase_token = $firebase_token;
 
-        if( isset($user) && $user->validatePassword($password) ){
+        if(!$is_facebook && isset($user) && $user->validatePassword($password) || $is_facebook && isset($user)) {
             $user->auth_key = \Yii::$app->security->generateRandomString(16);
             if( $user->save() ){
                 return $user;

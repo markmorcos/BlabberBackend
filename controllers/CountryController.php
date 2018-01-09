@@ -49,6 +49,7 @@ class CountryController extends AdminController
         $model = new Country();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->uploadPhoto($model, 'Country', 'country_flag', 'flag');
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('create', [
@@ -68,6 +69,7 @@ class CountryController extends AdminController
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $this->uploadPhoto($model, 'Country', 'country_flag', 'flag');
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('update', [
@@ -85,7 +87,8 @@ class CountryController extends AdminController
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-        
+        $this->deletePhotos($id, 'Country');
+
         if (!Yii::$app->request->isAjax) {
             return $this->redirect(['index']);
         }

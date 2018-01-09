@@ -85,6 +85,21 @@ class AdminController extends Controller
         }
     }
 
+    protected function deletePhotos($object_id, $object_type) {
+        $media = Media::find()->where([
+            'object_type' => $object_type,
+            'object_id' => $object_id
+        ])->all();
+        foreach($media as $medium) {
+            if (file_exists($medium->url)) {
+                unlink($medium->url);
+                if (!$medium->delete()) {
+                    echo $this->_getErrors($medium);
+                }
+            }
+        }
+    }
+
     protected function _getErrors($model)
     {
         $errors = '';
