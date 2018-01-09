@@ -525,6 +525,14 @@ class ApiBaseController extends Controller
 
             $temp['user'] = $this->_getUserMinimalData($comment->user);
 
+            $temp['mentions'] = array();
+            if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
+                $users = User::findAll($matches[1]);
+                foreach ($users as $user) {
+                    $temp['mentions'][] = $this->_getUserMinimalData($user);
+                }
+            }
+
             if (!empty($comment->business_identity)) {
                 $model = Business::findOne($comment->business_identity);
                 if (!empty($model)) {

@@ -2112,8 +2112,8 @@ class ApiController extends ApiBaseController
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
             $users = $matches[1];
-            foreach ($users as $username) {
-                $user = User::findOne(['username' => $username]);
+            foreach ($users as $id) {
+                $user = User::findOne($id);
                 if (empty($user)) {
                     continue;
                 }
@@ -2161,6 +2161,9 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'you are not allowed to edit this comment');
         }
 
+        $old_text = $comment->text;
+        preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $old_matches);
+
         if (!empty($text)) {
             $comment->text = $text;
         }
@@ -2191,30 +2194,12 @@ class ApiController extends ApiBaseController
             $object = Media::findOne($comment->object_id);
         }
 
-        // send notification (if not the owner)
-        if ($object->user_id != $this->logged_user['id']) {
-            $type = 'comment';
-            $title = '{edit_comment_title}';
-            $body = $commenter_name . ' {edit_comment_body} ' . $comment->object_type;
-            $data = [
-                'type' => $type,
-                'payload' => [
-                    'comment_id' => $comment->id,
-                    'object_id' => $comment->object_id,
-                    'object_type' => $comment->object_type,
-                    'user_data' => $this->_getUserData($comment->user),
-                ]
-            ];
-            $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user, $title, $body, $data);
-        }
-
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
             $users = $matches[1];
-            foreach ($users as $username) {
-                $user = User::findOne(['username' => $username]);
-                if (empty($user)) {
+            foreach ($users as $id) {
+                $user = User::findOne($id);
+                if (empty($user) || in_array($id, $old_matches[1])) {
                     continue;
                 }
 
