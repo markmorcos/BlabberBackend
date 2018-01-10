@@ -268,7 +268,9 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $query = Category::find()->where(['parent_id' => $parent_id])->orderBy(['order' => SORT_ASC]);
+        $conditions = [];
+        if(!empty($parent_id)) $conditions['parent_id'] = $parent_id;
+        $query = Category::find()->where($conditions)->orderBy(['order' => SORT_ASC]);
         $model = $this->_getModelWithPagination($query);
 
         $categories = [];

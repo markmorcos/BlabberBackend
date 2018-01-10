@@ -621,7 +621,7 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-following Get all users following the current user
+     * @api {post} /api/get-following Get following
      * @apiName GetFollowing
      * @apiGroup Follow
      *
