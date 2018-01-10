@@ -19,8 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'countries_for_dropdown' => $countries_for_dropdown,
     	'cities_for_dropdown' => $cities_for_dropdown,
         'categories_for_dropdown' => $categories_for_dropdown,
-        'users_for_dropdown' => $users_for_dropdown,
-        'flags' => $flags,
+        'users_for_dropdown' => $users_for_dropdown
     ]) ?>
 
 </div>

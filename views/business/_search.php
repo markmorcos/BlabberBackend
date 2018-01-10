@@ -21,21 +21,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'nameAr') ?>
 
-    <?= $form->field($model, 'address') ?>
-
-    <?= $form->field($model, 'addressAr') ?>
-
-    <?php // echo $form->field($model, 'country_id') ?>
-
-    <?php // echo $form->field($model, 'city_id') ?>
-
     <?php // echo $form->field($model, 'phone') ?>
-
-    <?php // echo $form->field($model, 'operation_hours') ?>
-
-    <?php // echo $form->field($model, 'lat') ?>
-
-    <?php // echo $form->field($model, 'lng') ?>
 
     <?php // echo $form->field($model, 'main_image') ?>
 

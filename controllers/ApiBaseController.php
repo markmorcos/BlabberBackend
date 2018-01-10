@@ -40,6 +40,7 @@ class ApiBaseController extends Controller
         'page_no' => null,
         'no_per_page' => 20,
         'total_pages_no' => null,
+        'total_records_no' => null
     ];
     public $adminEmail = 'info@myblabber.com';
 
@@ -106,6 +107,7 @@ class ApiBaseController extends Controller
             $this->output['pagination'] = [
                 'page_no' => $this->pagination['page_no'],
                 'total_pages_no' => $this->pagination['total_pages_no'],
+                'total_records_no' => $this->pagination['total_records_no']
             ];
         }
         return parent::afterAction($action, json_encode($this->output));
@@ -202,6 +204,7 @@ class ApiBaseController extends Controller
 
         $model = $provider->getModels();
         $this->pagination['total_pages_no'] = $provider->pagination->pageCount;
+        $this->pagination['total_records_no'] = (int) $query->count();
 
         return $model;
     }
@@ -265,9 +268,7 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $query = Category::find()
-            ->where(['parent_id' => $parent_id])
-            ->orderBy(['order' => SORT_ASC]);
+        $query = Category::find()->where(['parent_id' => $parent_id])->orderBy(['order' => SORT_ASC]);
         $model = $this->_getModelWithPagination($query);
 
         $categories = [];
@@ -278,6 +279,7 @@ class ApiBaseController extends Controller
             $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
             $temp['icon'] = Url::base(true) . '/' . $category['icon'];
             $temp['badge'] = Url::base(true) . '/' . $category['badge'];
+            $temp['business_count'] = (int) Business::find()->where(['category_id' => $category['id']])->count();
             $categories[] = $temp;
         }
 
@@ -344,17 +346,8 @@ class ApiBaseController extends Controller
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
-        $business['address'] = $model['address'.$this->lang];
         $business['email'] = $model['email'];
-        $business['country_id'] = $model['country_id'];
-        $business['country'] = $model['country']['name'.$this->lang];
-        $business['city_id'] = $model['city_id'];
-        $business['city'] = $model['city']['name'.$this->lang];
         $business['phone'] = $model['phone'];
-        $business['operation_hours'] = $model['operation_hours'];
-        $business['is_open'] = $model['isOpen'];
-        $business['lat'] = $model['lat'];
-        $business['lng'] = $model['lng'];
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
         $business['rating'] = $model['rating'];
         $business['price'] = $model['price'];
@@ -371,22 +364,17 @@ class ApiBaseController extends Controller
             if (isset($model['category']->topParent)) {
                 $business['top_category'] = $model['category']->topParent->attributes;
                 $business['top_category']['name'] = $model['category']->topParent['name' . $this->lang];
-                $business['top_category']['nameEn'] = $model['category']['name'];
             } else {
                 $business['top_category'] = $model['category']->attributes;
                 $business['top_category']['name'] = $model['category']['name' . $this->lang];
-                $business['top_category']['nameEn'] = $model['category']['name'];
             }
         } else {
             $business['category'] = null;
             $business['top_category'] = null;
         }
         $business['admin_id'] = $model['admin_id'];
-        $business['flags'] = $model['flagsList'];
         $business['interests'] = $model['interestsList'];
         $business['no_of_views'] = count($model['views']);
-        $business['no_of_checkins'] = count($model['checkins']);
-        $business['no_of_reviews'] = count($model['reviews']);
         $business['last_checkin'] = null;
         if (isset($model['checkins'][0])) {
             $last_checkin = $model['checkins'][0]->attributes;
@@ -394,7 +382,6 @@ class ApiBaseController extends Controller
             $business['last_checkin'] = $last_checkin;
         }
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
-        $business['distance'] = $model['distance'];
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
@@ -743,18 +730,18 @@ class ApiBaseController extends Controller
     }
 
     protected function _correctVotesPercentage($business_id) {
-        $correct = count(Option::find()
+        $correct = (int) Option::find()
             ->select('*')
             ->innerJoin('poll', 'poll.id = poll_id')
             ->innerJoin('vote', 'option.id = option_id')
-            ->andWhere(['correct' => true, 'business_id' => $business_id])
-            ->all());
-        $total = count(Option::find()
+            ->andWhere(['correct' => true, 'vote.business_id' => $business_id])
+            ->count();
+        $total = (int) Option::find()
             ->select('*')
             ->innerJoin('poll', 'poll.id = poll_id')
             ->innerJoin('vote', 'option.id = option_id')
-            ->andWhere(['business_id' => $business_id])
-            ->all());
+            ->andWhere(['vote.business_id' => $business_id])
+            ->count();
 
         $total = $total == 0 ? 1 : $total;
         return round(100 * $correct / $total);

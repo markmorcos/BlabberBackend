@@ -12,8 +12,6 @@ use app\models\User;
 use app\models\Media;
 use app\models\Interest;
 use app\models\BusinessInterest;
-use app\models\Flag;
-use app\models\BusinessFlag;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
@@ -61,12 +59,6 @@ class BusinessController extends AdminController
         $model = new Business();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            // add flags
-            if( !empty(Yii::$app->request->post('Business')['flags']) ){
-                $flags = Yii::$app->request->post('Business')['flags'];
-                $this->_addFlags($flags, $model->id);
-            }
-            
             // add interests
             if( !empty(Yii::$app->request->post('Business')['interestsList']) ){
                 $interests = Yii::$app->request->post('Business')['interestsList'];
@@ -81,14 +73,12 @@ class BusinessController extends AdminController
             $cities_for_dropdown = ArrayHelper::map(City::find()->all(), 'id', 'name');
             $categories_for_dropdown = ArrayHelper::map(Category::find()->all(), 'id', 'name');
             $users_for_dropdown = ArrayHelper::map(User::find()->where(['or', 'role="admin"', 'role="business"'])->all(), 'id', 'name');
-            $flags = ArrayHelper::map(Flag::find()->all(), 'id', 'name');
             return $this->render('create', [
                 'model' => $model,
                 'countries_for_dropdown' => $countries_for_dropdown,
                 'cities_for_dropdown' => $cities_for_dropdown,
                 'categories_for_dropdown' => $categories_for_dropdown,
-                'users_for_dropdown' => $users_for_dropdown,
-                'flags' => $flags,
+                'users_for_dropdown' => $users_for_dropdown
             ]);
         }
     }
@@ -103,15 +93,6 @@ class BusinessController extends AdminController
     {
         $model = $this->findModel($id);
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            if( !empty(Yii::$app->request->post('Business')['flags']) ){
-                // remove old flags
-                BusinessFlag::deleteAll('business_id = '.$id);            
-
-                // add flags
-                $flags = Yii::$app->request->post('Business')['flags'];
-                $this->_addFlags($flags, $id);
-            }
-
             if( !empty(Yii::$app->request->post('Business')['interestsList']) ){
                 // remove old interests
                 BusinessInterest::deleteAll('business_id = '.$id);
@@ -129,16 +110,12 @@ class BusinessController extends AdminController
             $cities_for_dropdown = ArrayHelper::map(City::find()->all(), 'id', 'name');
             $categories_for_dropdown = ArrayHelper::map(Category::find()->all(), 'id', 'name');
             $users_for_dropdown = ArrayHelper::map(User::find()->where(['or', 'role="admin"', 'role="business"'])->all(), 'id', 'name');
-            $flags = ArrayHelper::map(Flag::find()->all(), 'id', 'name');
-            $selected_flags = ArrayHelper::map(BusinessFlag::find()->where('business_id = '.$model->id)->all(), 'flag_id', 'flag_id');
             return $this->render('update', [
                 'model' => $model,
                 'countries_for_dropdown' => $countries_for_dropdown,
                 'cities_for_dropdown' => $cities_for_dropdown,
                 'categories_for_dropdown' => $categories_for_dropdown,
-                'users_for_dropdown' => $users_for_dropdown,
-                'flags' => $flags,
-                'selected_flags' => $selected_flags,
+                'users_for_dropdown' => $users_for_dropdown
             ]);
         }
     }
@@ -221,15 +198,6 @@ class BusinessController extends AdminController
             $business_interest->business_id = $business_id;
             $business_interest->interest_id = $temp_interest->id;
             $business_interest->save();
-        }
-    }
-
-    private function _addFlags($flags, $business_id){
-        foreach ((array)$flags as $id => $flag) {
-            $business_flag = new BusinessFlag();
-            $business_flag->business_id = $business_id;
-            $business_flag->flag_id = $id;
-            $business_flag->save();
         }
     }
 

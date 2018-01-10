@@ -715,6 +715,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Category
      *
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} category_id Parent category ID (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -787,11 +788,12 @@ class ApiController extends ApiBaseController
         foreach ($model as $key => $city) {
             $temp['id'] = $city['id'];
             $temp['name'] = $city['name'.$this->lang];
-            $temp['branch_count'] = Branch::find()
+            $business_count = Branch::find()
                 ->select('business_id')
                 ->where(['city_id' => $city['id']])
                 ->groupBy(['business_id'])
                 ->count();
+            $temp['business_count'] = (int) $business_count;
             $cities[] = $temp;
         }
 
@@ -894,22 +896,13 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name business name.
      * @apiParam {String} nameAr business arabic name.
-     * @apiParam {String} address business address.
-     * @apiParam {String} addressAr business arabic address.
-     * @apiParam {String} email business email.
-     * @apiParam {String} country_id business country id.
-     * @apiParam {String} city_id business city id.
      * @apiParam {String} phone business phone.
-     * @apiParam {String} operation_hours business operation hour.
-     * @apiParam {String} lat business latitude .
-     * @apiParam {String} lng business longitude .
      * @apiParam {String} price average business price.
      * @apiParam {String} description business description.
      * @apiParam {String} descriptionAr business arabic description.
      * @apiParam {String} category_id Category's id to add business inside.
      * @apiParam {String} website business website. (optional)
      * @apiParam {String} fb_page business Facebook page. (optional)
-     * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -918,7 +911,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $nameAr, $address, $addressAr, $email, $country_id, $city_id, $phone, $operation_hours, $lat, $lng, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionAddBusiness($name, $nameAr, $email, $phone, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -929,15 +922,8 @@ class ApiController extends ApiBaseController
         $business = new Business;
         $business->name = $name;
         $business->nameAr = $nameAr;
-        $business->address = $address;
-        $business->addressAr = $addressAr;
         $business->email = $email;
-        $business->country_id = $country_id;
-        $business->city_id = $city_id;
         $business->phone = $phone;
-        $business->operation_hours = $operation_hours;
-        $business->lat = $lat;
-        $business->lng = $lng;
         $business->price = $price;
         $business->description = $description;
         $business->descriptionAr = $descriptionAr;
@@ -956,23 +942,14 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($business));
         }
 
-        if (!empty($flags_ids)) {
-            $flags = explode(',', $flags_ids);
-            foreach ($flags as $flag) {
-                $business_flag = new BusinessFlag();
-                $business_flag->business_id = $business->id;
-                $business_flag->flag_id = $flag;
-                $business_flag->save();
-            }
-        }
-
         if (!empty($interests)) {
             $interests = explode(',', $interests);
-            foreach ($interests as $interest) {
-                $temp_interest = Interest::find()->where('name'.$this->lang.' = :name', [':name' => $interest])->one();
+            foreach ($interests as $key => $interest) {
+                $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
+                    $temp_interest->nameAr = $interestsAr[$key];
                     $temp_interest->save();
                 }
 
@@ -1010,21 +987,15 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to edit.
-     * @apiParam {String} name business name (optional).
-     * @apiParam {String} address business address (optional).
-     * @apiParam {String} email business email (optional).
-     * @apiParam {String} country_id business country id (optional).
-     * @apiParam {String} city_id business city id (optional).
-     * @apiParam {String} phone business phone (optional).
-     * @apiParam {String} operation_hours business operation hour.
-     * @apiParam {String} lat business latitude  (optional).
-     * @apiParam {String} lng business longitude  (optional).
-     * @apiParam {String} price average business price (optional).
-     * @apiParam {String} description business description (optional).
-     * @apiParam {String} category_id Category's id to add business inside (optional).
+     * @apiParam {String} name business name. (optional)
+     * @apiParam {String} nameAr business arabic name. (optional)
+     * @apiParam {String} phone business phone. (optional)
+     * @apiParam {String} price average business price. (optional)
+     * @apiParam {String} description business description. (optional)
+     * @apiParam {String} descriptionAr business arabic description. (optional)
+     * @apiParam {String} category_id Category's id to add business inside. (optional)
      * @apiParam {String} website business website. (optional)
      * @apiParam {String} fb_page business Facebook page. (optional)
-     * @apiParam {Array} flags_ids array of flags ids to add to business, ex. 10,13,5 (optional).
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1032,11 +1003,12 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBusiness($business_id, $name = null, $address = null, $email = null, $country_id = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $price = null, $description = null, $category_id = null, $website = null, $fb_page = null, $flags_ids = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $nameAr = null, $email = null, $phone = null, $price = null, $description = null, $descriptionAr = null, $category_id = null, $website = null, $fb_page = null, $interests = null)
     {
         $business = Business::find()
             ->where(['id' => $business_id])
             ->one();
+
         if ($business === null) {
             throw new HttpException(200, 'no business with this id');
         }
@@ -1046,57 +1018,32 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($name)) {
-            $business->{"name".$this->lang} = $name;
+            $business->name = $name;
         }
-
-        if (!empty($address)) {
-            $business->{"address".$this->lang} = $address;
+        if (!empty($nameAr)) {
+            $business->nameAr = $nameAr;
         }
-
         if (!empty($email)) {
             $business->email = $email;
         }
-
-        if (!empty($country_id)) {
-            $business->country_id = $country_id;
-        }
-
-        if (!empty($city_id)) {
-            $business->city_id = $city_id;
-        }
-
         if (!empty($phone)) {
             $business->phone = $phone;
         }
-
-        if (!empty($operation_hours)) {
-            $business->operation_hours = $operation_hours;
-        }
-
-        if (!empty($lat)) {
-            $business->lat = $lat;
-        }
-
-        if (!empty($lng)) {
-            $business->lng = $lng;
-        }
-
         if (!empty($price)) {
             $business->price = $price;
         }
-
         if (!empty($description)) {
-            $business->{"description".$this->lang} = $description;
+            $business->description = $description;
         }
-
+        if (!empty($descriptionAr)) {
+            $business->descriptionAr = $descriptionAr;
+        }
         if (!empty($category_id)) {
             $business->category_id = $category_id;
         }
-
         if (!empty($website)) {
             $business->website = $website;
         }
-
         if (!empty($fb_page)) {
             $business->fb_page = $fb_page;
         }
@@ -1105,29 +1052,17 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($business));
         }
 
-        if (!empty($flags_ids)) {
-            // remove old flags
-            BusinessFlag::deleteAll('business_id = ' . $business->id);
-
-            $flags = explode(',', $flags_ids);
-            foreach ($flags as $flag) {
-                $business_flag = new BusinessFlag();
-                $business_flag->business_id = $business->id;
-                $business_flag->flag_id = $flag;
-                $business_flag->save();
-            }
-        }
-
         if (!empty($interests)) {
             // remove old interests
             BusinessInterest::deleteAll('business_id = ' . $business->id);
 
             $interests = explode(',', $interests);
-            foreach ($interests as $interest) {
-                $temp_interest = Interest::find()->where('name'.$this->lang.' = :name', [':name' => $interest])->one();
+            foreach ($interests as $key => $interest) {
+                $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
+                    $temp_interest->nameAr = $interestsAr[$key];
                     $temp_interest->save();
                 }
 
@@ -1183,7 +1118,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} country_id Country's id.
      * @apiParam {String} category_id Category's id to get businesses inside (optional).
-     * @apiParam {Boolean} admin Get only businesses this user manages (optional).
+     * @apiParam {Boolean} admin_id Get only businesses this user manages (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1191,7 +1126,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses($country_id, $category_id = null, $admin = false)
+    public function actionGetBusinesses($country_id, $category_id = null, $admin_id = null)
     {
         $this->_addOutputs(['businesses']);
 
@@ -2613,11 +2548,11 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications_count']);
 
-        $count = Notification::find()
+        $notifications_count = Notification::find()
             ->where(['user_id' => $this->logged_user['id'], 'seen' => 0])
             ->count();
 
-        $this->output['notifications_count'] = $count;
+        $this->output['notifications_count'] = (int) $notifications_count;
     }
 
     /**

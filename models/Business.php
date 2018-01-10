@@ -10,15 +10,8 @@ use yii\helpers\Url;
  * @property integer $id
  * @property string $name
  * @property string $nameAr
- * @property string $address
- * @property string $addressAr
  * @property string $email
- * @property integer $country_id
- * @property integer $city_id
  * @property string $phone
- * @property string $operation_hours
- * @property string $lat
- * @property string $lng
  * @property string $main_image
  * @property string $rating
  * @property string $price
@@ -53,12 +46,12 @@ class Business extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'nameAr', 'country_id', 'city_id', 'operation_hours', 'price', 'category_id', 'admin_id'], 'required'],
-            [['country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
+            [['name', 'nameAr', 'operation_hours', 'price', 'category_id', 'admin_id'], 'required'],
+            [['category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'email', 'phone', 'operation_hours', 'lat', 'lng', 'website', 'fb_page'], 'string', 'max' => 255],
+            [['name', 'nameAr', 'email', 'phone', 'website', 'fb_page'], 'string', 'max' => 255],
             [['email'], 'email'],
-            [['address', 'addressAr', 'description', 'descriptionAr'], 'string', 'max' => 1023],
+            [['description', 'descriptionAr'], 'string', 'max' => 1023],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
             [['approved'], 'boolean'],
             [['operation_hours'], 'match', 'pattern' => '/^((from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])|(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])(\s*,?\s*from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])+)+$/'],
@@ -74,15 +67,8 @@ class Business extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'nameAr' => 'Name Ar',
-            'address' => 'Address',
-            'addressAr' => 'Address Ar',
             'email' => 'Email',
-            'country_id' => 'Country',
-            'city_id' => 'City',
             'phone' => 'Phone',
-            'operation_hours' => 'Operation Hours',
-            'lat' => 'Lat',
-            'lng' => 'Lng',
             'main_image' => 'Main Image',
             'rating' => 'Rating',
             'price' => 'Price',
@@ -101,16 +87,6 @@ class Business extends \yii\db\ActiveRecord
         ];
     }
 
-    public function getCountry()
-    {
-        return $this->hasOne(Country::className(), ['id' => 'country_id']);
-    }
-
-    public function getCity()
-    {
-        return $this->hasOne(City::className(), ['id' => 'city_id']);
-    }
-
     public function getCategory()
     {
         return $this->hasOne(Category::className(), ['id' => 'category_id']);
@@ -119,30 +95,6 @@ class Business extends \yii\db\ActiveRecord
     public function getAdmin()
     {
         return $this->hasOne(User::className(), ['id' => 'admin_id']);
-    }
-
-    public function getFlags()
-    {
-        return $this->hasMany(BusinessFlag::className(), ['business_id' => 'id']);
-    }
-
-    public function getFlagsList()
-    {
-        if( empty($this->id) ) return null;
-        
-        $business_flags = BusinessFlag::find()->where('business_id = '.$this->id)->all();
-        $flags_list = [];
-        $count = count($business_flags);
-        for ($i=0; $i < $count; $i++) { 
-            if (empty($business_flags[$i]->flag)) {
-                continue;
-            }
-
-            $business_flags[$i]->flag->icon = Url::base(true).'/'.$business_flags[$i]->flag->icon;
-            $flags_list[] = $business_flags[$i]->flag->attributes;
-        }
-        
-        return $flags_list;
     }
 
     public function getInterests()

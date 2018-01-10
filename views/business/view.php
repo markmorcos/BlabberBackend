@@ -15,22 +15,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <style type="text/css">
-span.flag {
-    background: #9CC3E5 none repeat scroll 0 0;
-    border: 1px solid #9CB5E2;
-    border-radius: 2px;
-    color: #406789;
-    display: block;
-    float: left;
-    margin-right: 5px;
-    padding: 5px;
-    height: 35px;
-}
-span.flag img {
-    max-width: 25px;
-    max-height: 25px;
-    margin-right: 10px;
-}
 span.interest {
     background: #cde69c none repeat scroll 0 0;
     border: 1px solid #a5d24a;
@@ -87,11 +71,6 @@ span.interest {
         ]) ?>
     </p>
     <?php 
-    $styled_flags_list = '';
-    foreach ($model->flags as $flag) {
-        $styled_flags_list .= '<span class="flag"><img src="'.Url::base(true).'/'.$flag->flag->icon.'" />.'.$flag->flag->name.'</span>';
-    }
-
     $styled_interests_list = '';
     foreach ($model->interests as $interest) {
         $styled_interests_list .= '<span class="interest">'.$interest->interest->name.'</span>';
@@ -239,21 +218,8 @@ span.interest {
             'id',
             'name',
             'nameAr',
-            'address',
-            'addressAr',
             'email',
-            array(
-                'attribute' => 'country_id',
-                'format' => 'raw',
-                'value' =>  ($model->country_id!=null)?Html::a($model->country->name, ['country/view', 'id' => $model->country_id]):null
-            ), 
-            array(
-                'attribute' => 'city_id',
-                'format' => 'raw',
-                'value' =>  ($model->city_id!=null)?Html::a($model->city->name, ['city/view', 'id' => $model->city_id]):null
-            ), 
             'phone',
-            'operation_hours',
             'rating',
             'price',
             'website',
@@ -286,11 +252,6 @@ span.interest {
                 'value' =>  ($model->admin_id!=null)?Html::a($model->admin->name, ['user/view', 'id' => $model->admin_id]):null
             ), 
             array(
-                'attribute' => 'flags',
-                'format' => 'raw',
-                'value' =>  $styled_flags_list
-            ), 
-            array(
                 'attribute' => 'interests',
                 'format' => 'raw',
                 'value' =>  $styled_interests_list
@@ -300,13 +261,6 @@ span.interest {
                 'format' => 'raw',
                 'value' =>  ($model->main_image!=null)?Html::img('@web/'.$model->main_image, ['style'=>'max-width: 300px;']):null
             ), 
-            array(
-                'label' => 'Location',
-                'format' => 'raw',
-                'value' =>  '<div id="map" style="width: 600px; height: 300px;"></div>'
-            ), 
-            'lat',
-            'lng',
             array(
                 'label' => 'Media',
                 'format' => 'raw',
@@ -368,16 +322,4 @@ span.interest {
         });
     }
     </script>
-    <script>
-        var map, position;
-        function initMap() {
-            position = {lat: <?= $model->lat ?>, lng: <?= $model->lng ?>};
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: position,
-                zoom: 11
-            });
-            new google.maps.Marker({position: position, map: map});
-        }
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgwhJ9ZH_DO_bK_UuSc5l3irAug07zL_0&callback=initMap" async defer></script>
 </div>

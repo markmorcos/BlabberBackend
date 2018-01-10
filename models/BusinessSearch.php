@@ -16,8 +16,8 @@ class BusinessSearch extends Business
     public function rules()
     {
         return [
-            [['id', 'country_id', 'city_id', 'category_id', 'admin_id'], 'integer'],
-            [['name', 'nameAr', 'address', 'addressAr', 'phone', 'operation_hours', 'lat', 'lng', 'main_image', 'rating', 'price', 'website', 'fb_page', 'description', 'descriptionAr', 'featured', 'verified', 'show_in_home', 'created', 'updated'], 'safe'],
+            [['id', 'category_id', 'admin_id'], 'integer'],
+            [['name', 'nameAr', 'phone', 'main_image', 'rating', 'price', 'website', 'fb_page', 'description', 'descriptionAr', 'featured', 'verified', 'show_in_home', 'created', 'updated'], 'safe'],
         ];
     }
 
