@@ -40,18 +40,6 @@ use app\models\BusinessV2;
 
 class ApiController extends ApiBaseController
 {
-    /***************************************/
-    /************** Migration **************/
-    /***************************************/
-
-    /**
-     * @api {post} /api/migrate Migrate from business to branch
-     * @apiName Migrate
-     * @apiGroup Migration
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
     public function actionMigrate()
     {
         // set_time_limit(0);
