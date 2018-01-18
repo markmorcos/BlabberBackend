@@ -2,26 +2,23 @@
 
 namespace app\models;
 
-use yii\helpers\Url;
-
 /**
- * This is the model class for table "poll".
+ * This is the model class for table "branch_flag".
  *
  * @property integer $id
- * @property string $title
- * @property string $titleAr
- * @property string $type
+ * @property integer $branch_id
+ * @property integer $flag_id
  * @property string $created
  * @property string $updated
  */
-class Poll extends LikeableActiveRecored
+class BranchFlag extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'poll';
+        return 'branch_flag';
     }
 
     /**
@@ -30,9 +27,9 @@ class Poll extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['title', 'titleAr', 'type'], 'required'],
+            [['branch_id', 'flag_id'], 'required'],
+            [['branch_id', 'flag_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['title', 'titleAr', 'type'], 'string', 'max' => 255],
         ];
     }
 
@@ -43,17 +40,15 @@ class Poll extends LikeableActiveRecored
     {
         return [
             'id' => 'ID',
-            'business_id' => 'Business',
-            'title' => 'Title',
-            'titleAr' => 'Title Ar',
-            'type' => 'Type',
+            'branch_id' => 'Branch ID',
+            'flag_id' => 'Flag ID',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
     }
 
-    public function getBusiness()
+    public function getFlag()
     {
-        return $this->hasOne(Business::className(), ['id' => 'business_id']);
+        return $this->hasOne(Flag::className(), ['id' => 'flag_id']);
     }
 }

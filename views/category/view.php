@@ -54,6 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
                 'value' =>  ($model->badge!=null)?Html::img('@web/'.$model->badge, ['style'=>'max-width: 300px;']):null
             ), 
+            'color',
             'created',
             'updated',
         ],

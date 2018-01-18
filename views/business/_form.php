@@ -17,8 +17,6 @@ use faryshta\widgets\JqueryTagsInput;
 
     <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
-
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'rating')->textInput(['maxlength' => true]) ?>

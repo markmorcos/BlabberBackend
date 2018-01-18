@@ -4,13 +4,13 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\Poll */
+/* @var $model app\models\Area */
 
-$this->title = $model->title;
-$this->params['breadcrumbs'][] = ['label' => 'Polls', 'url' => ['index']];
+$this->title = $model->name;
+$this->params['breadcrumbs'][] = ['label' => 'Areas', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="poll-view">
+<div class="area-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -29,9 +29,13 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'title',
-            'titleAr',
-            'type',
+            'name',
+            'nameAr',
+            array(
+                'attribute' => 'city_id',
+                'format' => 'raw',
+                'value' =>  ($model->city_id!=null)?Html::a($model->city->name, ['city/view', 'id' => $model->city_id]):null
+            ), 
             'created',
             'updated',
         ],

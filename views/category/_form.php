@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use kartik\color\ColorInput;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Category */
@@ -29,6 +30,9 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'icon')->fileInput() ?>
     
     <?= $form->field($model, 'badge')->fileInput() ?>
+
+    <label class="control-label">Color</label>
+    <?= ColorInput::widget(['model' => $model, 'attribute' => 'color']); ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>

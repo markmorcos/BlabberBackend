@@ -27,7 +27,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'name',
             'nameAr',
-            // 'email',
             // 'phone',
             // 'main_image',
             'rating',
@@ -52,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => function ($data) {
                     return ($data->admin_id!=null)?Html::a($data->admin->name, ['user/view', 'id' => $data->admin_id]):null;
                 },
-            ), 
+            ),
             // 'created',
             // 'updated',
 

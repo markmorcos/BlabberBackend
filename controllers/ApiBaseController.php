@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\components\Translation;
 use app\models\Blog;
+use app\models\Branch;
 use app\models\Business;
 use app\models\BusinessView;
 use app\models\Category;
@@ -38,7 +39,7 @@ class ApiBaseController extends Controller
     public $lang = '';
     public $pagination = [
         'page_no' => null,
-        'no_per_page' => 20,
+        'no_per_page' => 10,
         'total_pages_no' => null,
         'total_records_no' => null
     ];
@@ -75,10 +76,10 @@ class ApiBaseController extends Controller
         $guest_actions = [
             'error', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags',
-            'get-interests', 'get-homescreen-businesses', 'get-businesses', 'search-businesses',
-            'search-businesses-by-type', 'get-business-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
+            'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
+            'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors', 'get-blogs', 'get-polls', 'migrate'
+            'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -215,8 +216,8 @@ class ApiBaseController extends Controller
             return null;
         }
 
-        $last_sent_follow = $this->_isfOlloWing($this->logged_user['id'], $model->id);
-        $last_received_follow = $this->_isfOlloWing($model->id, $this->logged_user['id']);
+        $last_sent_follow = $this->_isFollowing($this->logged_user['id'], $model->id);
+        $last_received_follow = $this->_isFollowing($model->id, $this->logged_user['id']);
 
         $user['id'] = $model->id;
         $user['name'] = $model->name;
@@ -232,7 +233,7 @@ class ApiBaseController extends Controller
             $user['email'] = $model->email;
             $user['type'] = $model->role;
             $user['mobile'] = $model->mobile;
-            $user['interests'] = $model->interestsList;
+            $user['interests'] = $model['categoryList'.$this->lang];
         }
 
         return $user;
@@ -256,7 +257,7 @@ class ApiBaseController extends Controller
         }
     }
 
-    protected function _isfOlloWing($user_id, $receiver_id)
+    protected function _isFollowing($user_id, $receiver_id)
     {
         $model = Follow::find()
             ->where(['user_id' => $user_id, 'receiver_id' => $receiver_id])
@@ -301,14 +302,17 @@ class ApiBaseController extends Controller
         return $categoryTree;
     }
 
-    protected function _getBusinesses($conditions, $country_id = null, $order = null, $lat_lng = null, $andConditions = null)
+    protected function _getBusinesses($conditions, $area_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
+            ->innerJoin('branch', 'business_v2.id = branch.business_id')
+            ->innerJoin('city', 'city.id = branch.city_id')
             ->where($conditions)
-            ->with('category');
+            ->groupBy('business_v2.id')
+            ->with(['category', 'branches']);
 
-        if ($country_id !== null) {
-            $query->andWhere(['country_id' => $country_id]);
+        if ($area_id !== null) {
+            $query->andWhere(['branch.area_id' => $area_id]);
         }
 
         if ($order !== null) {
@@ -317,12 +321,12 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if (!empty($lat_lng)) {
+        if (empty($lat_lng)) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 
             $query
-                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
+                ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance']);
 //                ->having('distance < 100');
             $order += ['distance' => SORT_ASC];
         }
@@ -330,25 +334,25 @@ class ApiBaseController extends Controller
         if (empty($andConditions)) {
             $andConditions[] = 'and';
         }
-        $andConditions[] = ['approved' => true];
+        $andConditions[] = ['business_v2.approved' => true];
         $query->andWhere($andConditions);
 
         $query->orderBy($order);
+        $query->groupBy('business_v2.id');
         $model = $this->_getModelWithPagination($query);
 
         $businesses = [];
         foreach ($model as $key => $business) {
-            $businesses[] = $this->_getBusinessData($business);
+            $businesses[] = $this->_getBusinessData($business, $business->branches[0]->attributes);
         }
 
         return $businesses;
     }
 
-    protected function _getBusinessData($model)
+    protected function _getBusinessData($model, $branch)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
-        $business['email'] = $model['email'];
         $business['phone'] = $model['phone'];
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
         $business['rating'] = $model['rating'];
@@ -375,7 +379,7 @@ class ApiBaseController extends Controller
             $business['top_category'] = null;
         }
         $business['admin_id'] = $model['admin_id'];
-        $business['interests'] = $model['interestsList'];
+        $business['interests'] = $model['interestList'.$this->lang];
         $business['no_of_views'] = count($model['views']);
         $business['last_checkin'] = null;
         if (isset($model['checkins'][0])) {
@@ -385,6 +389,7 @@ class ApiBaseController extends Controller
         }
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
+        $business['branch'] = $branch;
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
@@ -398,6 +403,68 @@ class ApiBaseController extends Controller
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
         $business['rating'] = $model['rating'];
         $business['no_of_reviews'] = count($model['reviews']);
+
+        return $business;
+    }
+
+    protected function _getBranches($conditions, $lat_lng = null)
+    {
+        $query = Branch::find()
+            ->where($conditions);
+
+        $order = ['name' => SORT_ASC];
+
+        if (!empty($lat_lng)) {
+            $lat = $lat_lng[0];
+            $lng = $lat_lng[1];
+
+            $query
+                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
+//                ->having('distance < 100');
+            $order += ['distance' => SORT_ASC];
+        }
+
+        $query->orderBy($order);
+        $model = $this->_getModelWithPagination($query);
+
+        $branches = [];
+        foreach ($model as $key => $branch) {
+            $branches[] = $this->_getBranchData($branch);
+        }
+
+        return $branches;
+    }
+
+    protected function _getBranchData($model)
+    {
+        $branch['id'] = $model['id'];
+        // $branch['business_id'] = $model['business_id'];
+        $branch['name'] = $model['name'.$this->lang];
+        $branch['address'] = $model['address'.$this->lang];
+        $branch['city'] = $model['city']->attributes;
+        $branch['phone'] = $model['phone'];
+        $branch['operation_hours'] = $model['operation_hours'];
+        $branch['lat'] = $model['lat'];
+        $branch['lng'] = $model['lng'];
+        $branch['approved'] = $model['approved'];
+        $branch['is_reservable'] = $model['is_reservable'];
+        $branch['flags'] = $model['flagsList'];
+        $branch['is_open'] = $model['isOpen'];
+        $branch['created'] = $model['created'];
+        $branch['updated'] = $model['updated'];
+        return $branch;
+    }
+
+    protected function _getBranchMinimalData($model)
+    {
+        $branch['id'] = $model['id'];
+        $branch['name'] = $model['name' . $this->lang];
+        $branch['address'] = $model['address'.$this->lang];
+        $branch['city'] = $model['city'];
+        $branch['phone'] = $model['phone'];
+        $branch['lat'] = $model['lat'];
+        $branch['lng'] = $model['lng'];
+        $branch['is_open'] = $model['isOpen'];
 
         return $business;
     }
@@ -454,17 +521,17 @@ class ApiBaseController extends Controller
         return $checkins;
     }
 
-    protected function _getReviews($conditions, $country_id = null)
+    protected function _getReviews($conditions, $area_id = null)
     {
         $query = Review::find()
             ->where($conditions)
             ->orderBy(['id' => SORT_DESC])
             ->with('user');
 
-        if ($country_id !== null) {
+        if ($area_id !== null) {
             $query
                 ->joinWith('business')
-                ->andWhere(['business.country_id' => $country_id]);
+                ->andWhere(['branch.area_id' => $area_id]);
         }
 
         $model = $this->_getModelWithPagination($query);
@@ -507,8 +574,6 @@ class ApiBaseController extends Controller
         foreach ($model as $key => $comment) {
             $temp['id'] = $comment['id'];
             $temp['text'] = $comment['text'];
-            $temp['object_id'] = $comment['object_id'];
-            $temp['object_type'] = $comment['object_type'];
             $temp['created'] = $comment['created'];
             $temp['updated'] = $comment['updated'];
 
@@ -611,18 +676,18 @@ class ApiBaseController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    protected function _getMedia($conditions, $country_id = null)
+    protected function _getMedia($conditions, $area_id = null)
     {
         $query = Media::find()
             ->where($conditions)
             ->orderBy(['id' => SORT_DESC])
             ->with('user');
 
-        if ($country_id !== null) {
+        if ($area_id !== null) {
             $query
                 ->leftJoin('business', '`business`.`id` = `media`.`object_id`')
                 ->andWhere(['media.object_type' => 'Business'])
-                ->andWhere(['business.country_id' => $country_id]);
+                ->andWhere(['branch.area_id' => $area_id]);
         }
 
         $model = $this->_getModelWithPagination($query);
@@ -808,6 +873,8 @@ class ApiBaseController extends Controller
     {
         $title = Translation::get($user->lang, $title);
         $body = Translation::get($user->lang, $body);
-        \app\components\Notification::sendNotification($user->getLastFirebaseToken(), $title, $body, $data);
+        foreach ($user->tokens as $token) {
+            \app\components\Notification::sendNotification($token, $title, $body, $data);
+        }
     }
 }

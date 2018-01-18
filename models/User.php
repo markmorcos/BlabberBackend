@@ -46,7 +46,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['name', 'email'], 'required'],
+            [['name', 'email', 'password', 'mobile', 'gender'], 'required'],
             [['password'], 'required', 'on' => 'create'],
             [['role', 'gender'], 'string'],
             [['birthdate', 'created', 'updated'], 'safe'],
@@ -225,34 +225,44 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             ->orderBy(['id' => SORT_DESC]);
     }
 
-    public function getInterests()
+    public function getCategories()
     {
-        return $this->hasMany(UserInterest::className(), ['user_id' => 'id']);
+        return $this->hasMany(UserCategory::className(), ['user_id' => 'id']);
     }
 
-    public function getInterestsList()
+    public function getCategoryList()
     {
         if( empty($this->id) ) return null;
         
-        $user_interests = UserInterest::find()->where('user_id = '.$this->id)->all();
-        $interests_list = '';
-        $count = count($user_interests);
+        $user_categories = UserCategory::find()->where('user_id = '.$this->id)->all();
+        $categories_list = '';
+        $count = count($user_categories);
         for ($i=0; $i < $count; $i++) { 
-            if (empty($user_interests[$i]->interest)) {
+            if (empty($user_categories[$i]->category)) {
                 continue;
             }
             
-            $interests_list .= $user_interests[$i]->interest->name . ($i==$count-1?'':',');
+            $categories_list .= $user_categories[$i]->category->name . ($i==$count-1?'':',');
         }
         
-        return $interests_list;
+        return $categories_list;
     }
 
-    public function getLastFirebaseToken()
+    public function getCategoryListAr()
     {
-        if (count($this->tokens) > 0) {
-            return $this->tokens[0]->firebase_token;
+        if( empty($this->id) ) return null;
+        
+        $user_categories = UserCategory::find()->where('user_id = '.$this->id)->all();
+        $categories_list = '';
+        $count = count($user_categories);
+        for ($i=0; $i < $count; $i++) { 
+            if (empty($user_categories[$i]->category)) {
+                continue;
+            }
+            
+            $categories_list .= $user_categories[$i]->category->nameAr . ($i==$count-1?'':',');
         }
-        return '';
+        
+        return $categories_list;
     }
 }

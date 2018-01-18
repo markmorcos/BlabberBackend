@@ -6,9 +6,9 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * BusinessSearch represents the model behind the search form about `app\models\Business`.
+ * BranchSearch represents the model behind the search form about `app\models\Branch`.
  */
-class BusinessSearch extends Business
+class BranchSearch extends Branch
 {
     /**
      * @inheritdoc
@@ -16,8 +16,8 @@ class BusinessSearch extends Business
     public function rules()
     {
         return [
-            [['id', 'category_id', 'admin_id'], 'integer'],
-            [['name', 'nameAr', 'phone', 'main_image', 'rating', 'price', 'website', 'fb_page', 'description', 'descriptionAr', 'featured', 'verified', 'show_in_home', 'created', 'updated'], 'safe'],
+            [['id', 'business_id'], 'integer'],
+            [['name', 'nameAr', 'address', 'addressAr', 'phone', 'operation_hours', 'lat', 'lng', 'is_reservable', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -39,7 +39,7 @@ class BusinessSearch extends Business
      */
     public function search($params)
     {
-        $query = Business::find();
+        $query = Branch::find();
 
         // add conditions that should always apply here
 
@@ -58,25 +58,20 @@ class BusinessSearch extends Business
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'category_id' => $this->category_id,
-            'admin_id' => $this->admin_id,
+            'business_id' => $this->business_id,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'nameAr', $this->nameAr])
+            ->andFilterWhere(['like', 'address', $this->address])
+            ->andFilterWhere(['like', 'addressAr', $this->addressAr])
             ->andFilterWhere(['like', 'phone', $this->phone])
-            ->andFilterWhere(['like', 'main_image', $this->main_image])
-            ->andFilterWhere(['like', 'rating', $this->rating])
-            ->andFilterWhere(['like', 'price', $this->price])
-            ->andFilterWhere(['like', 'website', $this->website])
-            ->andFilterWhere(['like', 'fb_page', $this->fb_page])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'descriptionAr', $this->descriptionAr])
-            ->andFilterWhere(['like', 'featured', $this->featured])
-            ->andFilterWhere(['like', 'verified', $this->verified])
-            ->andFilterWhere(['like', 'show_in_home', $this->show_in_home]);
+            ->andFilterWhere(['like', 'operation_hours', $this->operation_hours])
+            ->andFilterWhere(['like', 'lat', $this->lat])
+            ->andFilterWhere(['like', 'lng', $this->lng])
+            ->andFilterWhere(['like', 'is_reservable', $this->is_reservable]);
 
         return $dataProvider;
     }

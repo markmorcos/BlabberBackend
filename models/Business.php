@@ -10,7 +10,6 @@ use yii\helpers\Url;
  * @property integer $id
  * @property string $name
  * @property string $nameAr
- * @property string $email
  * @property string $phone
  * @property string $main_image
  * @property string $rating
@@ -37,7 +36,7 @@ class Business extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'business';
+        return 'business_v2';
     }
 
     /**
@@ -46,15 +45,13 @@ class Business extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'nameAr', 'operation_hours', 'price', 'category_id', 'admin_id'], 'required'],
+            [['name', 'nameAr', 'price', 'category_id', 'admin_id'], 'required'],
             [['category_id', 'admin_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'email', 'phone', 'website', 'fb_page'], 'string', 'max' => 255],
-            [['email'], 'email'],
+            [['name', 'nameAr', 'phone', 'website', 'fb_page'], 'string', 'max' => 255],
             [['description', 'descriptionAr'], 'string', 'max' => 1023],
             [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
-            [['approved'], 'boolean'],
-            [['operation_hours'], 'match', 'pattern' => '/^((from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])|(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])(\s*,?\s*from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])+)+$/'],
+            [['approved'], 'boolean']
         ];
     }
 
@@ -67,7 +64,6 @@ class Business extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'nameAr' => 'Name Ar',
-            'email' => 'Email',
             'phone' => 'Phone',
             'main_image' => 'Main Image',
             'rating' => 'Rating',
@@ -87,6 +83,11 @@ class Business extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getBranches()
+    {
+        return $this->hasMany(Branch::className(), ['business_id' => 'id']);
+    }
+
     public function getCategory()
     {
         return $this->hasOne(Category::className(), ['id' => 'category_id']);
@@ -102,7 +103,7 @@ class Business extends \yii\db\ActiveRecord
         return $this->hasMany(BusinessInterest::className(), ['business_id' => 'id']);
     }
 
-    public function getInterestsList()
+    public function getInterestList()
     {
         if( empty($this->id) ) return null;
         
@@ -120,10 +121,22 @@ class Business extends \yii\db\ActiveRecord
         return $interests_list;
     }
 
-    public function getImages()
+    public function getInterestListAr()
     {
-        return $this->hasMany(Media::className(), ['object_id' => 'id'])
-            ->where(['object_type' => 'Business', 'type' => 'image']);
+        if( empty($this->id) ) return null;
+        
+        $business_interests = BusinessInterest::find()->where('business_id = '.$this->id)->all();
+        $interests_list = '';
+        $count = count($business_interests);
+        for ($i=0; $i < $count; $i++) { 
+            if (empty($business_interests[$i]->interest)) {
+                continue;
+            }
+
+            $interests_list .= $business_interests[$i]->interest->nameAr . ($i==$count-1?'':',');
+        }
+        
+        return $interests_list;
     }
 
     public function getVideos()
@@ -173,37 +186,5 @@ class Business extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Review::className(), ['business_id' => 'id'])
             ->orderBy(['id' => SORT_DESC]);
-    }
-
-    public function getIsOpen()
-    {
-        //TODO: add support to different days & timezones
-        $isOpen = False;
-        $operation_hours = $this->operation_hours;
-        $operation_hours_array = explode(',', $operation_hours);
-
-        foreach ($operation_hours_array as $operation_hour) {
-            if (empty($operation_hour)){
-                continue;
-            }
-
-            if (preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9] ([AaPp][Mm])/', $operation_hour, $matches) ||
-                preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9]/', $operation_hour, $matches)) {
-                if (!empty($matches[0]) && count($matches[0]) == 2) {
-                    $from = new \DateTime($matches[0][0]);
-                    $to = new \DateTime($matches[0][1]);
-                    $now = new \DateTime(date('H:i'));
-
-                    if (strcasecmp(substr($matches[0][1], -2), 'am') === 0) {
-                        $to->modify('+1 day');
-                    }
-
-                    return ($now >= $from && $now <= $to);
-                }
-            }
-
-        }
-
-        return $isOpen;
     }
 }

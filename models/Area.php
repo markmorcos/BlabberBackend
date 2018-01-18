@@ -3,22 +3,23 @@
 namespace app\models;
 
 /**
- * This is the model class for table "business_flag".
+ * This is the model class for table "area".
  *
  * @property integer $id
- * @property integer $business_id
- * @property integer $flag_id
+ * @property string $name
+ * @property string $nameAr
+ * @property integer $city_id
  * @property string $created
  * @property string $updated
  */
-class BusinessFlag extends \yii\db\ActiveRecord
+class Area extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'business_flag';
+        return 'area';
     }
 
     /**
@@ -27,9 +28,10 @@ class BusinessFlag extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_id', 'flag_id'], 'required'],
-            [['business_id', 'flag_id'], 'integer'],
+            [['city_id', 'name', 'nameAr'], 'required'],
+            [['city_id'], 'integer'],
             [['created', 'updated'], 'safe'],
+            [['name', 'nameAr'], 'string', 'max' => 255],
         ];
     }
 
@@ -40,15 +42,16 @@ class BusinessFlag extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'business_id' => 'Business ID',
-            'flag_id' => 'Flag ID',
+            'name' => 'Name',
+            'nameAr' => 'Name Ar',
+            'city_id' => 'City',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
     }
 
-    public function getFlag()
+    public function getCity()
     {
-        return $this->hasOne(Flag::className(), ['id' => 'flag_id']);
+        return $this->hasOne(City::className(), ['id' => 'city_id']);
     }
 }

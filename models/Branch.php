@@ -13,13 +13,13 @@ use yii\helpers\Url;
  * @property string $nameAr
  * @property string $address
  * @property string $addressAr
- * @property integer $city_id
+ * @property integer $area_id
  * @property string $phone
  * @property string $operation_hours
  * @property string $lat
  * @property string $lng
- * @property integer $admin_id
  * @property string $approved
+ * @property string $is_reservable
  * @property string $created
  * @property string $updated
  */
@@ -41,12 +41,12 @@ class Branch extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_id', 'city_id', 'operation_hours', 'admin_id'], 'required'],
-            [['business_id', 'city_id', 'admin_id'], 'integer'],
+            [['business_id', 'area_id', 'address', 'addressAr', 'operation_hours', 'lat', 'lng'], 'required'],
+            [['business_id', 'area_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng'], 'string', 'max' => 255],
             [['address', 'addressAr'], 'string', 'max' => 1023],
-            [['approved'], 'boolean'],
+            [['approved', 'is_reservable'], 'boolean'],
             [['operation_hours'], 'match', 'pattern' => '/^((from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])|(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])(\s*,?\s*from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])+)+$/'],
         ];
     }
@@ -63,13 +63,13 @@ class Branch extends \yii\db\ActiveRecord
             'nameAr' => 'Name Ar',
             'address' => 'Address',
             'addressAr' => 'Address Ar',
-            'city_id' => 'City',
+            'area_id' => 'Area',
             'phone' => 'Phone',
             'operation_hours' => 'Operation Hours',
             'lat' => 'Lat',
             'lng' => 'Lng',
-            'admin_id' => 'Admin',
             'approved' => 'Approved',
+            'is_reservable' => 'Reservable',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -77,61 +77,56 @@ class Branch extends \yii\db\ActiveRecord
 
     public function getBusiness()
     {
-        return $this->hasOne(BusinessV2::className(), ['id' => 'business_id']);
+        return $this->hasOne(Business::className(), ['id' => 'business_id']);
     }
 
-    public function getCity()
+    public function getArea()
     {
-        return $this->hasOne(City::className(), ['id' => 'city_id']);
+        return $this->hasOne(Area::className(), ['id' => 'area_id']);
     }
 
-    public function getAdmin()
+    public function getFlags()
     {
-        return $this->hasOne(User::className(), ['id' => 'admin_id']);
+        return $this->hasMany(BranchFlag::className(), ['branch_id' => 'id']);
     }
 
-    // public function getFlags()
-    // {
-    //     return $this->hasMany(BranchFlag::className(), ['branch_id' => 'id']);
-    // }
-
-    // public function getFlagsList()
-    // {
-    //     if( empty($this->id) ) return null;
+    public function getFlagsList()
+    {
+        if( empty($this->id) ) return null;
         
-    //     $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
-    //     $flags_list = [];
-    //     $count = count($branch_flags);
-    //     for ($i=0; $i < $count; $i++) { 
-    //         if (empty($branch_flags[$i]->flag)) {
-    //             continue;
-    //         }
+        $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
+        $flags_list = [];
+        $count = count($branch_flags);
+        for ($i=0; $i < $count; $i++) { 
+            if (empty($branch_flags[$i]->flag)) {
+                continue;
+            }
 
-    //         $branch_flags[$i]->flag->icon = Url::base(true).'/'.$branch_flags[$i]->flag->icon;
-    //         $flags_list[] = $branch_flags[$i]->flag->attributes;
-    //     }
+            $branch_flags[$i]->flag->icon = Url::base(true).'/'.$branch_flags[$i]->flag->icon;
+            $flags_list[] = $branch_flags[$i]->flag->attributes;
+        }
         
-    //     return $flags_list;
-    // }
+        return $flags_list;
+    }
 
-    // public function getImages()
-    // {
-    //     return $this->hasMany(Media::className(), ['object_id' => 'id'])
-    //         ->where(['object_type' => 'Branch', 'type' => 'image']);
-    // }
+    public function getImages()
+    {
+        return $this->hasMany(Media::className(), ['object_id' => 'id'])
+            ->where(['object_type' => 'Branch', 'type' => 'image']);
+    }
 
-    // public function getCheckins()
-    // {
-    //     return $this->hasMany(Checkin::className(), ['branch_id' => 'id'])
-    //         ->orderBy(['id' => SORT_DESC])
-    //         ->with('user');
-    // }
+    public function getCheckins()
+    {
+        return $this->hasMany(Checkin::className(), ['branch_id' => 'id'])
+            ->orderBy(['id' => SORT_DESC])
+            ->with('user');
+    }
 
-    // public function getReviews()
-    // {
-    //     return $this->hasMany(Review::className(), ['branch_id' => 'id'])
-    //         ->orderBy(['id' => SORT_DESC]);
-    // }
+    public function getReviews()
+    {
+        return $this->hasMany(Review::className(), ['branch_id' => 'id'])
+            ->orderBy(['id' => SORT_DESC]);
+    }
 
     public function getIsOpen()
     {

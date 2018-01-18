@@ -7,24 +7,29 @@ use yii\widgets\Pjax;
 use dosamigos\fileupload\FileUploadUI;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\Business */
+/* @var $model app\models\Branch */
 
 $this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Businesses', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Branches', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <style type="text/css">
-span.interest {
-    background: #cde69c none repeat scroll 0 0;
-    border: 1px solid #a5d24a;
+span.flag {
+    background: #9CC3E5 none repeat scroll 0 0;
+    border: 1px solid #9CB5E2;
     border-radius: 2px;
-    color: #638421;
+    color: #406789;
     display: block;
     float: left;
     margin-right: 5px;
     padding: 5px;
     height: 35px;
+}
+span.flag img {
+    max-width: 25px;
+    max-height: 25px;
+    margin-right: 10px;
 }
 
 .fileupload-buttonbar {
@@ -56,7 +61,7 @@ span.interest {
 }
 </style>
 
-<div class="business-view">
+<div class="branch-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -71,42 +76,24 @@ span.interest {
         ]) ?>
     </p>
     <?php 
-    $styled_interests_list = '';
-    foreach ($model->interests as $interest) {
-        $styled_interests_list .= '<span class="interest">'.$interest->interest->name.'</span>';
+    $styled_flags_list = '';
+    foreach ($model->flags as $flag) {
+        $styled_flags_list .= '<span class="flag"><img src="'.Url::base(true).'/'.$flag->flag->icon.'" />.'.$flag->flag->name.'</span>';
     }
 
 
     $all_images  = '';
     $all_images .= '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>';
     $all_images .= '<ul class="nav nav-tabs">';
-    $all_images .= '    <li class="active"><a data-toggle="tab" href="#menus">Menu</a></li>';
-    $all_images .= '    <li><a data-toggle="tab" href="#products">Product</a></li>';
-    $all_images .= '    <li><a data-toggle="tab" href="#brochures">Brochure</a></li>';
+    $all_images .= '    <li class="active"><a data-toggle="tab" href="#images">Image</a></li>';
     $all_images .= '</ul>';
 
     $all_images .= '<div class="tab-content">';
-    $all_images .= '    <div id="menus" class="tab-pane fade in active">';
-    $all_images .=          mediaUploader($model->id, 'menu');
+    $all_images .= '    <div id="images" class="tab-pane fade in active">';
+    $all_images .=          mediaUploader($model->id, 'image');
     $all_images .= '        <div class="images">';
-    foreach ($model->menus as $media) {
-        $all_images .= newMedia($media, 'menu');
-    }
-    $all_images .= '        </div>';
-    $all_images .= '    </div>';
-    $all_images .= '    <div id="products" class="tab-pane fade">';
-    $all_images .=          mediaUploader($model->id, 'product');
-    $all_images .= '        <div class="images">';
-    foreach ($model->products as $media) {
-        $all_images .= newMedia($media, 'product');
-    }
-    $all_images .= '        </div>';
-    $all_images .= '    </div>';
-    $all_images .= '    <div id="brochures" class="tab-pane fade">';
-    $all_images .=          mediaUploader($model->id, 'brochure');
-    $all_images .= '        <div class="images">';
-    foreach ($model->brochures as $media) {
-        $all_images .= newMedia($media, 'brochure');
+    foreach ($model->images as $media) {
+        $all_images .= newMedia($media, 'image');
     }
     $all_images .= '        </div>';
     $all_images .= '    </div>';
@@ -116,13 +103,13 @@ span.interest {
         $uploader = FileUploadUI::widget([
             'model' => new \app\models\Media(),
             'attribute' => 'file'.$type,
-            'url' => ['add-media', 'media_type' => $type, 'business_id' => $id],
+            'url' => ['add-media', 'media_type' => $type, 'branch_id' => $id],
             'gallery' => false,
             'fieldOptions' => [
-                'accept' => $type === 'brochure' ? 'application/pdf' : 'image/*'
+                'accept' => 'image/*'
             ],
             'clientOptions' => [
-                'maxFileSize' => $type === 'brochure' ? 50 * 1024 * 1024 : 2 * 1024 * 1024
+                'maxFileSize' => 2 * 1024 * 1024
             ],
             'clientEvents' => [
                 'fileuploaddone' => 'function(e, data) {
@@ -155,31 +142,31 @@ span.interest {
     ?>
 
     <script>
-    function editMedia(id, business_id, type){
+    function editMedia(id, branch_id, type){
         $.ajax('<?= Url::to(['media/edit']) ?>', {
             type: 'POST',
             data: { id: id, caption: $('#caption-' + id)[0].value, price: $('#price-' + id)[0].value },
         }).done(function(data) {
-            if (data === 'done') updateMedia(business_id,type);
+            if (data === 'done') updateMedia(branch_id,type);
             else alert('Unable to update details');
         });
         return false;
     }
-    function deleteMedia(id, business_id, type){
+    function deleteMedia(id, branch_id, type){
         if (confirm('Are you sure you want to delete this item?')) {
             $.ajax('<?= Url::to(['media/delete']) ?>', {
                 type: 'POST',
                 data: {id: id},
             }).done(function(data) {
-                updateMedia(business_id,type);
+                updateMedia(branch_id,type);
             });
         }
         return false;
     }
-    function updateMedia(business_id, type){
+    function updateMedia(branch_id, type){
         $.ajax({
-            url: "<?= Url::to(['business/get-images']) ?>",
-            data: {id: business_id, type: type},
+            url: "<?= Url::to(['branch/get-images']) ?>",
+            data: {id: branch_id, type: type},
             success: function(data) {
                 $('#'+type+' .images').html('');
                 var images = JSON.parse(data);
@@ -190,7 +177,7 @@ span.interest {
                     } else {
                         imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
                     }
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + branch_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }
@@ -206,48 +193,27 @@ span.interest {
             'id',
             'name',
             'nameAr',
+            'address',
+            'addressAr',
+            array(
+                'attribute' => 'area_id',
+                'format' => 'raw',
+                'value' =>  ($model->area_id!=null)?Html::a($model->area->name, ['area/view', 'id' => $model->area_id]):null
+            ), 
             'phone',
-            'rating',
-            'price',
-            'website',
-            'fb_page',
-            'description',
-            'descriptionAr',
+            'operation_hours',
             array(
-                'attribute' => 'featured',
+                'attribute' => 'flags',
                 'format' => 'raw',
-                'value' =>  ($model->featured==0)?"No":"Yes"
+                'value' =>  $styled_flags_list
             ), 
             array(
-                'attribute' => 'verified',
+                'label' => 'Location',
                 'format' => 'raw',
-                'value' =>  ($model->verified==0)?"No":"Yes"
+                'value' =>  '<div id="map" style="width: 600px; height: 300px;"></div>'
             ), 
-            array(
-                'attribute' => 'show_in_home',
-                'format' => 'raw',
-                'value' =>  ($model->show_in_home==0)?"No":"Yes"
-            ), 
-            array(
-                'attribute' => 'category_id',
-                'format' => 'raw',
-                'value' =>  ($model->category_id!=null)?Html::a($model->category->name, ['category/view', 'id' => $model->category_id]):null
-            ), 
-            array(
-                'attribute' => 'admin_id',
-                'format' => 'raw',
-                'value' =>  ($model->admin_id!=null)?Html::a($model->admin->name, ['user/view', 'id' => $model->admin_id]):null
-            ), 
-            array(
-                'attribute' => 'interests',
-                'format' => 'raw',
-                'value' =>  $styled_interests_list
-            ), 
-            array(
-                'attribute' => 'main_image',
-                'format' => 'raw',
-                'value' =>  ($model->main_image!=null)?Html::img('@web/'.$model->main_image, ['style'=>'max-width: 300px;']):null
-            ), 
+            'lat',
+            'lng',
             array(
                 'label' => 'Media',
                 'format' => 'raw',
@@ -255,6 +221,7 @@ span.interest {
             ),
             'created',
             'updated',
+            'isOpen',
             array(
                 'attribute' => 'approved',
                 'format' => 'raw',
@@ -267,6 +234,7 @@ span.interest {
                     return $html;
                 },
             ),
+            'is_reservable',
         ],
     ]) 
     ?>
@@ -308,4 +276,16 @@ span.interest {
         });
     }
     </script>
+    <script>
+        var map, position;
+        function initMap() {
+            position = {lat: <?= $model->lat ?>, lng: <?= $model->lng ?>};
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: position,
+                zoom: 11
+            });
+            new google.maps.Marker({position: position, map: map});
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgwhJ9ZH_DO_bK_UuSc5l3irAug07zL_0&callback=initMap" async defer></script>
 </div>

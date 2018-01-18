@@ -36,10 +36,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     return ($data->parent_id!=null)?Html::a($data->parent->name, ['category/view', 'id' => $data->parent_id]):null;
                 },
             ), 
-             'order',
+            'order',
             // 'main_image',
             // 'icon',
             // 'badge',
+            'color',
             // 'created',
             // 'updated',
 

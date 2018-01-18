@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\Translation;
+use app\models\Area;
 use app\models\Blog;
 use app\models\Business;
 use app\models\BusinessFlag;
@@ -28,7 +29,7 @@ use app\models\Review;
 use app\models\SavedBusiness;
 use app\models\Sponsor;
 use app\models\User;
-use app\models\UserInterest;
+use app\models\UserCategory;
 use app\models\UserToken;
 use Yii;
 use yii\helpers\ArrayHelper;
@@ -94,13 +95,21 @@ class ApiController extends ApiBaseController
             $branch = Branch::findOne($business->id);
             if (!$branch) {
                 $branch = new Branch;
+                if ($branch_name) {
+                    $area = Area::findOne(['name' => $branch_name]);
+                    if (!$area) {
+                        $area = new Area;
+                        $area->name = $branch_name;
+                        $area->nameAr = $branch_name_ar;
+                        $area->city_id = $business->city_id;
+                        $area->save();
+                    }
+                    $branch->area_id = $area->id;
+                }
                 $branch->id = $business->id;
                 $branch->business_id = $business_v2->id;
-                $branch->name = $branch_name;
-                $branch->nameAr = $branch_name_ar;
                 $branch->address = $business->address;
                 $branch->addressAr = $business->addressAr;
-                $branch->city_id = $business->city_id;
                 $branch->phone = $business->phone;
                 $branch->operation_hours = $business->operation_hours;
                 $branch->lat = $business->lat;
@@ -237,12 +246,9 @@ class ApiController extends ApiBaseController
      * @apiName SignInFb
      * @apiGroup User
      *
-     * @apiParam {String} facebook_id User's facebook id.
      * @apiParam {String} facebook_token User's facebook token.
-     * @apiParam {String} name User's full name.
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
-     * @apiParam {String} image User's new image url (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -251,7 +257,8 @@ class ApiController extends ApiBaseController
      */
     public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token)
     {
-        $this->_addOutputs(['user_data', 'auth_key']);
+        $this->_addOutputs(['user_data', 'auth_key', 'is_new_user']);
+        $this->output['is_new_user'] = false;
 
         // verify facebook token & facebook id
         $user_details = "https://graph.facebook.com/me?fields=id,name,email,picture{url}&access_token=" . $facebook_token;
@@ -264,6 +271,7 @@ class ApiController extends ApiBaseController
         $user = User::findByEmail($response->email);
         if ($user === null) {
             // sign up
+            $this->output['is_new_user'] = true;
             $user = new User;
             $user->email = $response->email;
             $user->facebook_id = $response->id;
@@ -452,8 +460,8 @@ class ApiController extends ApiBaseController
      * @apiParam {String} device_IMEI user device_IMEI (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
      * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
-     * @apiParam {Array} interests_ids array of interests ids to add to user, ex. 2,5,7 (optional).
-     * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null).
+     * @apiParam {Array} category_ids array of category ids to add to user, ex. 2,5,7 (optional).
+     * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null (string)).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -466,7 +474,7 @@ class ApiController extends ApiBaseController
         $device_IMEI = null,
         $firebase_token = null,
         $private = null,
-        $interests_ids = null,
+        $category_ids = null,
         $is_adult_and_smoker = null
     ) {
         $user = User::findOne($this->logged_user['id']);
@@ -502,24 +510,24 @@ class ApiController extends ApiBaseController
             $user->private = $private;
         }
 
-        if (isset($user->is_adult_and_smoker)) {
-            $user->is_adult_and_smoker = $is_adult_and_smoker;
+        if (isset($is_adult_and_smoker)) {
+            $user->is_adult_and_smoker = $is_adult_and_smoker == 'null' ? null : $is_adult_and_smoker;
         }
 
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
         }
 
-        if (!empty($interests_ids)) {
-            // remove old interests
-            UserInterest::deleteAll('user_id = ' . $user->id);
+        if (!empty($category_ids)) {
+            // remove old user categories
+            UserCategory::deleteAll('user_id = ' . $user->id);
 
-            $interests = explode(',', $interests_ids);
-            foreach ($interests as $interest) {
-                $user_interest = new UserInterest();
-                $user_interest->user_id = $user->id;
-                $user_interest->interest_id = $interest;
-                $user_interest->save();
+            $categories = explode(',', $category_ids);
+            foreach ($categories as $category) {
+                $user_category = new UserCategory();
+                $user_category->user_id = $user->id;
+                $user_category->category_id = $category;
+                $user_category->save();
             }
         }
     }
@@ -698,7 +706,7 @@ class ApiController extends ApiBaseController
     /***************************************/
 
     /**
-     * @api {post} /api/get-categories Get the main categories
+     * @api {post} /api/get-categories Get the categories
      * @apiName GetCategories
      * @apiGroup Category
      *
@@ -776,16 +784,47 @@ class ApiController extends ApiBaseController
         foreach ($model as $key => $city) {
             $temp['id'] = $city['id'];
             $temp['name'] = $city['name'.$this->lang];
+            $cities[] = $temp;
+        }
+
+        $this->output['cities'] = $cities;
+    }
+
+    /**
+     * @api {post} /api/get-areas Get all cities
+     * @apiName GetCAreas
+     * @apiGroup Business
+     *
+     * @apiParam {String} city_id City's id to get areas inside.
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} cities List of Cities.
+     */
+    public function actionGetAreas($city_id)
+    {
+        $this->_addOutputs(['cities']);
+
+        $query = Area::find()
+            ->where(['city_id' => $city_id]);
+        $model = $this->_getModelWithPagination($query);
+
+        $areas = [];
+        foreach ($model as $key => $area) {
+            $temp['id'] = $area['id'];
+            $temp['name'] = $area['name'.$this->lang];
             $business_count = Branch::find()
                 ->select('business_id')
-                ->where(['city_id' => $city['id']])
+                ->where(['area_id' => $area['id']])
                 ->groupBy(['business_id'])
                 ->count();
             $temp['business_count'] = (int) $business_count;
             $cities[] = $temp;
         }
 
-        $this->output['cities'] = $cities;
+        $this->output['areas'] = $areas;
     }
 
     /**
@@ -1104,9 +1143,10 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} country_id Country's id.
+     * @apiParam {String} area_id Area's id.
      * @apiParam {String} category_id Category's id to get businesses inside (optional).
-     * @apiParam {Boolean} admin_id Get only businesses this user manages (optional).
+     * @apiParam {Integer} admin_id Get only businesses this user manages (optional).
+     * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1114,9 +1154,11 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses($country_id, $category_id = null, $admin_id = null)
+    public function actionGetBusinesses($area_id, $nearby, $category_id = null, $admin_id = null)
     {
         $this->_addOutputs(['businesses']);
+
+        $conditions = [];
 
         if ($category_id) {
             $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
@@ -1124,7 +1166,9 @@ class ApiController extends ApiBaseController
         if ($admin_id) {
             $conditions['admin_id'] = $this->logged_user['id'];
         }
-        $this->output['businesses'] = $this->_getBusinesses($conditions, $country_id, ['name' => SORT_ASC]);
+        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+
+        $this->output['businesses'] = $this->_getBusinesses($conditions, $area_id, ['name' => SORT_ASC], $lat_lng);
     }
 
     /**
@@ -1132,7 +1176,7 @@ class ApiController extends ApiBaseController
      * @apiName SearchBusinesses
      * @apiGroup Business
      *
-     * @apiParam {String} country_id Country's id.
+     * @apiParam {String} area_id Area's id.
      * @apiParam {String} name the search keyword for business name (optional).
      * @apiParam {String} address the search keyword for business address (optional).
      * @apiParam {String} city the search keyword for business city (optional).
@@ -1143,7 +1187,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} flag_id the business flag_id (optional).
      * @apiParam {String} interest the search keyword for business interest (optional).
      * @apiParam {String} interest_id the business interest_id (optional).
-     * @apiParam {String} nearby the search coordinates for nearby business, value lat-lng, ex. 32.22-37.11 (optional).
+     * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1151,7 +1195,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinesses($country_id, $name = null, $address = null, $city = null, $city_id = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
+    public function actionSearchBusinesses($area_id, $name = null, $address = null, $city = null, $city_id = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1222,13 +1266,13 @@ class ApiController extends ApiBaseController
         }
 
         $lat_lng = empty($nearby) ? null : explode(',', $nearby);
-        $businesses = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
+        $businesses = $this->_getBusinesses($conditions, $area_id, null, $lat_lng, $andConditions);
         if (empty($businesses)) {
             $tokens = explode('/\s+/', trim($name));
             $first = empty($tokens) ? '' : $tokens[0];
             $conditions[] = "name like '%$first%'";
             $conditions[] = "nameAr like '%$first%'";
-            $businesses = $this->_getBusinesses($conditions, $country_id, null, $lat_lng, $andConditions);
+            $businesses = $this->_getBusinesses($conditions, $area_id, null, $lat_lng, $andConditions);
         }
         $this->output['businesses'] = $businesses;
     }
@@ -1238,7 +1282,7 @@ class ApiController extends ApiBaseController
      * @apiName SearchBusinessesByType
      * @apiGroup Business
      *
-     * @apiParam {String} country_id Country's id.
+     * @apiParam {String} area_id Area's id.
      * @apiParam {String} type Search by (recently_added, recently_viewed).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1247,19 +1291,19 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinessesByType($country_id, $type)
+    public function actionSearchBusinessesByType($area_id, $type)
     {
         $this->_addOutputs(['businesses']);
 
         $search_type = $type;
         if ($search_type === 'recently_added') {
-            $this->output['businesses'] = $this->_getBusinesses(null, $country_id, ['created' => SORT_DESC]);
+            $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC]);
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
                 ->select(['business_id', 'business_view.id'])
                 ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
                 ->joinWith('business')
-                ->andWhere(['business.country_id' => $country_id]);
+                ->andWhere(['business.area_id' => $area_id]);
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
@@ -1308,6 +1352,256 @@ class ApiController extends ApiBaseController
         }
 
         $this->output['business_data'] = $this->_getBusinessData($model);
+    }
+
+    /**
+     * @api {post} /api/add-branch Add new branch
+     * @apiName AddBranch
+     * @apiGroup Branch
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} business_id business ID.
+     * @apiParam {String} name branch name.
+     * @apiParam {String} nameAr branch arabic name.
+     * @apiParam {String} address branch address.
+     * @apiParam {String} addressAr branch arabic address.
+     * @apiParam {String} city_id City's id to add branch inside.
+     * @apiParam {String} phone branch phone.
+     * @apiParam {String} operation_hours branch operation hours.
+     * @apiParam {String} lat branch lat.
+     * @apiParam {String} lng branch lng.
+     * @apiParam {String} is_reservable whether branch allows reservations. (optional)
+     * @apiParam {Array} flags array of flags IDs, ex. 1,2,3 (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {String} branch_id the added branch id
+     */
+    public function actionAddBranch($business_id, $name = '', $nameAr = '', $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
+    {
+        $this->_addOutputs(['branch_id']);
+
+        if ($this->logged_user['role'] !== "business") {
+            throw new HttpException(200, 'you are not allowed to add new branch');
+        }
+
+        $branch = new Branch;
+        $branch->business_id = $business_id;
+        $branch->name = $name;
+        $branch->nameAr = $nameAr;
+        $branch->email = $email;
+        $branch->phone = $phone;
+        $branch->operation_hours = $operation_hours;
+        $branch->address = $address;
+        $branch->addressAr = $addressAr;
+        $branch->city_id = $city_id;
+        $branch->admin_id = $this->logged_user['id'];
+        $branch->approved = false;
+        $branch->is_reservable = $is_reservable ? $is_reservable : false;
+
+        if (!empty($website)) {
+            $branch->website = $website;
+        }
+        if (!empty($fb_page)) {
+            $branch->fb_page = $fb_page;
+        }
+
+        if (!$branch->save()) {
+            throw new HttpException(200, $this->_getErrors($branch));
+        }
+
+        if (!empty($flags)) {
+            $flags = explode(',', $flags);
+            foreach ($flags as $flag) {
+                $branch_flag = new BranchFlag();
+                $branch_flag->branch_id = $branch->id;
+                $branch_flag->flag_id = $flag;
+                $branch_flag->save();
+            }
+        }
+
+        $this->output['branch_id'] = $branch->id;
+    }
+
+    /**
+     * @api {post} /api/edit-branch Edit branch details
+     * @apiName EditBranch
+     * @apiGroup Branch
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} branch_id branch's id to edit.
+     * @apiParam {String} business_id business ID (optional).
+     * @apiParam {String} name branch name (optional).
+     * @apiParam {String} nameAr branch arabic name (optional).
+     * @apiParam {String} address branch address (optional).
+     * @apiParam {String} addressAr branch arabic address (optional).
+     * @apiParam {String} city_id City's id to add branch inside (optional).
+     * @apiParam {String} phone branch phone (optional).
+     * @apiParam {String} operation_hours branch operation hours (optional).
+     * @apiParam {String} lat branch lat (optional).
+     * @apiParam {String} lng branch lng (optional).
+     * @apiParam {String} is_reservable whether branch allows reservations (optional).
+     * @apiParam {Array} flags array of flags IDs, ex. 1,2,3 (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionEditBranch($branch_id, $business_id, $name, $nameAr, $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
+    {
+        $branch = Branch::find()
+            ->where(['id' => $branch_id])
+            ->one();
+        
+        if ($branch === null) {
+            throw new HttpException(200, 'no branch with this id');
+        }
+
+        if ($branch->business->admin_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to edit this branch');
+        }
+
+        if (!empty($business_id)) {
+            $business = Business::find()->where(['id' => $business_id])->one();
+            if (empty($business)) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            $branch->business_id = $business_id;
+        }
+        if (!empty($name)) {
+            $branch->name = $name;
+        }
+        if (!empty($nameAr)) {
+            $branch->nameAr = $nameAr;
+        }
+        if (!empty($address)) {
+            $branch->address = $address;
+        }
+        if (!empty($addressAr)) {
+            $branch->addressAr = $addressAr;
+        }
+        if (!empty($city_id)) {
+            $branch->city_id = $city_id;
+        }
+        if (!empty($phone)) {
+            $branch->phone = $phone;
+        }
+        if (!empty($operation_hours)) {
+            $branch->operation_hours = $operation_hours;
+        }
+        if (!empty($lat)) {
+            $branch->lat = $lat;
+        }
+        if (!empty($lng)) {
+            $branch->lng = $lng;
+        }
+        if (!empty($is_reservable)) {
+            $branch->is_reservable = $is_reservable;
+        }
+
+        if (!$branch->save()) {
+            throw new HttpException(200, $this->_getErrors($branch));
+        }
+
+        if (!empty($flags)) {
+            BranchFlag::deleteAll('branch_id = ' . $branch->id);
+            $flags = explode(',', $flags_ids);
+            foreach ($flags as $flag) {
+                $branch_flag = new BranchFlag;
+                $branch_flag->business_id = $business->id;
+                $branch_flag->flag_id = $flag;
+                $branch_flag->save();
+            }
+        }
+    }
+
+    /**
+     * @api {post} /api/delete-branch Delete branch
+     * @apiName DeleteBranch
+     * @apiGroup Branch
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} branch_id Branch's id to delete.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionDeleteBranch($branch_id) {
+        $branch = Branch::find()
+            ->where(['id' => $branch_id])
+            ->one();
+
+        if ($branch === null) {
+            throw new HttpException(200, 'no branch with this id');
+        }
+
+        if ($branch->business->admin_id != $this->logged_user['id']) {
+            throw new HttpException(200, 'you are not allowed to edit this branch');
+        }
+
+        $branch->approved = false;
+        if (!$branch->save()) {
+            throw new HttpException(200, $this->_getErrors($model));
+        }
+    }
+
+    /**
+     * @api {post} /api/get-branches Get branches for a specific business
+     * @apiName GetBranches
+     * @apiGroup Branch
+     *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {Boolean} business_id Get only branches this user manages (optional).
+     * @apiParam {String} nearby the search coordinates for nearby branches, value lat,lng, ex. 32.22,37.11 (optional).
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} branches branches details.
+     */
+    public function actionGetBranches($business_id)
+    {
+        $this->_addOutputs(['branches']);
+
+        $business = Business::findOne($business_id);
+        if (empty($business)) {
+            throw new HttpException(200, 'no business with this id');
+        }
+
+        $conditions['business_id'] = $business_id;
+        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+
+        $this->output['branches'] = $this->_getBranches($conditions, $lat_lng);
+    }
+
+    /**
+     * @api {post} /api/get-branch-data Get branch data
+     * @apiName GetBranchData
+     * @apiGroup Branch
+     *
+     * @apiParam {String} branch_id branch's id to get it's details.
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} branch_data branch details.
+     */
+    public function actionGetBranchData($branch_id)
+    {
+        $this->_addOutputs(['branch_data']);
+
+        $model = Branch::find()->where(['id' => $branch_id])->one();
+        if ($model === null) {
+            throw new HttpException(200, 'no branch with this id');
+        }
+
+        $this->output['branch_data'] = $this->_getBranchData($model);
     }
 
     /**
@@ -1943,7 +2237,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} text the comment.
      * @apiParam {String} object_id Object's id to comment about.
-     * @apiParam {String} object_type Object's type to comment about (review or media).
+     * @apiParam {String} object_type Object's type to comment about (review, media or blog).
      * @apiParam {String} business_identity Business's id to link the comment (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -1958,6 +2252,8 @@ class ApiController extends ApiBaseController
             $object = Review::findOne($object_id);
         } else if ($object_type === 'media') {
             $object = Media::findOne($object_id);
+        } else if ($object_type === 'blog') {
+            $object = Blog::findOne($object_id);
         } else {
             throw new HttpException(200, 'not supported type');
         }
@@ -1993,43 +2289,45 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-        // send notification (if not the owner)
-        if ($object->user_id != $this->logged_user['id']) {
-            $type = 'comment';
-            $title = '{new_comment_title}';
-            $body = $commenter_name . ' {new_comment_body} ' . $object_type;
-            $data = [
-                'type' => $type,
-                'payload' => [
-                    'comment_id' => $comment->id,
-                    'object_id' => $comment->object_id,
-                    'object_type' => $comment->object_type,
-                    'user_data' => $this->_getUserData($comment->user),
-                ]
-            ];
-            $this->_addNotification($object->user_id, $type, $title, $body, $data);
-            $this->_sendNotification($object->user, $title, $body, $data);
-        }
+        if ($object_type !== 'blog') {
+            // send notification (if not the owner)
+            if ($object->user_id != $this->logged_user['id']) {
+                $type = 'comment';
+                $title = '{new_comment_title}';
+                $body = $commenter_name . ' {new_comment_body} ' . $object_type;
+                $data = [
+                    'type' => $type,
+                    'payload' => [
+                        'comment_id' => $comment->id,
+                        'object_id' => $comment->object_id,
+                        'object_type' => $comment->object_type,
+                        'user_data' => $this->_getUserData($comment->user),
+                    ]
+                ];
+                $this->_addNotification($object->user_id, $type, $title, $body, $data);
+                $this->_sendNotification($object->user, $title, $body, $data);
+            }
 
-        // Send notification to admin
-        $businessObject = $object_type === 'media'
-        ? Business::findOne($object->object_id)
-        : $object->business;
-        if ($object->user_id != $businessObject->admin_id) {
-            $type = 'comment';
-            $title = '{new_comment_title}';
-            $body = $commenter_name . ' {new_comment_body} ' . $object_type;
-            $data = [
-                'type' => $type,
-                'payload' => [
-                    'comment_id' => $comment->id,
-                    'object_id' => $comment->object_id,
-                    'object_type' => $comment->object_type,
-                    'user_data' => $this->_getUserData($comment->user),
-                ]
-            ];
-            $this->_addNotification($businessObject->admin_id, $type, $title, $body, $data);
-            $this->_sendNotification($businessObject->admin, $title, $body, $data);
+            // Send notification to admin
+            $businessObject = $object_type === 'media'
+            ? Business::findOne($object->object_id)
+            : $object->business;
+            if ($object->user_id != $businessObject->admin_id) {
+                $type = 'comment';
+                $title = '{new_comment_title}';
+                $body = $commenter_name . ' {new_comment_body} ' . $object_type;
+                $data = [
+                    'type' => $type,
+                    'payload' => [
+                        'comment_id' => $comment->id,
+                        'object_id' => $comment->object_id,
+                        'object_type' => $comment->object_type,
+                        'user_data' => $this->_getUserData($comment->user),
+                    ]
+                ];
+                $this->_addNotification($businessObject->admin_id, $type, $title, $body, $data);
+                $this->_sendNotification($businessObject->admin, $title, $body, $data);
+            }
         }
 
         // send notifications
@@ -2110,13 +2408,6 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
-
-        if ($comment->object_type === 'review') {
-            $object = Review::findOne($comment->object_id);
-        } else if ($comment->object_type === 'media') {
-            $object = Media::findOne($comment->object_id);
-        }
-
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
             $users = $matches[1];
@@ -2192,7 +2483,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['comments']);
 
-        if ($object_type !== 'review' && $object_type !== 'media') {
+        if ($object_type !== 'review' && $object_type !== 'media' && $object_type !== 'blog') {
             throw new HttpException(200, 'not supported type');
         }
 
@@ -2521,8 +2812,8 @@ class ApiController extends ApiBaseController
     /***************************************/
 
     /**
-     * @api {post} /api/get-unseen-notifications-count Get all user unseen notifications count
-     * @apiName GetUnseenNotificationsCount
+     * @api {post} /api/get-unseen-notification-count Get all user unseen notifications count
+     * @apiName GetUnseenNotificationCount
      * @apiGroup Notifications
      *
      * @apiParam {String} user_id User's id.
@@ -2530,17 +2821,17 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Integer} notifications_count unseen notifications count.
+     * @apiSuccess {Integer} notification_count unseen notifications count.
      */
-    public function actionGetUnseenNotificationsCount()
+    public function actionGetUnseenNotificationCount()
     {
-        $this->_addOutputs(['notifications_count']);
+        $this->_addOutputs(['notification_count']);
 
-        $notifications_count = Notification::find()
+        $notification_count = Notification::find()
             ->where(['user_id' => $this->logged_user['id'], 'seen' => 0])
             ->count();
 
-        $this->output['notifications_count'] = (int) $notifications_count;
+        $this->output['notification_count'] = (int) $notification_count;
     }
 
     /**
@@ -2649,12 +2940,35 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} blogs Blog posts.
      */
-     public function actionGetBlogs()
-     {
-         $this->_addOutputs(['blogs']);
-         $model = $this->_getBlogs();
-         $this->output['blogs'] = $model;
-     }
+    public function actionGetBlogs()
+    {
+        $this->_addOutputs(['blogs']);
+        $model = $this->_getBlogs();
+        $this->output['blogs'] = $model;
+    }
+
+    /**
+     * @api {post} /api/get-blog Get single blog
+     * @apiName GetBlog
+     * @apiGroup Blog
+     *
+     * @apiParam {String} blog_id Blog id.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Object} blog Blog data.
+     */
+    public function actionGetBlog($blog_id)
+    {
+        $this->_addOutputs(['blog']);
+
+        $blog = Blog::findOne($blog_id);
+        if (empty($blog)) {
+            throw new HttpException(200, 'no blog with this id');
+        }
+
+        $this->output['blog'] = $blog->attributes;
+    }
 
     /**
      * @api {post} /api/get-polls Get all polls for business

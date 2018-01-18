@@ -4,11 +4,11 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\CategorySearch */
+/* @var $model app\models\BranchSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="category-search">
+<div class="branch-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -21,21 +21,21 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'nameAr') ?>
 
-    <?= $form->field($model, 'description') ?>
+    <?= $form->field($model, 'address') ?>
 
-    <?= $form->field($model, 'descriptionAr') ?>
+    <?= $form->field($model, 'addressAr') ?>
 
-    <?php // echo $form->field($model, 'parent_id') ?>
+    <?php // echo $form->field($model, 'area_id') ?>
 
-    <?php // echo $form->field($model, 'order') ?>
+    <?php // echo $form->field($model, 'phone') ?>
 
-    <?php // echo $form->field($model, 'main_image') ?>
+    <?php // echo $form->field($model, 'operation_hours') ?>
 
-    <?php // echo $form->field($model, 'icon') ?>
+    <?php // echo $form->field($model, 'lat') ?>
 
-    <?php // echo $form->field($model, 'badge') ?>
+    <?php // echo $form->field($model, 'lng') ?>
 
-    <?php echo $form->field($model, 'color') ?>
+    <?php // echo $form->field($model, 'is_reservable') ?>
 
     <?php // echo $form->field($model, 'created') ?>
 

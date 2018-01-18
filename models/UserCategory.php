@@ -3,22 +3,22 @@
 namespace app\models;
 
 /**
- * This is the model class for table "user_interest".
+ * This is the model class for table "user_category".
  *
  * @property integer $id
  * @property integer $user_id
- * @property integer $interest_id
+ * @property integer $category_id
  * @property string $created
  * @property string $updated
  */
-class UserInterest extends \yii\db\ActiveRecord
+class UserCategory extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'user_interest';
+        return 'user_category';
     }
 
     /**
@@ -27,8 +27,8 @@ class UserInterest extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'interest_id'], 'required'],
-            [['user_id', 'interest_id'], 'integer'],
+            [['user_id', 'category_id'], 'required'],
+            [['user_id', 'category_id'], 'integer'],
             [['created', 'updated'], 'safe'],
         ];
     }
@@ -41,15 +41,15 @@ class UserInterest extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
-            'interest_id' => 'Interest ID',
+            'category_id' => 'Category ID',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
     }
 
-    public function getInterest()
+    public function getCategory()
     {
-        return $this->hasOne(Interest::className(), ['id' => 'interest_id']);
+        return $this->hasOne(Category::className(), ['id' => 'category_id']);
     }
 
     public function getUser()

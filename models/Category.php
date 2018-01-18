@@ -15,6 +15,7 @@ namespace app\models;
  * @property string $badge
  * @property integer $parent_id
  * @property integer $order
+ * @property string $color
  * @property string $created
  * @property string $updated
  */
@@ -34,8 +35,10 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['name', 'nameAr'], 'required'],
             [['parent_id', 'order'], 'integer'],
             [['created', 'updated'], 'safe'],
+            [['color'], 'string', 'max' => 9],
             [['name', 'nameAr'], 'string', 'max' => 255],
             [['description', 'descriptionAr'], 'string', 'max' => 1023],
         ];
@@ -57,6 +60,7 @@ class Category extends \yii\db\ActiveRecord
             'badge' => 'Badge',
             'parent_id' => 'Parent',
             'order' => 'Order',
+            'color' => 'Color',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

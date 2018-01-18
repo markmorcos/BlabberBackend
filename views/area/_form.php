@@ -4,19 +4,19 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\Poll */
+/* @var $model app\models\Area */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="poll-form">
+<div class="area-form">
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'title')->textInput(); ?>
+    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'titleAr')->textInput(); ?>
+    <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'type')->dropDownList($types_for_dropdown); ?>
+    <?= $form->field($model, 'city_id')->dropDownList($cities_for_dropdown) ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
