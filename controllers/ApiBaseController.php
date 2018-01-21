@@ -75,7 +75,7 @@ class ApiBaseController extends Controller
 
         $guest_actions = [
             'error', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
-            'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-flags',
+            'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-areas', 'get-location', 'get-flags',
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
@@ -269,9 +269,9 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $conditions = [];
-        if(!empty($parent_id)) $conditions['parent_id'] = $parent_id;
-        $query = Category::find()->where($conditions)->orderBy(['order' => SORT_ASC]);
+        $query = Category::find()
+            ->where(['parent_id' => $parent_id])
+            ->orderBy(['order' => SORT_ASC]);
         $model = $this->_getModelWithPagination($query);
 
         $categories = [];
@@ -282,6 +282,7 @@ class ApiBaseController extends Controller
             $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
             $temp['icon'] = Url::base(true) . '/' . $category['icon'];
             $temp['badge'] = Url::base(true) . '/' . $category['badge'];
+            $temp['color'] = $category['color'];
             $temp['business_count'] = (int) Business::find()->where(['category_id' => $category['id']])->count();
             $categories[] = $temp;
         }
@@ -343,13 +344,13 @@ class ApiBaseController extends Controller
 
         $businesses = [];
         foreach ($model as $key => $business) {
-            $businesses[] = $this->_getBusinessData($business, $business->branches[0]->attributes);
+            $businesses[] = $this->_getBusinessData($business);
         }
 
         return $businesses;
     }
 
-    protected function _getBusinessData($model, $branch)
+    protected function _getBusinessData($model)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -389,7 +390,7 @@ class ApiBaseController extends Controller
         }
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
-        $business['branch'] = $branch;
+        $business['branch'] = $model['branches'][0]->attributes;
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
@@ -441,14 +442,14 @@ class ApiBaseController extends Controller
         // $branch['business_id'] = $model['business_id'];
         $branch['name'] = $model['name'.$this->lang];
         $branch['address'] = $model['address'.$this->lang];
-        $branch['city'] = $model['city']->attributes;
+        $branch['area'] = $model['area']->attributes;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
         $branch['approved'] = $model['approved'];
         $branch['is_reservable'] = $model['is_reservable'];
-        $branch['flags'] = $model['flagsList'];
+        $branch['flags'] = $model['flagList'.$this->lang];
         $branch['is_open'] = $model['isOpen'];
         $branch['created'] = $model['created'];
         $branch['updated'] = $model['updated'];

@@ -16,7 +16,7 @@ class BlogSearch extends Blog
     public function rules()
     {
         return [
-            [['id'], 'integer'],
+            [['id', 'business_id'], 'integer'],
             [['title', 'created', 'updated'], 'safe'],
         ];
     }
@@ -59,6 +59,7 @@ class BlogSearch extends Blog
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'business_id' => $this->business_id,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);

@@ -26,6 +26,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             // 'image',
+            array(
+                'attribute' => 'business_id',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return Html::a($data->business->name, ['business/view', 'id' => $data->business_id]);
+                },
+            ), 
             'title',
             'created',
             'updated',

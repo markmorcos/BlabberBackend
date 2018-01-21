@@ -108,17 +108,17 @@ class Business extends \yii\db\ActiveRecord
         if( empty($this->id) ) return null;
         
         $business_interests = BusinessInterest::find()->where('business_id = '.$this->id)->all();
-        $interests_list = '';
         $count = count($business_interests);
+        $interest_list = [];
         for ($i=0; $i < $count; $i++) { 
             if (empty($business_interests[$i]->interest)) {
                 continue;
             }
 
-            $interests_list .= $business_interests[$i]->interest->name . ($i==$count-1?'':',');
+            $interest_list[] = $business_interests[$i]->interest->name;
         }
         
-        return $interests_list;
+        return $interest_list;
     }
 
     public function getInterestListAr()
@@ -126,17 +126,17 @@ class Business extends \yii\db\ActiveRecord
         if( empty($this->id) ) return null;
         
         $business_interests = BusinessInterest::find()->where('business_id = '.$this->id)->all();
-        $interests_list = '';
         $count = count($business_interests);
+        $interest_list = [];
         for ($i=0; $i < $count; $i++) { 
             if (empty($business_interests[$i]->interest)) {
                 continue;
             }
 
-            $interests_list .= $business_interests[$i]->interest->nameAr . ($i==$count-1?'':',');
+            $interest_list[] = $business_interests[$i]->interest->nameAr;
         }
         
-        return $interests_list;
+        return $interest_list;
     }
 
     public function getVideos()

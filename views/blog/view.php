@@ -31,6 +31,13 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'title',
             array(
+                'attribute' => 'business_id',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return Html::a($data->business->name, ['business/view', 'id' => $data->business_id]);
+                },
+            ),
+            array(
                 'attribute' => 'image',
                 'format' => 'raw',
                 'value' =>  ($model->image!=null)?Html::img('@web/'.$model->image, ['style'=>'max-width: 300px;']):null

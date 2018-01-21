@@ -3,6 +3,8 @@
 namespace app\controllers;
 
 use Yii;
+use yii\helpers\ArrayHelper;
+use app\models\Business;
 use app\models\Blog;
 use app\models\BlogSearch;
 use yii\web\NotFoundHttpException;
@@ -52,8 +54,10 @@ class BlogController extends AdminController
             $this->uploadPhoto($model, 'Blog', 'blog_image', 'image');            
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
+            $businesses_for_dropdown = ArrayHelper::map(Business::find()->all(), 'id', 'name');
             return $this->render('create', [
                 'model' => $model,
+                'businesses_for_dropdown' => $businesses_for_dropdown,
             ]);
         }
     }
@@ -72,8 +76,10 @@ class BlogController extends AdminController
             $this->uploadPhoto($model, 'Blog', 'blog_image', 'image');            
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
+            $businesses_for_dropdown = ArrayHelper::map(Business::find()->all(), 'id', 'name');
             return $this->render('update', [
                 'model' => $model,
+                'businesses_for_dropdown' => $businesses_for_dropdown,
             ]);
         }
     }

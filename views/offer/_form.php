@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
@@ -24,7 +24,7 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'business_id')->widget(Select2::classname(), [
         'data' => $businesses_for_dropdown,
         'options' => [
-            'placeholder' => 'Select a business ...'
+            'placeholder' => 'Select a business...'
         ],
     ]) ?>
 

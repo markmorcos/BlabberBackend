@@ -69,6 +69,7 @@ class BranchController extends AdminController
             $flags = ArrayHelper::map(Flag::find()->all(), 'id', 'name');
             return $this->render('create', [
                 'model' => $model,
+                'businesses_for_dropdown' => $businesses_for_dropdown,
                 'areas_for_dropdown' => $areas_for_dropdown,
                 'flags' => $flags,
             ]);

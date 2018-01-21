@@ -722,7 +722,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['categories']);
 
-        $this->output['categories'] = $this->_getCategories($category_id);
+        $this->output['categories'] = $this->_getCategories(empty($category_id) ? null : $category_id);
     }
 
     /***************************************/
@@ -792,7 +792,7 @@ class ApiController extends ApiBaseController
 
     /**
      * @api {post} /api/get-areas Get all cities
-     * @apiName GetCAreas
+     * @apiName GetAreas
      * @apiGroup Business
      *
      * @apiParam {String} city_id City's id to get areas inside.
@@ -825,6 +825,38 @@ class ApiController extends ApiBaseController
         }
 
         $this->output['areas'] = $areas;
+    }
+
+    /**
+     * @api {post} /api/get-location Get area, city and country from lat and lng
+     * @apiName GetLocation
+     * @apiGroup Business
+     *
+     * @apiParam {String} lat Latitude.
+     * @apiParam {String} lng Longitude.
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Object} area Area.
+     * @apiSuccess {Object} city City.
+     * @apiSuccess {Object} country Country.
+     */
+    public function actionGetLocation($lat, $lng)
+    {
+        $this->_addOutputs(['area', 'city', 'country']);
+
+        $query = Area::find();
+
+        $query->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
+        $query->orderBy(['distance' => SORT_ASC]);
+        $model = $this->_getModelWithPagination($query);
+
+        $area = $model[0];
+
+        $this->output['area'] = $area->attributes;
+        $this->output['city'] = $area->city->attributes;
+        $this->output['country'] = $area->city->country->attributes;
     }
 
     /**

@@ -17,6 +17,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'id') ?>
 
+    <?= $form->field($model, 'business_id') ?>
+
     <?= // $form->field($model, 'image') ?>
 
     <?= $form->field($model, 'title') ?>

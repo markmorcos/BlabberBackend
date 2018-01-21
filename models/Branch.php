@@ -90,23 +90,37 @@ class Branch extends \yii\db\ActiveRecord
         return $this->hasMany(BranchFlag::className(), ['branch_id' => 'id']);
     }
 
-    public function getFlagsList()
+    public function getFlagList()
     {
         if( empty($this->id) ) return null;
         
         $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
-        $flags_list = [];
         $count = count($branch_flags);
+        $flag_list = [];
+        for ($i=0; $i < $count; $i++) { 
+
+            $flag_list[] = $branch_flags[$i]->flag->name;
+        }
+        
+        return $flag_list;
+    }
+
+    public function getFlagListAr()
+    {
+        if( empty($this->id) ) return null;
+        
+        $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
+        $count = count($branch_flags);
+        $flag_list = [];
         for ($i=0; $i < $count; $i++) { 
             if (empty($branch_flags[$i]->flag)) {
                 continue;
             }
 
-            $branch_flags[$i]->flag->icon = Url::base(true).'/'.$branch_flags[$i]->flag->icon;
-            $flags_list[] = $branch_flags[$i]->flag->attributes;
+            $flag_list[] = $branch_flags[$i]->flag->nameAr;
         }
         
-        return $flags_list;
+        return $flag_list;
     }
 
     public function getImages()

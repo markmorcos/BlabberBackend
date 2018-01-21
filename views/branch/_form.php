@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use faryshta\widgets\JqueryTagsInput;
+use kartik\select2\Select2;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Branch */
@@ -12,6 +13,13 @@ use faryshta\widgets\JqueryTagsInput;
 <div class="branch-form">
 
     <?php $form = ActiveForm::begin(); ?>
+
+    <?= $form->field($model, 'business_id')->widget(Select2::classname(), [
+        'data' => $businesses_for_dropdown,
+        'options' => [
+            'placeholder' => 'Select a business...'
+        ],
+    ]) ?>
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 

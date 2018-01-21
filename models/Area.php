@@ -9,6 +9,8 @@ namespace app\models;
  * @property string $name
  * @property string $nameAr
  * @property integer $city_id
+ * @property string $lat
+ * @property string $lng 
  * @property string $created
  * @property string $updated
  */
@@ -28,7 +30,7 @@ class Area extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['city_id', 'name', 'nameAr'], 'required'],
+            [['city_id', 'name', 'nameAr', 'lat', 'lng'], 'required'],
             [['city_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr'], 'string', 'max' => 255],
@@ -45,6 +47,8 @@ class Area extends \yii\db\ActiveRecord
             'name' => 'Name',
             'nameAr' => 'Name Ar',
             'city_id' => 'City',
+            'lat' => 'Latitude',
+            'lng' => 'Longitude',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
