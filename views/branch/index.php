@@ -36,6 +36,8 @@ $this->params['breadcrumbs'][] = $this->title;
             'nameAr',
             // 'address',
             // 'addressAr',
+            // 'country_id',
+            // 'city_id',
             // 'area_id',
             // 'phone',
             // 'operation_hours',

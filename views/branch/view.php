@@ -191,10 +191,25 @@ span.flag img {
         'model' => $model,
         'attributes' => [
             'id',
+            array(
+                'attribute' => 'business_id',
+                'format' => 'raw',
+                'value' =>  ($model->business_id!=null)?Html::a($model->business->name, ['business/view', 'id' => $model->business_id]):null
+            ), 
             'name',
             'nameAr',
             'address',
             'addressAr',
+            array(
+                'attribute' => 'country_id',
+                'format' => 'raw',
+                'value' =>  ($model->country_id!=null)?Html::a($model->country->name, ['country/view', 'id' => $model->country_id]):null
+            ), 
+            array(
+                'attribute' => 'city_id',
+                'format' => 'raw',
+                'value' =>  ($model->city_id!=null)?Html::a($model->city->name, ['city/view', 'id' => $model->city_id]):null
+            ), 
             array(
                 'attribute' => 'area_id',
                 'format' => 'raw',

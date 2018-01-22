@@ -29,6 +29,10 @@ use kartik\select2\Select2;
 
     <?= $form->field($model, 'addressAr')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'country_id')->dropDownList($countries_for_dropdown) ?>
+
+    <?= $form->field($model, 'city_id')->dropDownList($cities_for_dropdown) ?>
+
     <?= $form->field($model, 'area_id')->dropDownList($areas_for_dropdown) ?>
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>

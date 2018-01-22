@@ -139,6 +139,24 @@ class Business extends \yii\db\ActiveRecord
         return $interest_list;
     }
 
+    public function getInterestString()
+    {
+        if( empty($this->id) ) return null;
+
+        $business_interests = BusinessInterest::find()->where('business_id = '.$this->id)->all();
+        $count = count($business_interests);
+        $interest_list = '';
+        for ($i=0; $i < $count; $i++) {
+            if (empty($business_interests[$i]->interest)) {
+                continue;
+            }
+
+            $interest_list .= $business_interests[$i]->interest->name . ($i === $count - 1 ? '' : ',');
+        }
+
+        return $interest_list;
+    }
+
     public function getVideos()
     {
         return $this->hasMany(Media::className(), ['object_id' => 'id'])

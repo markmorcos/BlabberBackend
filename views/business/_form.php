@@ -45,7 +45,7 @@ use faryshta\widgets\JqueryTagsInput;
     <div style="margin-bottom: 15px;">
         <?= JqueryTagsInput::widget([
             'model' => $model,
-            'attribute' => 'interestsList',
+            'attribute' => 'interestString',
             'clientOptions' => [
                 'width' => '100%',
                 'defaultText' => 'add more',

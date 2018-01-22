@@ -13,6 +13,8 @@ use yii\helpers\Url;
  * @property string $nameAr
  * @property string $address
  * @property string $addressAr
+ * @property integer $country_id
+ * @property integer $city_id
  * @property integer $area_id
  * @property string $phone
  * @property string $operation_hours
@@ -41,8 +43,8 @@ class Branch extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['business_id', 'area_id', 'address', 'addressAr', 'operation_hours', 'lat', 'lng'], 'required'],
-            [['business_id', 'area_id'], 'integer'],
+            [['business_id', 'country_id', 'city_id', 'area_id', 'address', 'addressAr', 'operation_hours', 'lat', 'lng'], 'required'],
+            [['business_id', 'country_id', 'city_id', 'area_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng'], 'string', 'max' => 255],
             [['address', 'addressAr'], 'string', 'max' => 1023],
@@ -63,6 +65,8 @@ class Branch extends \yii\db\ActiveRecord
             'nameAr' => 'Name Ar',
             'address' => 'Address',
             'addressAr' => 'Address Ar',
+            'country_id' => 'Country',
+            'city_id' => 'City',
             'area_id' => 'Area',
             'phone' => 'Phone',
             'operation_hours' => 'Operation Hours',
@@ -78,6 +82,16 @@ class Branch extends \yii\db\ActiveRecord
     public function getBusiness()
     {
         return $this->hasOne(Business::className(), ['id' => 'business_id']);
+    }
+
+    public function getCountry()
+    {
+        return $this->hasOne(Country::className(), ['id' => 'country_id']);
+    }
+
+    public function getCity()
+    {
+        return $this->hasOne(City::className(), ['id' => 'city_id']);
     }
 
     public function getArea()

@@ -25,6 +25,10 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'addressAr') ?>
 
+    <?php // echo $form->field($model, 'country_id') ?>
+
+    <?php // echo $form->field($model, 'city_id') ?>
+
     <?php // echo $form->field($model, 'area_id') ?>
 
     <?php // echo $form->field($model, 'phone') ?>

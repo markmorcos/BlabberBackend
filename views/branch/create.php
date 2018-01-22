@@ -17,6 +17,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_form', [
         'model' => $model,
 	    	'businesses_for_dropdown' => $businesses_for_dropdown,
+	    	'countries_for_dropdown' => $countries_for_dropdown,
+	    	'cities_for_dropdown' => $cities_for_dropdown,
 	    	'areas_for_dropdown' => $areas_for_dropdown,
         'flags' => $flags
     ]) ?>

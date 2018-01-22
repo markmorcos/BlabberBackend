@@ -442,6 +442,8 @@ class ApiBaseController extends Controller
         // $branch['business_id'] = $model['business_id'];
         $branch['name'] = $model['name'.$this->lang];
         $branch['address'] = $model['address'.$this->lang];
+        $branch['country'] = $model['country']->attributes;
+        $branch['city'] = $model['city']->attributes;
         $branch['area'] = $model['area']->attributes;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];

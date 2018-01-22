@@ -6,6 +6,8 @@ use Yii;
 use app\models\Branch;
 use app\models\BranchSearch;
 use app\models\BranchFlag;
+use app\models\Country;
+use app\models\City;
 use app\models\Area;
 use app\models\Business;
 use app\models\Flag;
@@ -65,6 +67,8 @@ class BranchController extends AdminController
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             $businesses_for_dropdown = ArrayHelper::map(Business::find()->all(), 'id', 'name');
+            $countries_for_dropdown = ArrayHelper::map(Country::find()->all(), 'id', 'name');
+            $cities_for_dropdown = ArrayHelper::map(City::find()->all(), 'id', 'name');
             $areas_for_dropdown = ArrayHelper::map(Area::find()->all(), 'id', 'name');
             $flags = ArrayHelper::map(Flag::find()->all(), 'id', 'name');
             return $this->render('create', [
@@ -97,6 +101,8 @@ class BranchController extends AdminController
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             $businesses_for_dropdown = ArrayHelper::map(Business::find()->all(), 'id', 'name');
+            $countries_for_dropdown = ArrayHelper::map(Country::find()->all(), 'id', 'name');
+            $cities_for_dropdown = ArrayHelper::map(City::find()->all(), 'id', 'name');
             $areas_for_dropdown = ArrayHelper::map(Area::find()->all(), 'id', 'name');
             $flags = ArrayHelper::map(Flag::find()->all(), 'id', 'name');
             $selected_flags = ArrayHelper::map(BranchFlag::find()->where('branch_id = '.$model->id)->all(), 'flag_id', 'flag_id');
