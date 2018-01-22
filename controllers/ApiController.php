@@ -814,7 +814,7 @@ class ApiController extends ApiBaseController
      */
     public function actionGetAreas($city_id)
     {
-        $this->_addOutputs(['cities']);
+        $this->_addOutputs(['areas']);
 
         $query = Area::find()
             ->where(['city_id' => $city_id]);
