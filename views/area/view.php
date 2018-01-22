@@ -35,7 +35,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'city_id',
                 'format' => 'raw',
                 'value' =>  ($model->city_id!=null)?Html::a($model->city->name, ['city/view', 'id' => $model->city_id]):null
-            ), 
+            ),
+            'lat',
+            'lng',
             'created',
             'updated',
         ],

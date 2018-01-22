@@ -172,6 +172,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      * @apiParam {String} type User's type (user or business) (optional).
+     * @apiParam {String} gender User's gender.
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
@@ -188,6 +189,7 @@ class ApiController extends ApiBaseController
         $device_IMEI,
         $firebase_token = null,
         $type = 'user',
+        $gender = null,
         $mobile = null,
         $image = null
     ) {
@@ -197,12 +199,19 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'invalid user type');
         }
 
+        if (!empty($gender) && !in_array($gender, ['male', 'female'])) {
+            throw new HttpException(200, 'invalid user type');
+        }
+
         // sign up
         $user = new User;
         $user->name = $name;
         $user->email = $email;
         $user->password = Yii::$app->security->generatePasswordHash($password);
         $user->role = $type;
+        if (!empty($gender)) {
+            $user->gender = $gender;
+        }
         if (!empty($mobile)) {
             $user->mobile = $mobile;
         }

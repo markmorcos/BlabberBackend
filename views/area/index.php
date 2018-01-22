@@ -27,7 +27,13 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
             'name',
             'nameAr',
-            'city_id',
+            array(
+                'attribute' => 'city_id',
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return Html::a($data->city->name, ['city/view', 'id' => $data->city_id]);
+                },
+            ), 
             'created',
             'updated',
 
