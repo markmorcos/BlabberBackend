@@ -442,9 +442,9 @@ class ApiBaseController extends Controller
         // $branch['business_id'] = $model['business_id'];
         $branch['name'] = $model['name'.$this->lang];
         $branch['address'] = $model['address'.$this->lang];
-        $branch['country'] = $model['country']->attributes;
-        $branch['city'] = $model['city']->attributes;
-        $branch['area'] = $model['area']->attributes;
+        $branch['country'] = empty($model['country']) ? null : $model['country']->attributes;
+        $branch['city'] = empty($model['city']) ? null : $model['city']->attributes;
+        $branch['area'] = empty($model['area']) ? null : $model['area']->attributes;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['lat'] = $model['lat'];
