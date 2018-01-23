@@ -270,9 +270,9 @@ class ApiController extends ApiBaseController
         $this->output['is_new_user'] = false;
 
         // verify facebook token & facebook id
-        $user_details = "https://graph.facebook.com/me?fields=id,name,email,picture{url}&access_token=" . $facebook_token;
-        $response = file_get_contents($user_details);
-        $response = json_decode($response);
+        $user_details = 'https://graph.facebook.com/me?fields=id,name,email,picture{url}&access_token=' . $facebook_token;
+        $response = @file_get_contents($user_details);
+        $response = @json_decode($response);
         if (!isset($response) || !isset($response->id)) {
             throw new HttpException(200, 'invalid facebook token');
         }
@@ -282,18 +282,25 @@ class ApiController extends ApiBaseController
             // sign up
             $this->output['is_new_user'] = true;
             $user = new User;
-            $user->email = $response->email;
-            $user->facebook_id = $response->id;
-            $user->approved = 1; //true
-            $user->name = $response->name;
+        }
+        $user->email = $response->email;
+        $user->facebook_id = $response->id;
+        $user->approved = 1; //true
+        $user->name = $response->name;
 
-            if (!empty($response->picture->data->url)) {
-                $user->profile_photo = $response->picture->data->url;
-            }
+        if (empty($user->password)) {
+            $user->password = uniqid();
+        }
+        if (empty($user->gender)) {
+            $user->gender = 'male';
+        }
 
-            if (!$user->save()) {
-                throw new HttpException(200, $this->_getErrors($user));
-            }
+        if (!empty($response->picture->data->url)) {
+            $user->profile_photo = $response->picture->data->url;
+        }
+
+        if (!$user->save()) {
+            throw new HttpException(200, $this->_getErrors($user));
         }
 
         $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
@@ -810,7 +817,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} areas List of areas.
+     * @apiSuccess {Array} areas List of get-areas.
      */
     public function actionGetAreas($city_id)
     {
@@ -863,9 +870,9 @@ class ApiController extends ApiBaseController
 
         $area = $model[0];
 
-        $this->output['area'] = $area->attributes;
-        $this->output['city'] = $area->city->attributes;
         $this->output['country'] = $area->city->country->attributes;
+        $this->output['city'] = $area->city->attributes;
+        $this->output['area'] = $area->attributes;
     }
 
     /**
@@ -979,7 +986,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $nameAr, $email, $phone, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $interests = null)
+    public function actionAddBusiness($name, $nameAr, $phone, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $interests = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -990,7 +997,6 @@ class ApiController extends ApiBaseController
         $business = new Business;
         $business->name = $name;
         $business->nameAr = $nameAr;
-        $business->email = $email;
         $business->phone = $phone;
         $business->price = $price;
         $business->description = $description;
@@ -1195,7 +1201,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses($area_id, $nearby, $category_id = null, $admin_id = null)
+    public function actionGetBusinesses($area_id, $nearby = null, $category_id = null, $admin_id = null)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1207,7 +1213,7 @@ class ApiController extends ApiBaseController
         if ($admin_id) {
             $conditions['admin_id'] = $this->logged_user['id'];
         }
-        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+        $lat_lng = $nearby === null ? null : explode(',', $nearby);
 
         $this->output['businesses'] = $this->_getBusinesses($conditions, $area_id, ['name' => SORT_ASC], $lat_lng);
     }
@@ -1942,8 +1948,8 @@ class ApiController extends ApiBaseController
 
         if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches)) {
             $users = $matches[1];
-            foreach ($users as $username) {
-                $user = User::findOne(['username' => $username]);
+            foreach ($users as $id) {
+                $user = User::findOne(['id' => $id]);
                 if (empty($user)) {
                     continue;
                 }
@@ -2019,8 +2025,8 @@ class ApiController extends ApiBaseController
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches)) {
             $users = $matches[1];
-            foreach ($users as $username) {
-                $user = User::findOne(['username' => $username]);
+            foreach ($users as $id) {
+                $user = User::findOne(['id' => $id]);
                 if (empty($user)) {
                     continue;
                 }

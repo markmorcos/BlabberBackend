@@ -3,13 +3,16 @@
 namespace app\controllers;
 
 use app\components\Translation;
+use app\models\Area;
 use app\models\Blog;
 use app\models\Branch;
 use app\models\Business;
 use app\models\BusinessView;
 use app\models\Category;
 use app\models\Checkin;
+use app\models\City;
 use app\models\Comment;
+use app\models\Country;
 use app\models\Follow;
 use app\models\Media;
 use app\models\Notification;
@@ -307,14 +310,21 @@ class ApiBaseController extends Controller
     {
         $query = Business::find()
             ->innerJoin('branch', 'business_v2.id = branch.business_id')
+            // ->leftJoin('area', 'area.id = branch.area_id')
             ->innerJoin('city', 'city.id = branch.city_id')
+            // ->leftJoin('country', 'country.id = branch.country_id')
             ->where($conditions)
             ->groupBy('business_v2.id')
             ->with(['category', 'branches']);
 
-        if ($area_id !== null) {
-            $query->andWhere(['branch.area_id' => $area_id]);
-        }
+        // $area = Area::findOne($area_id);
+        // if (!empty($area)) {
+        //     $query->andWhere(
+        //         'branch.area_id is not null and branch.area_id = ' . $area_id
+        //         . ' or branch.city_id is not null and branch.city_id = ' . $area->city_id
+        //         . ' or branch.country_id is not null and branch.country_id = ' . $area->city->country_id
+        //     );
+        // }
 
         if ($order !== null) {
             $order = ['featured' => SORT_DESC] + $order;
