@@ -800,7 +800,7 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-areas Get all cities
+     * @api {post} /api/get-areas Get all areas
      * @apiName GetAreas
      * @apiGroup Business
      *
@@ -810,7 +810,7 @@ class ApiController extends ApiBaseController
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
-     * @apiSuccess {Array} cities List of Cities.
+     * @apiSuccess {Array} areas List of areas.
      */
     public function actionGetAreas($city_id)
     {
@@ -830,7 +830,7 @@ class ApiController extends ApiBaseController
                 ->groupBy(['business_id'])
                 ->count();
             $temp['business_count'] = (int) $business_count;
-            $cities[] = $temp;
+            $areas[] = $temp;
         }
 
         $this->output['areas'] = $areas;
