@@ -1415,7 +1415,9 @@ class ApiController extends ApiBaseController
      * @apiParam {String} nameAr branch arabic name.
      * @apiParam {String} address branch address.
      * @apiParam {String} addressAr branch arabic address.
+     * @apiParam {String} country_id Country's id to add branch inside.
      * @apiParam {String} city_id City's id to add branch inside.
+     * @apiParam {String} area_id Area's id to add branch inside.
      * @apiParam {String} phone branch phone.
      * @apiParam {String} operation_hours branch operation hours.
      * @apiParam {String} lat branch lat.
@@ -1428,7 +1430,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} branch_id the added branch id
      */
-    public function actionAddBranch($business_id, $name = '', $nameAr = '', $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
+    public function actionAddBranch($business_id, $name = '', $nameAr = '', $address, $addressAr, $country_id, $city_id, $area_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
     {
         $this->_addOutputs(['branch_id']);
 
@@ -1444,7 +1446,9 @@ class ApiController extends ApiBaseController
         $branch->operation_hours = $operation_hours;
         $branch->address = $address;
         $branch->addressAr = $addressAr;
+        $branch->country_id = $country_id;
         $branch->city_id = $city_id;
+        $branch->area_id = $area_id;
         $branch->admin_id = $this->logged_user['id'];
         $branch->approved = false;
         $branch->is_reservable = $is_reservable ? $is_reservable : false;
