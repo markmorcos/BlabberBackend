@@ -95,6 +95,8 @@ class ApiController extends ApiBaseController
             $branch = Branch::findOne($business->id);
             if (!$branch) {
                 $branch = new Branch;
+                $branch->id = $business->id;
+                $branch->business_id = $business_v2->id;
                 if ($branch_name) {
                     $area = Area::findOne(['name' => $branch_name]);
                     if (!$area) {
@@ -106,8 +108,8 @@ class ApiController extends ApiBaseController
                     }
                     $branch->area_id = $area->id;
                 }
-                $branch->id = $business->id;
-                $branch->business_id = $business_v2->id;
+                $branch->city_id = $business->city_id;
+                $branch->country_id = $business->country_id;
                 $branch->address = $business->address;
                 $branch->addressAr = $business->addressAr;
                 $branch->phone = $business->phone;
@@ -1438,7 +1440,6 @@ class ApiController extends ApiBaseController
         $branch->business_id = $business_id;
         $branch->name = $name;
         $branch->nameAr = $nameAr;
-        $branch->email = $email;
         $branch->phone = $phone;
         $branch->operation_hours = $operation_hours;
         $branch->address = $address;
