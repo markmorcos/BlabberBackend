@@ -96,10 +96,10 @@ class ApiBaseController extends Controller
             $this->pagination['page_no'] = intval($page);
         }
 
-        if (isset($this->logged_user['lang'])) {
-            $this->lang = $this->logged_user['lang'];
-        } else if (!empty(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
+        if (!empty(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
             $this->lang = Yii::$app->request->post('lang');
+        } else if (isset($this->logged_user['lang'])) {
+            $this->lang = $this->logged_user['lang'];
         }
 
         return parent::beforeAction($action);
@@ -229,6 +229,7 @@ class ApiBaseController extends Controller
         $user['last_sent_follow'] = $last_sent_follow !== null ? $last_sent_follow->attributes : null;
         $user['last_received_follow'] = $last_received_follow !== null ? $last_received_follow->attributes : null;
         $user['is_adult_and_smoker'] = $model->is_adult_and_smoker;
+        $user['lang'] = $model->lang === '' ? 'En' : $model->lang;
 
         if (!($model->private === 1 && 
             ($last_sent_follow === null || $last_sent_follow->status !== '1') && 
@@ -236,7 +237,7 @@ class ApiBaseController extends Controller
             $user['email'] = $model->email;
             $user['type'] = $model->role;
             $user['mobile'] = $model->mobile;
-            $user['interests'] = $model['categoryList'.$this->lang];
+            $user['categories'] = $model['categoryList'.$this->lang];
         }
 
         return $user;
@@ -768,14 +769,13 @@ class ApiBaseController extends Controller
     {
         $query = Poll::find()
             ->where($conditions)
-            ->orderBy(['id' => SORT_DESC]);
+            ->orderBy(['id' => SORT_ASC]);
 
         $model = $this->_getModelWithPagination($query);
 
         $polls = [];
         foreach ($model as $key => $value) {
             $temp['id'] = $value['id'];
-            $temp['business_id'] = $value['business_id'];
             $temp['title'] = $value['title'.$this->lang];
             $temp['type'] = $value['type'];
             $temp['created'] = $value['created'];
@@ -785,9 +785,9 @@ class ApiBaseController extends Controller
             foreach ($options_model as $option) {
                 $options[] = [
                     'id' => $option->id,
-                    'option' => $option->option.$this->lang,
-                    'votes' => count(Vote::find()->where(['option_id' => $option->id])->all()),
-                    'added_vote' => $this->_addedVote($this->logged_user['id'], $option->id)
+                    'option' => $option['option'.$this->lang],
+                    'votes' => count(Vote::find()->where(['option_id' => $option->id, 'business_id' => $conditions['business_id']])->all()),
+                    'added_vote' => $this->_addedVote($this->logged_user['id'], $option->id, $conditions['business_id'])
                 ];
             }
             $temp['options'] = $options;
@@ -798,12 +798,13 @@ class ApiBaseController extends Controller
         return $polls;
     }
 
-    protected function _addedVote($user_id, $option_id)
+    protected function _addedVote($user_id, $option_id, $business_id)
     {
         $model = Vote::find()
             ->where([
                 'user_id' => $user_id,
                 'option_id' => $option_id,
+                'business_id' => $business_id,
             ])
             ->one();
         return !empty($model);

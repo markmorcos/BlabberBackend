@@ -74,6 +74,8 @@ class BranchController extends AdminController
             return $this->render('create', [
                 'model' => $model,
                 'businesses_for_dropdown' => $businesses_for_dropdown,
+                'countries_for_dropdown' => $countries_for_dropdown,
+                'cities_for_dropdown' => $cities_for_dropdown,
                 'areas_for_dropdown' => $areas_for_dropdown,
                 'flags' => $flags,
             ]);
@@ -109,6 +111,8 @@ class BranchController extends AdminController
             return $this->render('update', [
                 'model' => $model,
                 'businesses_for_dropdown' => $businesses_for_dropdown,
+                'countries_for_dropdown' => $countries_for_dropdown,
+                'cities_for_dropdown' => $cities_for_dropdown,
                 'areas_for_dropdown' => $areas_for_dropdown,
                 'flags' => $flags,
                 'selected_flags' => $selected_flags,

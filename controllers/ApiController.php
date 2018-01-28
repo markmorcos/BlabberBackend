@@ -480,6 +480,7 @@ class ApiController extends ApiBaseController
      * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} category_ids array of category ids to add to user, ex. 2,5,7 (optional).
      * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null (string)).
+     * @apiParam {String} lang User language (En, Ar).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -493,7 +494,8 @@ class ApiController extends ApiBaseController
         $firebase_token = null,
         $private = null,
         $category_ids = null,
-        $is_adult_and_smoker = null
+        $is_adult_and_smoker = null,
+        $lang = null
     ) {
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
@@ -530,6 +532,10 @@ class ApiController extends ApiBaseController
 
         if (isset($is_adult_and_smoker)) {
             $user->is_adult_and_smoker = $is_adult_and_smoker == 'null' ? null : $is_adult_and_smoker;
+        }
+
+        if (isset($lang)) {
+            $user->lang = $lang === 'Ar' ? 'Ar' : '';
         }
 
         if (!$user->save()) {
@@ -628,7 +634,7 @@ class ApiController extends ApiBaseController
             'type' => $type,
             'payload' => [
                 'request_id' => $model->id,
-                'user_data' => $this->_getUserData($model->user),
+                'user_id' => $model->user_id,
             ]
         ];
         $this->_sendNotification($model->receiver, $title, $body, $data);
@@ -1694,8 +1700,8 @@ class ApiController extends ApiBaseController
                 'type' => $type,
                 'payload' => [
                     'saved_business_id' => $savedBusiness->id,
-                    'user_data' => $this->_getUserData($savedBusiness->user),
-                    'business_data' => $this->_getBusinessData($savedBusiness->business),
+                    'user_id' => $savedBusiness->user_id,
+                    'business_id' => $savedBusiness->business_id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1831,8 +1837,8 @@ class ApiController extends ApiBaseController
                 'type' => $type,
                 'payload' => [
                     'checkin_id' => $checkin->id,
-                    'user_data' => $this->_getUserData($checkin->user),
-                    'business_data' => $this->_getBusinessData($checkin->business),
+                    'user_id' => $checkin->user_id,
+                    'business_id' => $checkin->business_id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1943,8 +1949,8 @@ class ApiController extends ApiBaseController
                 'type' => $type,
                 'payload' => [
                     'review_id' => $review->id,
-                    'user_data' => $this->_getUserData($review->user),
-                    'business_data' => $this->_getBusinessData($review->business),
+                    'user_id' => $review->user_id,
+                    'business_id' => $review->business_id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1966,7 +1972,7 @@ class ApiController extends ApiBaseController
                     'type' => $type,
                     'payload' => [
                         'review_id' => $review->id,
-                        'user_data' => $this->_getUserData($review->user),
+                        'user_id' => $review->user_id,
                         'business_id' => $review->business_id,
                     ]
                 ];
@@ -2043,7 +2049,7 @@ class ApiController extends ApiBaseController
                     'type' => $type,
                     'payload' => [
                         'review_id' => $review->id,
-                        'user_data' => $this->_getUserData($review->user),
+                        'user_id' => $review->user_id,
                         'business_id' => $review->business_id,
                     ]
                 ];
@@ -2188,8 +2194,8 @@ class ApiController extends ApiBaseController
                 'type' => $type,
                 'payload' => [
                     'media_id' => $media->id,
-                    'user_data' => $this->_getUserData($media->user),
-                    'business_data' => $this->_getBusinessData($business),
+                    'user_id' => $media->user_id,
+                    'business_id' => $media->business_id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2353,7 +2359,7 @@ class ApiController extends ApiBaseController
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
                         'object_type' => $comment->object_type,
-                        'user_data' => $this->_getUserData($comment->user),
+                        'user_id' => $comment->user_id,
                     ]
                 ];
                 $this->_addNotification($object->user_id, $type, $title, $body, $data);
@@ -2374,7 +2380,7 @@ class ApiController extends ApiBaseController
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
                         'object_type' => $comment->object_type,
-                        'user_data' => $this->_getUserData($comment->user),
+                        'user_id' => $comment->user_id,
                     ]
                 ];
                 $this->_addNotification($businessObject->admin_id, $type, $title, $body, $data);
@@ -2400,7 +2406,7 @@ class ApiController extends ApiBaseController
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
                         'object_type' => $comment->object_type,
-                        'user_data' => $this->_getUserData($comment->user),
+                        'user_id' => $comment->user_id,
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2478,7 +2484,7 @@ class ApiController extends ApiBaseController
                         'comment_id' => $comment->id,
                         'object_id' => $comment->object_id,
                         'object_type' => $comment->object_type,
-                        'user_data' => $this->_getUserData($comment->user),
+                        'user_id' => $comment->user_id,
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2911,7 +2917,6 @@ class ApiController extends ApiBaseController
         ]
         : [
             'new_follow' => [],
-            'follow_accepted' => [],
             'favorite' => [],
             'checkin' => [],
             'review' => [],
@@ -2927,7 +2932,7 @@ class ApiController extends ApiBaseController
         foreach ($requests_model as $key => $request) {
             $notifications['new_follow'][] = array(
                 'request_id' => $request->id,
-                'user_data' => $this->_getUserData($request->user)
+                'user_data' => $this->_getUserMinimalData($request->user)
             );
         }
 
@@ -2940,6 +2945,12 @@ class ApiController extends ApiBaseController
             $temp['title'] = Translation::get($this->lang, $notification['title']);
             $temp['body'] = Translation::get($this->lang, $notification['body']);
             $temp['data'] = json_decode($notification['data']);
+            if(!empty($temp['data']->payload->user_id)) {
+                $temp->payload->user_data = $this->_getUserMinimalData(User::findOne($temp['data']->payload->user_id));
+            }
+            if(!empty($temp['data']->payload->business_id)) {
+                $temp['data']->payload->business_data = $this->_getBusinessMinimalData(Business::findOne($temp['data']->payload->business_id));
+            }
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
             if ($format === 'list') {
@@ -3052,12 +3063,12 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} option_id Option's id.
-     *
+     * @apiParam {String} business_id Business's id.
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} vote_id Vote id.
      */
-     public function actionAddVote($option_id)
+     public function actionAddVote($option_id, $business_id)
      {
         $option = Option::findOne(['id' => $option_id]);
         if (empty($option)) {
@@ -3077,6 +3088,7 @@ class ApiController extends ApiBaseController
         }
 
         $model->option_id = $option_id;
+        $model->business_id = $business_id;
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
         }

@@ -63,11 +63,19 @@ class MediaController  extends AdminController
      * @param integer $id
      * @return mixed
      */
-    public function actionEdit($id)
+    public function actionSave($id)
     {
         $model = $this->findModel($id);
+        $model->section = $_POST['section'];
+        $model->sectionAr = $_POST['sectionAr'];
+        $model->title = $_POST['title'];
+        $model->titleAr = $_POST['titleAr'];
         $model->caption = $_POST['caption'];
+        $model->captionAr = $_POST['captionAr'];
+        $model->currency = $_POST['currency'];
+        $model->currencyAr = $_POST['currencyAr'];
         $model->price = $_POST['price'];
+        $model->discount = $_POST['discount'];
         if ($model->save()) {
             echo 'done';
         } else {

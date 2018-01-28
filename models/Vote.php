@@ -10,6 +10,7 @@ use yii\helpers\Url;
  * @property integer $id
  * @property integer $user_id
  * @property integer $option_id
+ * @property integer $business_id
  * @property string $vote
  * @property string $created
  * @property string $updated
@@ -30,8 +31,8 @@ class Vote extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['user_id', 'option_id'], 'required'],
-            [['user_id', 'option_id'], 'integer'],
+            [['user_id', 'option_id', 'business_id'], 'required'],
+            [['user_id', 'option_id', 'business_id'], 'integer'],
             [['created', 'updated'], 'safe'],
         ];
     }
@@ -45,9 +46,15 @@ class Vote extends LikeableActiveRecored
             'id' => 'ID',
             'user_id' => 'User',
             'option_id' => 'Option',
+            'business_id' => 'Business',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
+    }
+
+    public function getBusiness()
+    {
+       return $this->hasOne(Business::className(), ['id' => 'business_id']);
     }
 
     public function getUser()

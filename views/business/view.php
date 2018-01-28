@@ -44,6 +44,9 @@ span.interest {
     margin: 5px;
     text-align: center;
 }
+#products > .images > div, #menus > .images > div {
+    width: 180px;
+}
 .images > div > div {
     height: 110px;
     width: 120px;
@@ -141,6 +144,27 @@ span.interest {
         $image = "<div>";
         if ($type === 'brochure') {
             $image .= '<div><a target="_blank" href="'.Url::base(true).'/'.$media->url.'">Open File</a></div>';
+        } else if ($type === 'product' || $type === 'menu') {
+            $image .= '<div class="fields" style="width:100%">
+                <img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/>
+                <span>
+                    <input value="' . $media->section . '" name="section" placeholder="Section" class="form-control" />
+                    <input value="' . $media->sectionAr . '" name="sectionAr" placeholder="Arabic Section" class="form-control" />
+                    <input value="' . $media->title . '" name="title" placeholder="Title" class="form-control" />
+                    <input value="' . $media->titleAr . '" name="titleAr" placeholder="Arabic Title" class="form-control" />
+                    <input value="' . $media->caption . '" name="caption" placeholder="Caption" class="form-control" />
+                    <input value="' . $media->captionAr . '" name="captionAr" placeholder="Arabic Caption" class="form-control" />
+                    <input value="' . $media->currency . '" name="currency" placeholder="Currency" class="form-control" />
+                    <input value="' . $media->currencyAr . '" name="currencyAr" placeholder="Arabic Currency" class="form-control" />
+                    <input value="' . $media->price . '" name="price" placeholder="Price" class="form-control" />
+                    <input value="' . $media->discount . '" name="discount" placeholder="Discount" class="form-control" />
+                </span>
+            </div>';
+            $image .= Html::a('Update', '#', [
+                'style' => 'margin-right:10px',
+                'class' => 'btn btn-primary',
+                'onclick' => "return saveMedia(this,'".$media->id."','".$media->object_id."','".$type."s');",
+            ]);
         } else {
             $image .= '<div><img src="'.Url::base(true).'/'.$media->url.'" style="max-height: 100px; max-width: 100px;"/></div>';
         }
@@ -162,6 +186,27 @@ span.interest {
         }).done(function(data) {
             if (data === 'done') updateMedia(business_id,type);
             else alert('Unable to update details');
+        });
+        return false;
+    }
+    function saveMedia(btn, id, business_id, type){
+        let data = { id: id };
+
+        const elems = $(btn).parent().find('.fields span input');
+        for (var i = 0; i < elems.length; ++i) {
+            let elem = $($(elems).get(i));
+            
+            const key = elem.attr('name');
+            const value = elem.val();
+
+            data[key] = value;
+        }
+
+        $.ajax('<?= Url::to(['media/save']) ?>', {
+            type: 'POST',
+            data: data,
+        }).done(function(data) {
+            updateMedia(business_id,type);
         });
         return false;
     }
@@ -187,10 +232,28 @@ span.interest {
                     imageDiv  = "<div>";
                     if (type === 'brochures') {
                         imageDiv += "   <div><a target='_blank' href='<?= Url::base(true) ?>/" + images[i]['url'] + "'>Open File</a></div>";
+                    } else if (type === 'products' || type === 'menus') {
+                        imageDiv += '\
+                        <div class="fields" style="width:100%">\
+                            <img src="<?= Url::base(true) ?>/' + images[i]["url"] + '" style="max-height: 100px; max-width: 100px;">\
+                            <span>\
+                                <input value="' + images[i]['section'] + '" name="section" placeholder="Section" class="form-control" />\
+                                <input value="' + images[i]['sectionAr'] + '" name="sectionAr" placeholder="Arabic Section" class="form-control" />\
+                                <input value="' + images[i]['title'] + '" name="title" placeholder="Title" class="form-control" />\
+                                <input value="' + images[i]['titleAr'] + '" name="titleAr" placeholder="Arabic Title" class="form-control" />\
+                                <input value="' + images[i]['caption'] + '" name="caption" placeholder="Caption" class="form-control" />\
+                                <input value="' + images[i]['captionAr'] + '" name="captionAr" placeholder="Arabic Caption" class="form-control" />\
+                                <input value="' + images[i]['currency'] + '" name="currency" placeholder="Currency" class="form-control" />\
+                                <input value="' + images[i]['currencyAr'] + '" name="currencyAr" placeholder="Arabic Currency" class="form-control" />\
+                                <input value="' + images[i]['price'] + '" name="price" placeholder="Price" class="form-control" />\
+                                <input value="' + images[i]['discount'] + '" name="discount" placeholder="Discount" class="form-control" />\
+                            </span>\
+                        </div>\
+                        <a class="btn btn-primary" href="#" style="margin-right:10px" onclick="return saveMedia(this, ' + images[i]['id'] + ',\'' + business_id + '\',\'' + type + '\');">Update</a>';
                     } else {
                         imageDiv += "   <div><img src='<?= Url::base(true) ?>/" + images[i]['url'] + "' style='max-height: 100px; max-width: 100px;'></div>";
                     }
-                    imageDiv += "   <a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
+                    imageDiv += "<a class='btn btn-danger' href='#' onclick='return deleteMedia(\"" + images[i]['id'] + "\",\"" + business_id + "\",\"" + type + "\");'>Delete</a>";
                     imageDiv += "</div>";
                     $('#'+type+' .images').append(imageDiv)
                 }
