@@ -1532,13 +1532,13 @@ class ApiController extends ApiBaseController
      * @apiParam {String} lat branch lat (optional).
      * @apiParam {String} lng branch lng (optional).
      * @apiParam {String} is_reservable whether branch allows reservations (optional).
-     * @apiParam {Array} flags array of flags IDs, ex. 1,2,3 (optional).
+     * @apiParam {Array} flag_ids array of flags IDs, ex. 1,2,3 (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBranch($branch_id, $name = null, $nameAr = null, $address = null, $addressAr = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $is_reservable = null, $flags = null)
+    public function actionEditBranch($branch_id, $name = null, $nameAr = null, $address = null, $addressAr = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $is_reservable = null, $flag_ids = null)
     {
         $branch = Branch::find()
             ->where(['id' => $branch_id])
@@ -1594,9 +1594,9 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($branch));
         }
 
-        if (!empty($flags)) {
+        if (!empty($flag_ids)) {
             BranchFlag::deleteAll('branch_id = ' . $branch->id);
-            $flags = explode(',', $flags_ids);
+            $flags = explode(',', $flag_ids);
             foreach ($flags as $flag) {
                 $branch_flag = new BranchFlag();
                 $branch_flag->branch_id = $branch->id;
