@@ -6,7 +6,6 @@ use app\components\Translation;
 use app\models\Area;
 use app\models\Blog;
 use app\models\Business;
-use app\models\BusinessFlag;
 use app\models\BusinessInterest;
 use app\models\BusinessView;
 use app\models\Category;
@@ -37,6 +36,7 @@ use yii\helpers\Url;
 use yii\web\HttpException;
 
 use app\models\Branch;
+use app\models\BranchFlag;
 use app\models\BusinessV2;
 
 class ApiController extends ApiBaseController
@@ -1538,7 +1538,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBranch($branch_id, $name, $nameAr, $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
+    public function actionEditBranch($branch_id, $name = null, $nameAr = null, $address = null, $addressAr = null, $city_id = null, $phone = null, $operation_hours = null, $lat = null, $lng = null, $is_reservable = null, $flags = null)
     {
         $branch = Branch::find()
             ->where(['id' => $branch_id])
@@ -1598,7 +1598,7 @@ class ApiController extends ApiBaseController
             BranchFlag::deleteAll('branch_id = ' . $branch->id);
             $flags = explode(',', $flags_ids);
             foreach ($flags as $flag) {
-                $branch_flag = new BranchFlag;
+                $branch_flag = new BranchFlag();
                 $branch_flag->branch_id = $branch->id;
                 $branch_flag->flag_id = $flag;
                 $branch_flag->save();
