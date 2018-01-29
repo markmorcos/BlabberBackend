@@ -725,6 +725,35 @@ class ApiController extends ApiBaseController
         $this->output['users'] = $following;
     }
 
+    /**
+     * @api {post} /api/following-feed Get feed of the following
+     * @apiName GetFollowingFeed
+     * @apiGroup Follow
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} page Page number (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} users List of followers.
+     */
+    public function actionGetFollowingFeed()
+    {
+        $this->_addOutputs(['users']);
+
+        $query = Follow::find()
+            ->where(['receiver_id' => $this->logged_user['id'], 'status' => '1']);
+        $model = $this->_getModelWithPagination($query);
+
+        $following = array();
+        foreach ($model as $key => $follow) {
+            $following[] = $this->_getUserMinimalData($follow->user);
+        }
+
+        $this->output['users'] = $following;
+    }
+
     /***************************************/
     /************* Categories **************/
     /***************************************/
@@ -1455,6 +1484,8 @@ class ApiController extends ApiBaseController
         $branch->country_id = $country_id;
         $branch->city_id = $city_id;
         $branch->area_id = $area_id;
+        $branch->lat = $lat;
+        $branch->lng = $lng;
         $branch->admin_id = $this->logged_user['id'];
         $branch->approved = false;
         $branch->is_reservable = $is_reservable ? $is_reservable : false;
@@ -2893,8 +2924,8 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-all-notifications Get all user notifications
-     * @apiName GetAllNotifications
+     * @api {post} /api/get-notifications Get all user notifications
+     * @apiName GetNotifications
      * @apiGroup Notifications
      *
      * @apiParam {String} user_id User's id.
@@ -2906,44 +2937,21 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} notifications List of Notifications.
      */
-    public function actionGetAllNotifications($format = 'group')
+    public function actionGetNotifications($format = 'group')
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = $format === 'list'
-        ? [
-            'new_follow' => [],
-            'list' => [],
-        ]
-        : [
-            'new_follow' => [],
-            'favorite' => [],
-            'checkin' => [],
-            'review' => [],
-            'review_tag' => [],
-            'media' => [],
-            'comment' => [],
-            'comment_tag' => [],
-        ];
-
-        $query = Follow::find()
-            ->where(['receiver_id' => $this->logged_user['id'], 'status' => '0']);
-        $requests_model = $this->_getModelWithPagination($query);
-        foreach ($requests_model as $key => $request) {
-            $notifications['new_follow'][] = array(
-                'request_id' => $request->id,
-                'user_data' => $this->_getUserMinimalData($request->user)
-            );
-        }
+        $notifications = []
 
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
             ->orderBy(['id' => SORT_DESC]);
         $notifications_model = $this->_getModelWithPagination($query);
+
         foreach ($notifications_model as $key => $notification) {
             $temp['notification_id'] = $notification['id'];
-            $temp['title'] = Translation::get($this->lang, $notification['title']);
-            $temp['body'] = Translation::get($this->lang, $notification['body']);
+            // $temp['title'] = Translation::get($this->lang, $notification['title']);
+            // $temp['body'] = Translation::get($this->lang, $notification['body']);
             $temp['data'] = json_decode($notification['data']);
             if(!empty($temp['data']->payload->user_id)) {
                 $temp->payload->user_data = $this->_getUserMinimalData(User::findOne($temp['data']->payload->user_id));
@@ -2953,11 +2961,8 @@ class ApiController extends ApiBaseController
             }
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
-            if ($format === 'list') {
-                $notifications['list'][] = $temp;
-            } else {
-                $notifications[$notification['type']][] = $temp;
-            }
+
+            $notifications[] = $temp;
         }
 
         $this->output['notifications'] = $notifications;
