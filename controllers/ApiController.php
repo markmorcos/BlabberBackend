@@ -1522,7 +1522,6 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} branch_id branch's id to edit.
-     * @apiParam {String} business_id business ID (optional).
      * @apiParam {String} name branch name (optional).
      * @apiParam {String} nameAr branch arabic name (optional).
      * @apiParam {String} address branch address (optional).
@@ -1539,7 +1538,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBranch($branch_id, $business_id, $name, $nameAr, $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
+    public function actionEditBranch($branch_id, $name, $nameAr, $address, $addressAr, $city_id, $phone, $operation_hours, $lat, $lng, $is_reservable = null, $flags = null)
     {
         $branch = Branch::find()
             ->where(['id' => $branch_id])
@@ -1600,7 +1599,7 @@ class ApiController extends ApiBaseController
             $flags = explode(',', $flags_ids);
             foreach ($flags as $flag) {
                 $branch_flag = new BranchFlag;
-                $branch_flag->business_id = $business->id;
+                $branch_flag->branch_id = $branch->id;
                 $branch_flag->flag_id = $flag;
                 $branch_flag->save();
             }
