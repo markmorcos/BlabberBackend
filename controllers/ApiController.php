@@ -2941,7 +2941,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = []
+        $notifications = [];
 
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
