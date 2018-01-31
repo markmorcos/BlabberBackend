@@ -1367,7 +1367,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} area_id Area's id.
-     * @apiParam {String} type Search by (recently_added, recently_viewed).
+     * @apiParam {String} type Search by (recently_added, recently_viewed, recently_visited).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1400,9 +1400,51 @@ class ApiController extends ApiBaseController
                 $businesses[] = $this->_getBusinessData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
+        } else if ($search_type === 'recently_viewed') {
+            $query = Checkin::find()
+                ->select(['business_id', 'business_view.id'])
+                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
+                ->joinWith('business')
+                ->andWhere(['business.area_id' => $area_id]);
+            $model = $this->_getModelWithPagination($query);
+
+            $businesses = [];
+            $ids_list = [];
+            foreach ($model as $key => $business_view) {
+                if (in_array($business_view->business_id, $ids_list)) {
+                    continue;
+                }
+                $ids_list[] = $business_view->business_id;
+                $businesses[] = $this->_getBusinessData($business_view->business);
+            }
+
+            $this->output['businesses'] = $businesses;
         } else {
             throw new HttpException(200, 'not supported search type');
         }
+    }
+
+    /**
+     * @api {post} /api/get-business-recommendations Get featured businesses
+     * @apiName GetBusinessRecommendations
+     * @apiGroup Business
+     *
+     * @apiParam {String} area_id area_id Area ID.
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} businesses businesses details.
+     */
+    public function actionGetBusinessRecommendations($area_id)
+    {
+        $this->_addOutputs(['businesses']);
+
+        $nameVar = 'name'.$this->lang;
+        $businesses = $this->_getBusinesses(['featured' => 1], $area_id, ["$nameVar" => SORT_ASC], null, null);
+
+        $this->output['businesses'] = $businesses;
     }
 
     /**

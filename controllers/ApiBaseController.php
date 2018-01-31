@@ -82,7 +82,7 @@ class ApiBaseController extends Controller
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate'
+            'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate', 'get-business-recommendations'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -311,21 +311,21 @@ class ApiBaseController extends Controller
     {
         $query = Business::find()
             ->innerJoin('branch', 'business_v2.id = branch.business_id')
-            // ->leftJoin('area', 'area.id = branch.area_id')
-            ->innerJoin('city', 'city.id = branch.city_id')
-            // ->leftJoin('country', 'country.id = branch.country_id')
+            ->leftJoin('area', 'area.id = branch.area_id')
+            ->leftJoin('city', 'city.id = branch.city_id')
+            ->leftJoin('country', 'country.id = branch.country_id')
             ->where($conditions)
             ->groupBy('business_v2.id')
             ->with(['category', 'branches']);
 
-        // $area = Area::findOne($area_id);
-        // if (!empty($area)) {
-        //     $query->andWhere(
-        //         'branch.area_id is not null and branch.area_id = ' . $area_id
-        //         . ' or branch.city_id is not null and branch.city_id = ' . $area->city_id
-        //         . ' or branch.country_id is not null and branch.country_id = ' . $area->city->country_id
-        //     );
-        // }
+        $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
+        $area = Area::findOne($area_id);
+        if ($area) {
+            $areaQuery .= ' or branch.city_id is not null and branch.city_id = ' . $area->city_id;
+            $city = City::findOne($area->city_id);
+            if ($city) $areaQuery .= ' or branch.country_id is not null and branch.country_id = ' . $city->country_id;
+        }
+        $query->andWhere($areaQuery);
 
         if ($order !== null) {
             $order = ['featured' => SORT_DESC] + $order;
@@ -333,7 +333,7 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if (empty($lat_lng)) {
+        if (!empty($lat_lng)) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 
@@ -717,9 +717,18 @@ class ApiBaseController extends Controller
             $temp['type'] = $value['type'];
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
-            $temp['caption'] = $value['caption'];
-            $temp['price'] = $value['price'];
-            $temp['rating'] = $value['rating'];
+            if ($value['type'] === 'product' || $value['type'] === 'menu') {
+                $temp['section'] = $value['section'];
+                $temp['sectionAr'] = $value['sectionAr'];
+                $temp['title'] = $value['title'];
+                $temp['titleAr'] = $value['titleAr'];
+                $temp['caption'] = $value['caption'];
+                $temp['captionAr'] = $value['captionAr'];
+                $temp['currency'] = $value['currency'];
+                $temp['currencyAr'] = $value['currencyAr'];
+                $temp['price'] = $value['price'];
+                $temp['discount'] = $value['discount'];
+            }
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];
 
