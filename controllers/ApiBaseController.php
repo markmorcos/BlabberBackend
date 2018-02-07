@@ -341,8 +341,8 @@ class ApiBaseController extends Controller
             $lng = $lat_lng[1];
 
             $query
-                ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance']);
-               ->having('distance < 5');
+                ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance'])
+                ->having('distance < 5');
             $order += ['distance' => SORT_ASC];
         }
 
@@ -430,8 +430,8 @@ class ApiBaseController extends Controller
             $lng = $lat_lng[1];
 
             $query
-                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
-               ->having('distance < 5');
+                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance'])
+                ->having('distance < 5');
             $order += ['distance' => SORT_ASC];
         }
 
