@@ -399,7 +399,7 @@ class ApiBaseController extends Controller
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
         if (!empty($model['branches'])) {
-            $business['branch'] = $this->getBranchData($model['branches'][0]);
+            $business['branch'] = $this->_getBranchData($model['branches'][0]);
         }
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];

@@ -47,7 +47,7 @@ class Checkin extends \yii\db\ActiveRecord
             'text' => 'Text',
             'rating' => 'Rating',
             'user_id' => 'User ID',
-            'branch_id' => 'Business ID',
+            'branch_id' => 'Branch ID',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -60,6 +60,6 @@ class Checkin extends \yii\db\ActiveRecord
 
     public function getBranch()
     {
-        return $this->hasOne(Business::className(), ['id' => 'branch_id']);
+        return $this->hasOne(Branch::className(), ['id' => 'branch_id']);
     }
 }
