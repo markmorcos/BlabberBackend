@@ -456,16 +456,22 @@ class ApiBaseController extends Controller
             $branch['country']['id'] = $model['country']['id'];
             $branch['country']['name'] = $model['country']['name'.$this->lang];
             $branch['country']['flag'] = $model['country']['flag'];
+        } else {
+            $model['country'] = null;
         }
         if (!empty($model['city'])) {
             $branch['city']['id'] = $model['city']['id'];
             $branch['city']['name'] = $model['city']['name'.$this->lang];
+        } else {
+            $model['city'] = null;
         }
         if (!empty($model['area'])) {
             $branch['area']['id'] = $model['area']['id'];
             $branch['area']['name'] = $model['area']['name'.$this->lang];
             $branch['area']['lat'] = $model['area']['lng'];
             $branch['area']['lat'] = $model['area']['lng'];
+        } else {
+            $model['area'] = null;
         }
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
