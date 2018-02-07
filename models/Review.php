@@ -9,7 +9,7 @@ namespace app\models;
  * @property string $text
  * @property string $rating
  * @property integer $user_id
- * @property integer $business_id
+ * @property integer $branch_id
  * @property string $created
  * @property string $updated
  */
@@ -29,8 +29,8 @@ class Review extends LikeableActiveRecored
     public function rules()
     {
         return [
-            [['text', 'rating', 'user_id', 'business_id'], 'required'],
-            [['user_id', 'business_id'], 'integer'],
+            [['text', 'rating', 'user_id', 'branch_id'], 'required'],
+            [['user_id', 'branch_id'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['text'], 'string', 'max' => 1023],
             [['rating'], 'string', 'max' => 1],
@@ -47,7 +47,7 @@ class Review extends LikeableActiveRecored
             'text' => 'Text',
             'rating' => 'Rating',
             'user_id' => 'User ID',
-            'business_id' => 'Business ID',
+            'branch_id' => 'Branch ID',
             'created' => 'Created',
             'updated' => 'Updated',
         ];
@@ -58,8 +58,8 @@ class Review extends LikeableActiveRecored
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 
-    public function getBusiness()
+    public function getBranch()
     {
-        return $this->hasOne(Business::className(), ['id' => 'business_id']);
+        return $this->hasOne(Branch::className(), ['id' => 'branch_id']);
     }
 }

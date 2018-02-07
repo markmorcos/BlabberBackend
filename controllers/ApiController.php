@@ -740,18 +740,7 @@ class ApiController extends ApiBaseController
      */
     public function actionGetFollowingFeed()
     {
-        $this->_addOutputs(['users']);
-
-        $query = Follow::find()
-            ->where(['receiver_id' => $this->logged_user['id'], 'status' => '1']);
-        $model = $this->_getModelWithPagination($query);
-
-        $following = array();
-        foreach ($model as $key => $follow) {
-            $following[] = $this->_getUserMinimalData($follow->user);
-        }
-
-        $this->output['users'] = $following;
+        // TODO
     }
 
     /***************************************/
@@ -950,16 +939,22 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name Flags's name.
+     * @apiParam {String} nameAr Flags's Arabic name.
      * @apiParam {File} Media[file] Flag's icon file (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddFlag($name)
+    public function actionAddFlag($name, $nameAr)
     {
+        if ($this->logged_user['role'] !== "business") {
+            throw new HttpException(200, 'you are not allowed to add new flag');
+        }
+
         $flag = new Flag;
-        $flag->{"name".$this->lang} = $name;
+        $flag->name = $name;
+        $flag->nameAr = $nameAr;
 
         if (!$flag->save()) {
             throw new HttpException(200, $this->_getErrors($flag));
@@ -1016,6 +1011,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} website business website. (optional)
      * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
+     * @apiParam {Array} interestsAr Arabic array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1023,7 +1019,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} business_id the added business id
      */
-    public function actionAddBusiness($name, $nameAr, $phone, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $interests = null)
+    public function actionAddBusiness($name, $nameAr, $phone, $price, $description, $descriptionAr, $category_id, $website = null, $fb_page = null, $interests = null, $interestsAr = null)
     {
         $this->_addOutputs(['business_id']);
 
@@ -1055,12 +1051,14 @@ class ApiController extends ApiBaseController
 
         if (!empty($interests)) {
             $interests = explode(',', $interests);
-            foreach ($interests as $key => $interest) {
+            $interestsAr = explode(',', $interestsAr);
+            for ($i = 0; $i < sizeof($interests); ++$i) {
+                $interest = $interests[$i];
                 $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
-                    $temp_interest->nameAr = $interestsAr[$key];
+                    $temp_interest->nameAr = $interestsAr[$i];
                     $temp_interest->save();
                 }
 
@@ -1108,13 +1106,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} website business website. (optional)
      * @apiParam {String} fb_page business Facebook page. (optional)
      * @apiParam {Array} interests array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
+     * @apiParam {Array} interestsAr Arabic array of interests strings to add to business, ex. interest1,interest2,interest3 (optional).
      * @apiParam {File} Media[file] Business's main image file (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionEditBusiness($business_id, $name = null, $nameAr = null, $email = null, $phone = null, $price = null, $description = null, $descriptionAr = null, $category_id = null, $website = null, $fb_page = null, $interests = null)
+    public function actionEditBusiness($business_id, $name = null, $nameAr = null, $email = null, $phone = null, $price = null, $description = null, $descriptionAr = null, $category_id = null, $website = null, $fb_page = null, $interests = null, $interestsAr = null)
     {
         $business = Business::find()
             ->where(['id' => $business_id])
@@ -1168,12 +1167,14 @@ class ApiController extends ApiBaseController
             BusinessInterest::deleteAll('business_id = ' . $business->id);
 
             $interests = explode(',', $interests);
-            foreach ($interests as $key => $interest) {
+            $interestsAr = explode(',', $interestsAr);
+            for ($i = 0; $i < sizeof($interests); ++$i) {
+                $interest = $interests[$i];
                 $temp_interest = Interest::find()->where('name = :name', [':name' => $interest])->one();
                 if (empty($temp_interest)) {
                     $temp_interest = new Interest();
                     $temp_interest->name = $interest;
-                    $temp_interest->nameAr = $interestsAr[$key];
+                    $temp_interest->nameAr = $interestsAr[$i];
                     $temp_interest->save();
                 }
 
@@ -1238,8 +1239,9 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses($area_id, $nearby = null, $category_id = null, $admin_id = null)
+    public function actionGetBusinesses($area_id = null, $nearby = null, $category_id = null, $admin_id = null)
     {
+        // TODO
         $this->_addOutputs(['businesses']);
 
         $conditions = [];
@@ -1281,6 +1283,7 @@ class ApiController extends ApiBaseController
      */
     public function actionSearchBusinesses($area_id, $name = null, $address = null, $city = null, $city_id = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
+        // TODO
         $this->_addOutputs(['businesses']);
 
         $conditions[] = 'or';
@@ -1401,32 +1404,15 @@ class ApiController extends ApiBaseController
             }
             $this->output['businesses'] = $businesses;
         } else if ($search_type === 'recently_viewed') {
-            $query = Checkin::find()
-                ->select(['business_id', 'business_view.id'])
-                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
-                ->joinWith('business')
-                ->andWhere(['business.area_id' => $area_id]);
-            $model = $this->_getModelWithPagination($query);
-
-            $businesses = [];
-            $ids_list = [];
-            foreach ($model as $key => $business_view) {
-                if (in_array($business_view->business_id, $ids_list)) {
-                    continue;
-                }
-                $ids_list[] = $business_view->business_id;
-                $businesses[] = $this->_getBusinessData($business_view->business);
-            }
-
-            $this->output['businesses'] = $businesses;
+            // TODO
         } else {
             throw new HttpException(200, 'not supported search type');
         }
     }
 
     /**
-     * @api {post} /api/get-business-recommendations Get featured businesses
-     * @apiName GetBusinessRecommendations
+     * @api {post} /api/get-featured-businesses Get featured businesses
+     * @apiName GetFeaturedBusinesses
      * @apiGroup Business
      *
      * @apiParam {String} area_id area_id Area ID.
@@ -1437,7 +1423,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinessRecommendations($area_id)
+    public function actionGetFeaturedBusinesses($area_id)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1809,17 +1795,17 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} business_to_get Business's id of Business you want to get the saved businesses for (optional).
-     * @apiParam {String} user_to_get User's id of User you want to get the saved businesses for (optional).
+     * @apiParam {String} business_id Business's id of Business you want to get the saved businesses for (optional).
+     * @apiParam {String} user_id User's id of User you want to get the saved businesses for (optional).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetSavedBusinesses($business_to_get = null, $user_to_get = null)
+    public function actionGetSavedBusinesses($business_id = null, $user_id = null)
     {
-        if (!empty($business_to_get)) {
+        if (!empty($business_id)) {
             $user = User::findOne($this->logged_user['id']);
             if ($user->role !== 'business') {
                 throw new HttpException(200, 'you are not allowed to view this list');
@@ -1829,7 +1815,7 @@ class ApiController extends ApiBaseController
 
             $model = SavedBusiness::find()
                 ->select('user_id')
-                ->where(['business_id' => $business_to_get])
+                ->where(['business_id' => $business_id])
                 ->all();
             $user_list = [];
             foreach ($model as $key => $business) {
@@ -1840,12 +1826,12 @@ class ApiController extends ApiBaseController
             $this->output['users'] = $user_list;
         }
 
-        if (!empty($user_to_get)) {
+        if (!empty($user_id)) {
             $this->_addOutputs(['businesses']);
 
             $model = SavedBusiness::find()
                 ->select('business_id')
-                ->where(['user_id' => $user_to_get])
+                ->where(['user_id' => $user_id])
                 ->all();
             $ids_list = [];
             foreach ($model as $key => $business) {
@@ -1864,7 +1850,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} business_id business's id to checkin.
+     * @apiParam {String} branch_id branch's id to checkin.
      * @apiParam {String} text User's review about the place (optional).
      * @apiParam {String} rating User's rating about the place (optional).
      *
@@ -1872,35 +1858,34 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} checkin_id the added checkin id
      */
-    public function actionCheckin($business_id, $text = null, $rating = null)
+    public function actionCheckin($branch_id, $text = null, $rating = null)
     {
         $this->_addOutputs(['checkin_id']);
 
-        $model = Business::find()
-            ->where(['id' => $business_id])
-            ->one();
-        if ($model === null) {
-            throw new HttpException(200, 'no business with this id');
+        $branch = Branch::findOne($branch_id);
+        if (empty($branch)) {
+            throw new HttpException(200, 'no branch with this id');
         }
 
         $checkin = new Checkin;
         $checkin->user_id = $this->logged_user['id'];
-        $checkin->business_id = $business_id;
+        $checkin->branch_id = $branch_id;
         $checkin->text = $text;
         $checkin->rating = $rating;
 
         if (!$checkin->save()) {
             throw new HttpException(200, $this->_getErrors($checkin));
         }
-        $model->rating = $this->_calcRating($business_id);
 
-        if (!$model->save()) {
-            throw new HttpException(200, $this->_getErrors($model));
+        $business = $branch->business;
+        $busines->rating = $this->_calcRating($business->id);
+        if (!$business->save()) {
+            throw new HttpException(200, $this->_getErrors($business));
         }
 
         $this->output['checkin_id'] = $checkin->id;
 
-        $user = User::findOne($model->admin_id);
+        $user = User::findOne($business->admin_id);
         if (!empty($user) && $user->role === 'business') {
             $type = 'checkin';
             $title = '{new_checkin_title}';
@@ -1910,7 +1895,7 @@ class ApiController extends ApiBaseController
                 'payload' => [
                     'checkin_id' => $checkin->id,
                     'user_id' => $checkin->user_id,
-                    'business_id' => $checkin->business_id,
+                    'business_id' => $checkin->branch->business_id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -1944,8 +1929,8 @@ class ApiController extends ApiBaseController
      * @apiName GetCheckins
      * @apiGroup Business
      *
-     * @apiParam {String} business_id_to_get Business's id (optional).
-     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} branch_id Business's id (optional).
+     * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1953,16 +1938,16 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} checkins checkins details.
      */
-    public function actionGetCheckins($business_id_to_get = null, $user_id_to_get = null)
+    public function actionGetCheckins($branch_id = null, $user_id = null)
     {
         $this->_addOutputs(['checkins']);
 
         $conditions = [];
-        if (!empty($business_id_to_get)) {
-            $conditions['business_id'] = $business_id_to_get;
+        if (!empty($branch_id)) {
+            $conditions['branch_id'] = $branch_id;
         }
-        if (!empty($user_id_to_get)) {
-            $conditions['user_id'] = $user_id_to_get;
+        if (!empty($user_id)) {
+            $conditions['user_id'] = $user_id;
         }
         $this->output['checkins'] = $this->_getCheckins($conditions);
     }
@@ -1974,7 +1959,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} business_id business's id to review.
+     * @apiParam {String} branch_id business's id to review.
      * @apiParam {String} text User's review about the place.
      * @apiParam {String} rating User's rating about the place.
      *
@@ -1982,20 +1967,20 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {String} review_id the added review id
      */
-    public function actionReview($business_id, $text, $rating)
+    public function actionReview($branch_id, $text, $rating)
     {
         $this->_addOutputs(['review_id']);
 
-        $business = Business::find()
-            ->where(['id' => $business_id])
+        $branch = Business::find()
+            ->where(['id' => $branch_id])
             ->one();
-        if ($business === null) {
-            throw new HttpException(200, 'no business with this id');
+        if ($branch === null) {
+            throw new HttpException(200, 'no branch with this id');
         }
 
         $review = new Review;
         $review->user_id = $this->logged_user['id'];
-        $review->business_id = $business_id;
+        $review->branch_id = $branch_id;
         $review->text = $text;
         $review->rating = $rating;
 
@@ -2003,6 +1988,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($review));
         }
 
+        $business = $branch->business;
         $business->rating = $this->_calcRating($business_id);
 
         if (!$business->save()) {
@@ -2016,13 +2002,13 @@ class ApiController extends ApiBaseController
         if (!empty($user) && $user->role === 'business') {
             $type = 'review';
             $title = '{new_review_title}';
-            $body = $review->user->name . ' {new_review_body} ' . $review->business->name;
+            $body = $review->user->name . ' {new_review_body} ' . $business->name;
             $data = [
                 'type' => $type,
                 'payload' => [
                     'review_id' => $review->id,
                     'user_id' => $review->user_id,
-                    'business_id' => $review->business_id,
+                    'business_id' => $business->id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2039,13 +2025,13 @@ class ApiController extends ApiBaseController
 
                 $type = 'review_tag';
                 $title = '{new_review_tag_title}';
-                $body = $review->user->name . ' {new_review_tag_body} ' . $review->business->name;
+                $body = $review->user->name . ' {new_review_tag_body} ' . $business->name;
                 $data = [
                     'type' => $type,
                     'payload' => [
                         'review_id' => $review->id,
                         'user_id' => $review->user_id,
-                        'business_id' => $review->business_id,
+                        'business_id' => $business->id,
                     ]
                 ];
                 $this->_addNotification($user->id, $type, $title, $body, $data);

@@ -164,7 +164,7 @@ class ApiBaseController extends Controller
         $user = User::findOne($request->post('user_id'));
 
         if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
-            $this->logged_user = $user->attributes;
+            $this->logged_user = $this->getUserData($user);
             return true;
         } else {
             return false;
@@ -180,11 +180,9 @@ class ApiBaseController extends Controller
         }
 
         if ($user->approved === 0) {
-            //false
             throw new HttpException(200, 'your account not approved yet, we will update you by email when it\'s done');
         }
         if ($user->blocked === 1) {
-            //true
             throw new HttpException(200, 'your account is blocked, please contact the support');
         }
 
@@ -202,7 +200,7 @@ class ApiBaseController extends Controller
             'query' => $query,
             'pagination' => [
                 'pageSize' => $this->pagination['no_per_page'],
-                'page' => $this->pagination['page_no'] - 1, // to make it zero based
+                'page' => $this->pagination['page_no'] - 1,
             ],
         ]);
 
@@ -280,18 +278,23 @@ class ApiBaseController extends Controller
 
         $categories = [];
         foreach ($model as $key => $category) {
-            $temp['id'] = $category['id'];
-            $temp['name'] = $category['name'.$this->lang];
-            $temp['description'] = $category['description'.$this->lang];
-            $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
-            $temp['icon'] = Url::base(true) . '/' . $category['icon'];
-            $temp['badge'] = Url::base(true) . '/' . $category['badge'];
-            $temp['color'] = $category['color'];
-            $temp['business_count'] = (int) Business::find()->where(['category_id' => $category['id']])->count();
-            $categories[] = $temp;
+            $categories[] = $this->getCategoryData($category);
         }
 
         return $categories;
+    }
+
+    protected function _getCategoryData($category)
+    {
+        $temp['id'] = $category['id'];
+        $temp['name'] = $category['name'.$this->lang];
+        $temp['description'] = $category['description'.$this->lang];
+        $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
+        $temp['icon'] = Url::base(true) . '/' . $category['icon'];
+        $temp['badge'] = Url::base(true) . '/' . $category['badge'];
+        $temp['color'] = $category['color'];
+        $temp['business_count'] = (int) Business::find()->where(['category_id' => $category['id']])->count();
+        return $temp;
     }
 
     protected function _getAllCategoryTreeIds($category_id)
@@ -339,7 +342,7 @@ class ApiBaseController extends Controller
 
             $query
                 ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance']);
-//                ->having('distance < 100');
+               ->having('distance < 5');
             $order += ['distance' => SORT_ASC];
         }
 
@@ -377,31 +380,27 @@ class ApiBaseController extends Controller
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
-            $business['category'] = $model['category']->attributes;
-            $business['category']['name'] = $model['category']['name' . $this->lang];
+            $business['subcategory'] = $this->_getCategoryData($model['category']);
+            $business['subcategory']['name'] = $model['category']['name' . $this->lang];
             if (isset($model['category']->topParent)) {
-                $business['top_category'] = $model['category']->topParent->attributes;
-                $business['top_category']['name'] = $model['category']->topParent['name' . $this->lang];
+                $business['category'] = $this->_getCategoryData($model['category']->topParent);
+                $business['category']['name'] = $model['category']->topParent['name' . $this->lang];
             } else {
-                $business['top_category'] = $model['category']->attributes;
-                $business['top_category']['name'] = $model['category']['name' . $this->lang];
+                $business['category'] = $this->_getCategoryData($model['category']);
+                $business['category']['name'] = $model['category']['name' . $this->lang];
             }
         } else {
+            $business['subcategory'] = null;
             $business['category'] = null;
-            $business['top_category'] = null;
         }
         $business['admin_id'] = $model['admin_id'];
         $business['interests'] = $model['interestList'.$this->lang];
         $business['no_of_views'] = count($model['views']);
-        $business['last_checkin'] = null;
-        if (isset($model['checkins'][0])) {
-            $last_checkin = $model['checkins'][0]->attributes;
-            $last_checkin['user_data'] = $this->_getUserData($model['checkins'][0]->user);
-            $business['last_checkin'] = $last_checkin;
-        }
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
-        $business['branch'] = empty($model['branches']) ? null : $model['branches'][0]->attributes;
+        if (!empty($model['branches'])) {
+            $business['branch'] = $this->getBranchData($model['branches'][0]);
+        }
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
@@ -432,7 +431,7 @@ class ApiBaseController extends Controller
 
             $query
                 ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
-//                ->having('distance < 100');
+               ->having('distance < 5');
             $order += ['distance' => SORT_ASC];
         }
 
@@ -450,12 +449,24 @@ class ApiBaseController extends Controller
     protected function _getBranchData($model)
     {
         $branch['id'] = $model['id'];
-        // $branch['business_id'] = $model['business_id'];
+        $branch['business_id'] = $model['business_id'];
         $branch['name'] = $model['name'.$this->lang];
         $branch['address'] = $model['address'.$this->lang];
-        $branch['country'] = empty($model['country']) ? null : $model['country']->attributes;
-        $branch['city'] = empty($model['city']) ? null : $model['city']->attributes;
-        $branch['area'] = empty($model['area']) ? null : $model['area']->attributes;
+        if (!empty($model['country'])) {
+            $branch['country']['id'] = $model['country']['id'];
+            $branch['country']['name'] = $model['country']['name'.$this->lang];
+            $branch['country']['flag'] = $model['country']['flag'];
+        }
+        if (!empty($model['city'])) {
+            $branch['city']['id'] = $model['city']['id'];
+            $branch['city']['name'] = $model['city']['name'.$this->lang];
+        }
+        if (!empty($model['area'])) {
+            $branch['area']['id'] = $model['area']['id'];
+            $branch['area']['name'] = $model['area']['name'.$this->lang];
+            $branch['area']['lat'] = $model['area']['lng'];
+            $branch['area']['lat'] = $model['area']['lng'];
+        }
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['lat'] = $model['lat'];
@@ -499,7 +510,7 @@ class ApiBaseController extends Controller
         $businessView->business_id = $business_id;
 
         if (!$businessView->save()) {
-            return $this->_getErrors($businessView); //saving problem
+            return $this->_getErrors($businessView);
         }
 
         return 'done';
@@ -511,12 +522,12 @@ class ApiBaseController extends Controller
             ->where($conditions)
             ->orderBy(['id' => SORT_DESC])
             ->with('user')
-            ->with('business');
+            ->with('branch');
         $model = $this->_getModelWithPagination($query);
 
         $checkins = [];
         foreach ($model as $key => $checkin) {
-            if (empty($checkin->user) || empty($checkin->business)) {
+            if (empty($checkin->user) || empty($checkin->branch)) {
                 continue;
             }
 
@@ -527,7 +538,7 @@ class ApiBaseController extends Controller
             $temp['updated'] = $checkin['updated'];
 
             $temp['user'] = $this->_getUserMinimalData($checkin->user);
-            $temp['business'] = $this->_getBusinessMinimalData($checkin->business);
+            $temp['branch'] = $this->_getBranchMinimalData($checkin->branch);
 
             $checkins[] = $temp;
         }
@@ -888,7 +899,7 @@ class ApiBaseController extends Controller
         $notification->data = json_encode($data);
 
         if (!$notification->save()) {
-            return $this->_getErrors($notification); //saving problem
+            return $this->_getErrors($notification);
         }
     }
 
