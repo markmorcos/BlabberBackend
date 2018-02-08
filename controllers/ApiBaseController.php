@@ -96,7 +96,7 @@ class ApiBaseController extends Controller
             $this->pagination['page_no'] = intval($page);
         }
 
-        if (isset(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
+        if (!empty(Yii::$app->request->post('lang')) && Yii::$app->request->post('lang') === 'Ar') {
             $this->lang = Yii::$app->request->post('lang');
         } else if (isset($this->logged_user['lang']) && $this->logged_user['lang'] === 'Ar') {
             $this->lang = $this->logged_user['lang'];
