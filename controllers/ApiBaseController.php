@@ -164,7 +164,7 @@ class ApiBaseController extends Controller
         $user = User::findOne($request->post('user_id'));
 
         if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
-            $this->logged_user = $this->getUserData($user);
+            $this->logged_user = $this->_getUserData($user);
             return true;
         } else {
             return false;
