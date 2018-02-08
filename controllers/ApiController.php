@@ -1824,9 +1824,7 @@ class ApiController extends ApiBaseController
             }
 
             $this->output['users'] = $user_list;
-        }
-
-        if (!empty($user_id)) {
+        } else if (!empty($user_id)) {
             $this->_addOutputs(['businesses']);
 
             $model = SavedBusiness::find()
