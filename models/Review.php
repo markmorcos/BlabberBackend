@@ -20,7 +20,7 @@ class Review extends LikeableActiveRecored
      */
     public static function tableName()
     {
-        return 'review';
+        return 'review_v2';
     }
 
     /**
