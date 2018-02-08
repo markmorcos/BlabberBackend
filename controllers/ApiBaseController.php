@@ -483,6 +483,7 @@ class ApiBaseController extends Controller
         $branch['is_reservable'] = $model['is_reservable'];
         $branch['flags'] = $model['flagList'.$this->lang];
         $branch['is_open'] = $model['isOpen'];
+        $branch['no_of_reviews'] = count($model['reviews']);
         $branch['created'] = $model['created'];
         $branch['updated'] = $model['updated'];
         return $branch;
