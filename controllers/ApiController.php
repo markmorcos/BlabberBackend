@@ -1274,6 +1274,8 @@ class ApiController extends ApiBaseController
      * @apiParam {String} interest the search keyword for business interest (optional).
      * @apiParam {String} interest_id the business interest_id (optional).
      * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
+     * @apiParam {String} filter comma-separated fields to filter by (price:2, is_reservable:1, isOpen:0) (optional).
+     * @apiParam {String} sort comma-separated fields to sort by (rating) (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1352,14 +1354,32 @@ class ApiController extends ApiBaseController
             $conditions[] = ['id' => $ids];
         }
 
+        if (!empty($filter)) {
+            $filters = explode(',', $filter);
+            foreach ($f as $filters) {
+                $query = explode(':', $f);
+                $andConditions[] = [$query[0] => $query[1]];
+            }
+        }
+
+        $order = null;
+        if (!empty($sort)) {
+            $sorts = explode(',', $sort);
+            $order = [];
+            foreach ($s as $sorts) {
+                $query = explode(':', $s);
+                $order[$query[0]] = $query[1];
+            }
+        }
+
         $lat_lng = empty($nearby) ? null : explode(',', $nearby);
-        $businesses = $this->_getBusinesses($conditions, $area_id, null, $lat_lng, $andConditions);
+        $businesses = $this->_getBusinesses($conditions, null, $order, $lat_lng, $andConditions);
         if (empty($businesses)) {
             $tokens = explode('/\s+/', trim($name));
             $first = empty($tokens) ? '' : $tokens[0];
             $conditions[] = "name like '%$first%'";
             $conditions[] = "nameAr like '%$first%'";
-            $businesses = $this->_getBusinesses($conditions, $area_id, null, $lat_lng, $andConditions);
+            $businesses = $this->_getBusinesses($conditions, null, $order, $lat_lng, $andConditions);
         }
         $this->output['businesses'] = $businesses;
     }
