@@ -1836,7 +1836,7 @@ class ApiController extends ApiBaseController
                 $ids_list[] = $business->business_id;
             }
 
-            $conditions = ['id' => $ids_list];
+            $conditions = ['business_v2.id' => $ids_list];
             $this->output['businesses'] = $this->_getBusinesses($conditions);
         }
     }
