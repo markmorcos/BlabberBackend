@@ -278,7 +278,7 @@ class ApiBaseController extends Controller
 
         $categories = [];
         foreach ($model as $key => $category) {
-            $categories[] = $this->getCategoryData($category);
+            $categories[] = $this->_getCategoryData($category);
         }
 
         return $categories;

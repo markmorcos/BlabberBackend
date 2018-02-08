@@ -2181,8 +2181,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} business_id_to_get Business's id (optional).
-     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} branch_id Business's id (optional).
+     * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -2190,16 +2190,16 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} reviews reviews details.
      */
-    public function actionGetReviews($business_id_to_get = null, $user_id_to_get = null)
+    public function actionGetReviews($branch_id = null, $user_id = null)
     {
         $this->_addOutputs(['reviews']);
 
         $conditions = [];
-        if (!empty($business_id_to_get)) {
-            $conditions['business_id'] = $business_id_to_get;
+        if (!empty($branch_id)) {
+            $conditions['business_id'] = $branch_id;
         }
-        if (!empty($user_id_to_get)) {
-            $conditions['user_id'] = $user_id_to_get;
+        if (!empty($user_id)) {
+            $conditions['user_id'] = $user_id;
         }
         $this->output['reviews'] = $this->_getReviews($conditions);
     }
@@ -2212,7 +2212,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id business's id to add media to.
-     * @apiParam {String} type Media's type (image, video, menu, product, brochure or cigarette).
+     * @apiParam {String} type Media's type (image, menu, product or brochure).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
      * @apiParam {String} rating Media's rating (optional).
