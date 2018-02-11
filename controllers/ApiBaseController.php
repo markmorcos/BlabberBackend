@@ -414,7 +414,6 @@ class ApiBaseController extends Controller
         $business['name'] = $model['name'.$this->lang];
         $business['main_image'] = Url::base(true) . '/' . $model['main_image'];
         $business['rating'] = $model['rating'];
-        $business['no_of_reviews'] = count($model['reviews']);
 
         return $business;
     }
@@ -563,7 +562,7 @@ class ApiBaseController extends Controller
 
         if ($area_id !== null) {
             $query
-                ->joinWith('business')
+                ->joinWith('branch')
                 ->andWhere(['branch.area_id' => $area_id]);
         }
 
@@ -718,9 +717,10 @@ class ApiBaseController extends Controller
 
         if ($area_id !== null) {
             $query
-                ->leftJoin('business', '`business`.`id` = `media`.`object_id`')
-                ->andWhere(['media.object_type' => 'Business'])
-                ->andWhere(['branch.area_id' => $area_id]);
+                ->leftJoin('branch', '`branch`.`id` = `media`.`object_id`')
+                ->andWhere(['media.object_type' => 'Branch'])
+                ->andWhere(['branch.area_id' => $area_id])
+                ->groupBy('branch.business_id');
         }
 
         $model = $this->_getModelWithPagination($query);

@@ -199,10 +199,4 @@ class Business extends \yii\db\ActiveRecord
             ->orderBy(['id' => SORT_DESC])
             ->with('user');
     }
-
-    public function getReviews()
-    {
-        return $this->hasMany(Review::className(), ['business_id' => 'id'])
-            ->orderBy(['id' => SORT_DESC]);
-    }
 }
