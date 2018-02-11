@@ -1285,7 +1285,6 @@ class ApiController extends ApiBaseController
      */
     public function actionSearchBusinesses($area_id, $name = null, $address = null, $city = null, $city_id = null, $category = null, $category_id = null, $flag = null, $flag_id = null, $interest = null, $interest_id = null, $nearby = null)
     {
-        // TODO
         $this->_addOutputs(['businesses']);
 
         $conditions[] = 'or';

@@ -9,13 +9,11 @@ use yii\helpers\Url;
  *
  * @property integer $id
  * @property integer $business_id
- * @property string $name
- * @property string $nameAr
- * @property string $address
- * @property string $addressAr
  * @property integer $country_id
  * @property integer $city_id
  * @property integer $area_id
+ * @property string $address
+ * @property string $addressAr
  * @property string $phone
  * @property string $operation_hours
  * @property string $lat
@@ -46,10 +44,10 @@ class Branch extends \yii\db\ActiveRecord
             [['business_id', 'country_id', 'city_id', 'area_id', 'address', 'addressAr', 'operation_hours', 'lat', 'lng'], 'required'],
             [['business_id', 'country_id', 'city_id', 'area_id'], 'integer'],
             [['created', 'updated'], 'safe'],
-            [['name', 'nameAr', 'phone', 'operation_hours', 'lat', 'lng'], 'string', 'max' => 255],
+            [['phone', 'operation_hours', 'lat', 'lng'], 'string', 'max' => 255],
             [['address', 'addressAr'], 'string', 'max' => 1023],
             [['approved', 'is_reservable'], 'boolean'],
-            [['operation_hours'], 'match', 'pattern' => '/^((from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])|(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])(\s*,?\s*from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])+)+$/'],
+            [['operation_hours'], 'match', 'pattern' => '/^(((Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(-(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday))?: )?(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])|((Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(-(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday))?: )?(from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])(, ((Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(-(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday))?: )?from [01][0-9]:[0-5][0-9] [a|p][m] to [01][0-9]:[0-5][0-9] [a|p][m])+)+$/'],
         ];
     }
 
@@ -61,13 +59,11 @@ class Branch extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'business_id' => 'Business',
-            'name' => 'Name',
-            'nameAr' => 'Name Ar',
-            'address' => 'Address',
-            'addressAr' => 'Address Ar',
             'country_id' => 'Country',
             'city_id' => 'City',
             'area_id' => 'Area',
+            'address' => 'Address',
+            'addressAr' => 'Address Ar',
             'phone' => 'Phone',
             'operation_hours' => 'Operation Hours',
             'lat' => 'Lat',

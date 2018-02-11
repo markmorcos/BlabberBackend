@@ -318,19 +318,18 @@ class ApiBaseController extends Controller
             ->leftJoin('city', 'city.id = branch.city_id')
             ->leftJoin('country', 'country.id = branch.country_id')
             ->where($conditions)
-            ->groupBy('business_v2.id')
-            ->with(['category', 'branches']);
+            ->groupBy('business_v2.id');
 
-        // if (!empty($area_id)) {
-        //     $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
-        //     $area = Area::findOne($area_id);
-        //     if ($area) {
-        //         $areaQuery .= ' or branch.city_id is not null and branch.city_id = ' . $area->city_id;
-        //         $city = City::findOne($area->city_id);
-        //         if ($city) $areaQuery .= ' or branch.country_id is not null and branch.country_id = ' . $city->country_id;
-        //     }
-        //     $query->andWhere($areaQuery);
-        // }
+        if ($area_id) {
+            $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
+            $area = Area::findOne($area_id);
+            if ($area) {
+                $areaQuery .= ' or branch.city_id is not null and branch.city_id = ' . $area->city_id;
+                $city = City::findOne($area->city_id);
+                if ($city) $areaQuery .= ' or branch.country_id is not null and branch.country_id = ' . $city->country_id;
+            }
+            $query->andWhere($areaQuery);
+        }
 
         if ($order !== null) {
             $order = ['featured' => SORT_DESC] + $order;
@@ -338,7 +337,7 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if (!empty($lat_lng)) {
+        if ($lat_lng) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 

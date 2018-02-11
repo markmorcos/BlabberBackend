@@ -16,8 +16,8 @@ class BranchSearch extends Branch
     public function rules()
     {
         return [
-            [['id', 'business_id'], 'integer'],
-            [['name', 'nameAr', 'address', 'addressAr', 'phone', 'operation_hours', 'lat', 'lng', 'is_reservable', 'created', 'updated'], 'safe'],
+            [['id', 'business_id', 'country_id', 'city_id', 'area_id'], 'integer'],
+            [['address', 'addressAr', 'phone', 'operation_hours', 'lat', 'lng', 'is_reservable', 'created', 'updated'], 'safe'],
         ];
     }
 
@@ -59,13 +59,14 @@ class BranchSearch extends Branch
         $query->andFilterWhere([
             'id' => $this->id,
             'business_id' => $this->business_id,
+            'country_id' => $this->country_id,
+            'city_id' => $this->city_id,
+            'area_id' => $this->area_id,
             'created' => $this->created,
             'updated' => $this->updated,
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'nameAr', $this->nameAr])
-            ->andFilterWhere(['like', 'address', $this->address])
+        $query->andFilterWhere(['like', 'address', $this->address])
             ->andFilterWhere(['like', 'addressAr', $this->addressAr])
             ->andFilterWhere(['like', 'phone', $this->phone])
             ->andFilterWhere(['like', 'operation_hours', $this->operation_hours])

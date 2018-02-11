@@ -196,10 +196,6 @@ span.flag img {
                 'format' => 'raw',
                 'value' =>  ($model->business_id!=null)?Html::a($model->business->name, ['business/view', 'id' => $model->business_id]):null
             ), 
-            'name',
-            'nameAr',
-            'address',
-            'addressAr',
             array(
                 'attribute' => 'country_id',
                 'format' => 'raw',
@@ -215,6 +211,8 @@ span.flag img {
                 'format' => 'raw',
                 'value' =>  ($model->area_id!=null)?Html::a($model->area->name, ['area/view', 'id' => $model->area_id]):null
             ), 
+            'address',
+            'addressAr',
             'phone',
             'operation_hours',
             array(
