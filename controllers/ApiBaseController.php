@@ -176,14 +176,14 @@ class ApiBaseController extends Controller
         $user = User::login($email, $password, $device_IMEI, $firebase_token, $is_facebook);
 
         if ($user === null) {
-            throw new HttpException(200, 'login problem');
+            throw new HttpException(200, 'Incorrect email/password');
         }
 
         if ($user->approved === 0) {
-            throw new HttpException(200, 'your account not approved yet, we will update you by email when it\'s done');
+            throw new HttpException(200, 'Your account not approved yet, we will update you by email when it\'s done');
         }
         if ($user->blocked === 1) {
-            throw new HttpException(200, 'your account is blocked, please contact the support');
+            throw new HttpException(200, 'Your account is blocked, please contact the support');
         }
 
         $this->output['user_data'] = $this->_getUserData($user);

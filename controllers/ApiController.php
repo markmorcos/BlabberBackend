@@ -202,7 +202,7 @@ class ApiController extends ApiBaseController
         }
 
         if (!empty($gender) && !in_array($gender, ['male', 'female'])) {
-            throw new HttpException(200, 'invalid user type');
+            throw new HttpException(200, 'invalid gender');
         }
 
         // sign up
@@ -1252,7 +1252,7 @@ class ApiController extends ApiBaseController
         if ($admin_id) {
             $conditions['admin_id'] = $this->logged_user['id'];
         }
-        $lat_lng = $nearby === null ? null : explode(',', $nearby);
+        $lat_lng = $nearby ? explode(',', $nearby) : null;
 
         $this->output['businesses'] = $this->_getBusinesses($conditions, $area_id, ['name' => SORT_ASC], $lat_lng);
     }
@@ -1371,7 +1371,7 @@ class ApiController extends ApiBaseController
             }
         }
 
-        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+        $lat_lng = $nearby ? explode(',', $nearby) : null;
         $businesses = $this->_getBusinesses($conditions, null, $order, $lat_lng, $andConditions);
         if (empty($businesses)) {
             $tokens = explode('/\s+/', trim($name));
@@ -1710,7 +1710,7 @@ class ApiController extends ApiBaseController
         }
 
         $conditions['business_id'] = $business_id;
-        $lat_lng = empty($nearby) ? null : explode(',', $nearby);
+        $lat_lng = $nearby ? explode(',', $nearby) : null;
 
         $this->output['branches'] = $this->_getBranches($conditions, $lat_lng);
     }
@@ -2239,6 +2239,7 @@ class ApiController extends ApiBaseController
      */
     public function actionAddMedia($business_id, $type, $caption = null, $rating = null)
     {
+        // TODO add media to business or branch
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
@@ -2314,8 +2315,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} business_id_to_get Business's id (optional).
-     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} business_id Business's id (optional).
+     * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -2323,17 +2324,20 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($business_id_to_get = null, $user_id_to_get = null)
+    public function actionGetMedia($business_id = null, $branch_id = null, $user_id = null)
     {
         $this->_addOutputs(['media']);
 
         $conditions = '';
-        if (!empty($business_id_to_get)) {
-            $conditions .= "object_id = '" . $business_id_to_get . "' AND ";
-            $conditions .= "object_type = 'business' AND ";
+        if (!empty($business_id)) {
+            $conditions .= "object_id = '" . $business_id . "' AND ";
+            $conditions .= "object_type = 'Business' AND ";
             $conditions .= "type != 'business_image'";
-        } else if (!empty($user_id_to_get)) {
-            $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
+        } else if (!empty($branch_id)) {
+            $conditions .= "object_id = '" . $business_id . "' AND ";
+            $conditions .= "object_type = 'Branch'";
+        } else if (!empty($user_id)) {
+            $conditions .= "user_id = '" . $user_id . "' AND ";
             $conditions .= "type != 'profile_photo'";
         }
         $this->output['media'] = $this->_getMedia($conditions);
@@ -2346,18 +2350,18 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} ids Media's ids (ex. 3,7,8).
+     * @apiParam {String} id Media's id.
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMediaByIds($ids)
+    public function actionGetMediaById($id)
     {
         $this->_addOutputs(['media']);
 
-        $conditions['id'] = explode(',', $ids);
+        $conditions['id'] = $id;
         $this->output['media'] = $this->_getMedia($conditions);
     }
 
