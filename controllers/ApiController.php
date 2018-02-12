@@ -1288,7 +1288,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetBusinesses($area_id = null, $nearby = null, $category_id = null, $admin_id = null)
+    public function actionGetBusinesses($area_id = null, $nearby = null, $category_id = null)
     {
         // TODO
         $this->_addOutputs(['businesses']);
@@ -1297,8 +1297,7 @@ class ApiController extends ApiBaseController
 
         if ($category_id) {
             $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
-        }
-        if ($admin_id) {
+        } else if ($this->logged_user) {
             $conditions['admin_id'] = $this->logged_user['id'];
         }
         $lat_lng = $nearby ? explode(',', $nearby) : null;
