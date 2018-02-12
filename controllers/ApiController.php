@@ -174,7 +174,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      * @apiParam {String} type User's type (user or business) (optional).
-     * @apiParam {String} gender User's gender.
+     * @apiParam {String} gender User's gender (male or female) (optional).
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
@@ -1708,7 +1708,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} branches branches details.
      */
-    public function actionGetBranches($business_id)
+    public function actionGetBranches($business_id, $nearby = null)
     {
         $this->_addOutputs(['branches']);
 
