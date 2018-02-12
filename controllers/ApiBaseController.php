@@ -501,7 +501,7 @@ class ApiBaseController extends Controller
         $branch['lng'] = $model['lng'];
         $branch['is_open'] = $model['isOpen'];
 
-        return $business;
+        return $branch;
     }
 
     protected function _isSavedBusiness($user_id, $business_id)
@@ -573,7 +573,7 @@ class ApiBaseController extends Controller
 
         $reviews = [];
         foreach ($model as $key => $review) {
-            if (empty($review->user) || empty($review->business)) {
+            if (empty($review->user) || empty($review->branch)) {
                 continue;
             }
 
@@ -584,7 +584,7 @@ class ApiBaseController extends Controller
             $temp['updated'] = $review['updated'];
 
             $temp['user'] = $this->_getUserMinimalData($review->user);
-            $temp['business'] = $this->_getBusinessMinimalData($review->business);
+            $temp['branch'] = $this->_getBranchMinimalData($review->branch);
 
             $temp['likes'] = count($review['likes']);
             $temp['dislikes'] = count($review['dislikes']);
