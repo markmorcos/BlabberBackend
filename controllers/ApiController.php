@@ -1830,7 +1830,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetSavedBusinesses($business_id = null, $user_id = null)
+    public function actionGetSavedBusinesses($business_id = null, $user_id_to_get = null)
     {
         if (!empty($business_id)) {
             $user = User::findOne($this->logged_user['id']);
@@ -1851,12 +1851,12 @@ class ApiController extends ApiBaseController
             }
 
             $this->output['users'] = $user_list;
-        } else if (!empty($user_id)) {
+        } else if (!empty($user_id_to_get)) {
             $this->_addOutputs(['businesses']);
 
             $model = SavedBusiness::find()
                 ->select('business_id')
-                ->where(['user_id' => $user_id])
+                ->where(['user_id' => $user_id_to_get])
                 ->all();
             $ids_list = [];
             foreach ($model as $key => $business) {
@@ -1963,7 +1963,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} checkins checkins details.
      */
-    public function actionGetCheckins($branch_id = null, $user_id = null)
+    public function actionGetCheckins($branch_id = null, $user_id_to_get = null)
     {
         $this->_addOutputs(['checkins']);
 
@@ -1971,8 +1971,8 @@ class ApiController extends ApiBaseController
         if (!empty($branch_id)) {
             $conditions['branch_id'] = $branch_id;
         }
-        if (!empty($user_id)) {
-            $conditions['user_id'] = $user_id;
+        if (!empty($user_id_to_get)) {
+            $conditions['user_id'] = $user_id_to_get;
         }
         $this->output['checkins'] = $this->_getCheckins($conditions);
     }
@@ -2207,7 +2207,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} branch_id Business's id (optional).
-     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} reviewer_id User's id to get reviews of (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -2215,7 +2215,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} reviews reviews details.
      */
-    public function actionGetReviews($branch_id = null, $user_id = null)
+    public function actionGetReviews($branch_id = null, $user_id_to_get = null)
     {
         $this->_addOutputs(['reviews']);
 
@@ -2223,8 +2223,8 @@ class ApiController extends ApiBaseController
         if (!empty($branch_id)) {
             $conditions['branch_id'] = $branch_id;
         }
-        if (!empty($user_id)) {
-            $conditions['user_id'] = $user_id;
+        if (!empty($user_id_to_get)) {
+            $conditions['user_id'] = $user_id_to_get;
         }
         $this->output['reviews'] = $this->_getReviews($conditions);
     }
@@ -2332,7 +2332,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($business_id = null, $branch_id = null, $user_id = null)
+    public function actionGetMedia($business_id = null, $branch_id = null, $user_id_to_get = null)
     {
         $this->_addOutputs(['media']);
 
@@ -2344,8 +2344,8 @@ class ApiController extends ApiBaseController
         } else if (!empty($branch_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
             $conditions .= "object_type = 'Branch'";
-        } else if (!empty($user_id)) {
-            $conditions .= "user_id = '" . $user_id . "' AND ";
+        } else if (!empty($user_id_to_get)) {
+            $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
             $conditions .= "type != 'profile_photo'";
         }
         $this->output['media'] = $this->_getMedia($conditions);
