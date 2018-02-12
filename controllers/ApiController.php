@@ -1295,7 +1295,7 @@ class ApiController extends ApiBaseController
 
         if (!empty($category_id)) {
             $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
-        } else if ($this->logged_user) {
+        } else if ($this->logged_user['id']) {
             $conditions['admin_id'] = $this->logged_user['id'];
         }
         $lat_lng = $nearby ? explode(',', $nearby) : null;
