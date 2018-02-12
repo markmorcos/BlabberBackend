@@ -1768,29 +1768,36 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'no business with this id');
         }
 
-        $savedBusiness = new SavedBusiness;
-        $savedBusiness->user_id = $this->logged_user['id'];
-        $savedBusiness->business_id = $business_id;
+        $saved_business = SavedBusiness::findOne(['user_id' => $this->logged_user['id'], 'business_id' => $business_id]);
 
-        if (!$savedBusiness->save()) {
-            throw new HttpException(200, $this->_getErrors($savedBusiness));
-        }
+        if ($saved_business) {
+            if (!$saved_business->delete()) {
+                throw new HttpException(200, $this->_getErrors($saved_business));
+            }
+        } else {
+            $savedBusiness = new SavedBusiness;
+            $savedBusiness->user_id = $this->logged_user['id'];
+            $savedBusiness->business_id = $business_id;
 
-        $user = User::findOne($model->admin_id);
-        if (!empty($user) && $user->role === 'business') {
-            $type = 'favorite';
-            $title = '{new_favorite_title}';
-            $body = $savedBusiness->user->name . ' {new_favorite_body} ' . $savedBusiness->business->name;
-            $data = [
-                'type' => $type,
-                'payload' => [
-                    'saved_business_id' => $savedBusiness->id,
-                    'user_id' => $savedBusiness->user_id,
-                    'business_id' => $savedBusiness->business_id,
-                ]
-            ];
-            $this->_addNotification($user->id, $type, $title, $body, $data);
-            $this->_sendNotification($user, $title, $body, $data);
+            if (!$savedBusiness->save()) {
+                throw new HttpException(200, $this->_getErrors($savedBusiness));
+            }
+
+            $user = User::findOne($model->admin_id);
+            if (!empty($user) && $user->role === 'business') {
+                $type = 'favorite';
+                $title = '{new_favorite_title}';
+                $body = $savedBusiness->user->name . ' {new_favorite_body} ' . $savedBusiness->business->name;
+                $data = [
+                    'type' => $type,
+                    'payload' => [
+                        'user_id' => $savedBusiness->user_id,
+                        'business_id' => $savedBusiness->business_id,
+                    ]
+                ];
+                $this->_addNotification($user->id, $type, $title, $body, $data);
+                $this->_sendNotification($user, $title, $body, $data);
+            }
         }
     }
 
