@@ -165,6 +165,8 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public static function login($email, $password, $device_IMEI, $firebase_token, $is_facebook)
     {
         $user = static::findByEmail($email);
+        if (!$user) return null;
+
         $user->device_IMEI = $device_IMEI;
         $user->firebase_token = $firebase_token;
 
