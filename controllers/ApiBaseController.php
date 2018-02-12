@@ -193,7 +193,7 @@ class ApiBaseController extends Controller
     protected function _getModelWithPagination($query)
     {
         if ($this->pagination['page_no'] === null) {
-            return $query->all();
+            $this->pagination['page_no'] = 1;
         }
 
         $provider = new ActiveDataProvider([
@@ -453,7 +453,6 @@ class ApiBaseController extends Controller
     {
         $branch['id'] = $model['id'];
         $branch['business_id'] = $model['business_id'];
-        $branch['name'] = $model['name'.$this->lang];
         $branch['address'] = $model['address'.$this->lang];
         if (!empty($model['country'])) {
             $branch['country']['id'] = $model['country']['id'];
@@ -493,9 +492,28 @@ class ApiBaseController extends Controller
     protected function _getBranchMinimalData($model)
     {
         $branch['id'] = $model['id'];
-        $branch['name'] = $model['name' . $this->lang];
         $branch['address'] = $model['address'.$this->lang];
-        $branch['city'] = $model['city'];
+        if (!empty($model['country'])) {
+            $branch['country']['id'] = $model['country']['id'];
+            $branch['country']['name'] = $model['country']['name'.$this->lang];
+            $branch['country']['flag'] = $model['country']['flag'];
+        } else {
+            $branch['country'] = null;
+        }
+        if (!empty($model['city'])) {
+            $branch['city']['id'] = $model['city']['id'];
+            $branch['city']['name'] = $model['city']['name'.$this->lang];
+        } else {
+            $branch['city'] = null;
+        }
+        if (!empty($model['area'])) {
+            $branch['area']['id'] = $model['area']['id'];
+            $branch['area']['name'] = $model['area']['name'.$this->lang];
+            $branch['area']['lat'] = $model['area']['lat'];
+            $branch['area']['lng'] = $model['area']['lng'];
+        } else {
+            $branch['area'] = null;
+        }
         $branch['phone'] = $model['phone'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
