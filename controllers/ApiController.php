@@ -191,17 +191,25 @@ class ApiController extends ApiBaseController
         $device_IMEI,
         $firebase_token = null,
         $type = 'user',
-        $gender = null,
+        $gender = 'male',
         $mobile = null,
         $image = null
     ) {
         $this->_addOutputs(['user_data', 'auth_key']);
 
+        if (empty($type)) {
+            $type = 'user';
+        }
+
         if (!in_array($type, ['user', 'business'])) {
             throw new HttpException(200, 'invalid user type');
         }
 
-        if (!empty($gender) && !in_array($gender, ['male', 'female'])) {
+        if (empty($gender)) {
+            $gender = 'male';
+        }
+
+        if (!in_array($gender, ['male', 'female'])) {
             throw new HttpException(200, 'invalid gender');
         }
 
@@ -2213,7 +2221,7 @@ class ApiController extends ApiBaseController
 
         $conditions = [];
         if (!empty($branch_id)) {
-            $conditions['business_id'] = $branch_id;
+            $conditions['branch_id'] = $branch_id;
         }
         if (!empty($user_id)) {
             $conditions['user_id'] = $user_id;
