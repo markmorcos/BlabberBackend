@@ -293,7 +293,10 @@ class ApiBaseController extends Controller
         $temp['icon'] = Url::base(true) . '/' . $category['icon'];
         $temp['badge'] = Url::base(true) . '/' . $category['badge'];
         $temp['color'] = $category['color'];
-        $temp['business_count'] = (int) Business::find()->where(['category_id' => $category['id']])->count();
+        $temp['business_count'] = (int) Business::find()
+        ->innerJoin('category', 'category_id = category.id')
+        ->where('category.id = ' . $category['id'] . ' or category.parent_id = ' . $category['id'])
+        ->count();
         return $temp;
     }
 

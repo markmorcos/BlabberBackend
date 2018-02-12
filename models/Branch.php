@@ -164,8 +164,7 @@ class Branch extends \yii\db\ActiveRecord
                 continue;
             }
 
-            if (preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9] ([AaPp][Mm])/', $operation_hour, $matches) ||
-                preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9]/', $operation_hour, $matches)) {
+            if (preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9] ([ap][m])/', $operation_hour, $matches)) {
                 if (!empty($matches[0]) && count($matches[0]) == 2) {
                     $from = new \DateTime($matches[0][0]);
                     $to = new \DateTime($matches[0][1]);
