@@ -1802,27 +1802,6 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/delete-saved-business Delete Saved Business
-     * @apiName DeleteSavedBusiness
-     * @apiGroup Business
-     *
-     * @apiParam {String} user_id User's id.
-     * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} saved_business_id saved business's id to delete it.
-     *
-     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
-     * @apiSuccess {String} errors errors details if status = 1.
-     */
-    public function actionDeleteSavedBusiness($saved_business_id)
-    {
-        $model = SavedBusiness::findOne(['user_id' => $this->logged_user['id'], 'business_id' => $saved_business_id]);
-
-        if (!$model->delete()) {
-            throw new HttpException(200, $this->_getErrors($model));
-        }
-    }
-
-    /**
      * @api {post} /api/get-saved-businesses Get all saved businesses for users or businesses
      * @apiName GetSavedBusinesses
      * @apiGroup Business
