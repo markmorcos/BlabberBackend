@@ -314,6 +314,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
+     * @apiSuccess {Boolean} is_new_user Whether the user is a new one or not.
      */
     public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token)
     {
@@ -328,15 +329,20 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'invalid facebook token');
         }
 
-        $user = User::findByEmail($response->email);
+        $email = isset($response->email) ? $response->email : $response->id . '@facebook.com';
+
+        $user = User::findByEmail($response->id . '@facebook.com');
+        if (!$user) {
+            $user = User::findByEmail($email);
+        }
         if ($user === null) {
             // sign up
             $this->output['is_new_user'] = true;
             $user = new User;
         }
-        $user->email = $response->email;
+        $user->email = $email;
         $user->facebook_id = $response->id;
-        $user->approved = 1; //true
+        $user->approved = 1;
         $user->name = $response->name;
 
         if (empty($user->password)) {
@@ -604,8 +610,8 @@ class ApiController extends ApiBaseController
     /***************************************/
 
     /**
-     * @api {post} /api/search-for-user Search for user by name
-     * @apiName SearchForUser
+     * @api {post} /api/search-users Search for user by name
+     * @apiName SearchUsers
      * @apiGroup Follow
      *
      * @apiParam {String} user_id User's id.
@@ -617,7 +623,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} users the list of users
      */
-    public function actionSearchForUser($name)
+    public function actionSearchUsers($name)
     {
         $this->_addOutputs(['users']);
 
@@ -1514,8 +1520,15 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['businesses']);
 
-        $conditions = ['featured' => 1];
-        $order = ['rand()' => SORT_ASC];
+        $conditions = [];
+
+        $user = User::findOne($this->logged_user['id']);
+        if ($user) {
+            $category_ids = ArrayHelper::map($user->categories, 'id');
+            print_r($category_ids);
+            $conditions = ['category_id' => $user->categories];
+        }
+        $order = ['rating' => SORT_DESC];
         $businesses = $this->_getBusinesses($conditions, $area_id, $order, null, null);
 
         $this->output['businesses'] = $businesses;
