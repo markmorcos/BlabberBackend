@@ -175,6 +175,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} firebase_token User's firebase token (optional).
      * @apiParam {String} type User's type (user or business) (optional).
      * @apiParam {String} gender User's gender (male or female) (optional).
+     * @apiParam {String} birthdate User's birthdate (YYY-MM-DD) (optional).
      * @apiParam {String} mobile User's unique mobile number (optional).
      * @apiParam {String} image User's new image url (optional).
      * @apiParam {File} Media[file] User's new image file (optional).
@@ -192,6 +193,7 @@ class ApiController extends ApiBaseController
         $firebase_token = null,
         $type = 'user',
         $gender = 'male',
+        $birthdate,
         $mobile = null,
         $image = null
     ) {
@@ -221,6 +223,9 @@ class ApiController extends ApiBaseController
         $user->role = $type;
         if (!empty($gender)) {
             $user->gender = $gender;
+        }
+        if (!empty($birthdate)) {
+            $user->birthdate = date('Y-m-d', strtotime($birthdate));
         }
         if (!empty($mobile)) {
             $user->mobile = $mobile;
@@ -258,6 +263,42 @@ class ApiController extends ApiBaseController
         }
 
         $this->_login($email, $password, $device_IMEI, $firebase_token, false);
+    }
+
+    /**
+     * @api {post} /api/validate-email Validate email
+     * @apiName ValidateEmail
+     * @apiGroup User
+     *
+     * @apiParam {String} email Email.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionValidateEmail($email) {
+        $user = new User;
+        $user->email = $email;
+        if (!$user->validate() && !empty($user->errors['email'])) {
+            throw new HttpException(200, implode(',', $user->errors['email']));
+        }
+    }
+
+    /**
+     * @api {post} /api/validate-mobile Validate mobile
+     * @apiName ValidateMobile
+     * @apiGroup User
+     *
+     * @apiParam {String} mobile Mobile.
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     */
+    public function actionValidateMobile($mobile) {
+        $user = new User;
+        $user->mobile = $mobile;
+        if (!$user->validate() && !empty($user->errors['mobile'])) {
+            throw new HttpException(200, implode(',', $user->errors['mobile']));
+        }
     }
 
     /**
@@ -485,7 +526,6 @@ class ApiController extends ApiBaseController
      * @apiParam {String} birthdate user birthdate (optional).
      * @apiParam {String} device_IMEI user device_IMEI (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
-     * @apiParam {Boolean} private user private (0: false, 1: true) (optional).
      * @apiParam {Array} category_ids array of category ids to add to user, ex. 2,5,7 (optional).
      * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null (string)).
      * @apiParam {String} lang User language (En, Ar).
@@ -500,7 +540,6 @@ class ApiController extends ApiBaseController
         $birthdate = null,
         $device_IMEI = null,
         $firebase_token = null,
-        $private = null,
         $category_ids = null,
         $is_adult_and_smoker = null,
         $lang = null
@@ -532,10 +571,6 @@ class ApiController extends ApiBaseController
 
         if (!empty($firebase_token)) {
             $user->firebase_token = $firebase_token;
-        }
-
-        if (isset($private) && $private !== '') {
-            $user->private = $private;
         }
 
         if (isset($is_adult_and_smoker)) {
@@ -1456,6 +1491,32 @@ class ApiController extends ApiBaseController
 
         $nameVar = 'name'.$this->lang;
         $businesses = $this->_getBusinesses(['featured' => 1], $area_id, ["$nameVar" => SORT_ASC], null, null);
+
+        $this->output['businesses'] = $businesses;
+    }
+
+    /**
+     * @api {post} /api/get-recommended-businesses Get recommended businesses
+     * @apiName GetRecommendedBusinesses
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} area_id area_id Area ID.
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} businesses businesses details.
+     */
+    public function actionGetRecommendedBusinesses($area_id)
+    {
+        $this->_addOutputs(['businesses']);
+
+        $conditions = ['featured' => 1];
+        $order = ['rand()' => SORT_ASC];
+        $businesses = $this->_getBusinesses($conditions, $area_id, $order, null, null);
 
         $this->output['businesses'] = $businesses;
     }

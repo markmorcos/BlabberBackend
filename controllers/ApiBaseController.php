@@ -77,12 +77,13 @@ class ApiBaseController extends Controller
         $this->enableCsrfValidation = false;
 
         $guest_actions = [
-            'error', 'sign-up', 'sign-in-fb', 'sign-in', 'recover-password',
+            'error', 'sign-up', 'validate-email', 'validate-mobile', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-areas', 'get-location', 'get-flags',
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
-            'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate', 'get-business-recommendations'
+            'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate', 'get-featured-business',
+            'get-recommended-businesses'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -223,20 +224,17 @@ class ApiBaseController extends Controller
         $user['id'] = $model->id;
         $user['name'] = $model->name;
         $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
-        $user['private'] = $model->private;
         $user['last_sent_follow'] = $last_sent_follow !== null ? $last_sent_follow->attributes : null;
         $user['last_received_follow'] = $last_received_follow !== null ? $last_received_follow->attributes : null;
         $user['is_adult_and_smoker'] = $model->is_adult_and_smoker;
         $user['lang'] = $model->lang === '' ? 'En' : $model->lang;
 
-        if (!($model->private === 1 && 
-            ($last_sent_follow === null || $last_sent_follow->status !== '1') && 
-            ($last_received_follow === null || $last_received_follow->status !== '1'))) {
-            $user['email'] = $model->email;
-            $user['type'] = $model->role;
-            $user['mobile'] = $model->mobile;
-            $user['categories'] = $model['categoryList'.$this->lang];
-        }
+        $user['email'] = $model->email;
+        $user['type'] = $model->role;
+        $user['mobile'] = $model->mobile;
+        $user['gender'] = $model->gender;
+        $user['birthdate'] = $model->birthdate;
+        $user['categories'] = $model['categoryList'.$this->lang];
 
         return $user;
     }
