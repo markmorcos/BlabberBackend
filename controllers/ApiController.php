@@ -1279,7 +1279,6 @@ class ApiController extends ApiBaseController
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} area_id Area's id.
      * @apiParam {String} category_id Category's id to get businesses inside (optional).
-     * @apiParam {Integer} admin_id Get only businesses this user manages (optional).
      * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1290,12 +1289,11 @@ class ApiController extends ApiBaseController
      */
     public function actionGetBusinesses($area_id = null, $nearby = null, $category_id = null)
     {
-        // TODO
         $this->_addOutputs(['businesses']);
 
         $conditions = [];
 
-        if ($category_id) {
+        if (!empty($category_id)) {
             $conditions['category_id'] = $this->_getAllCategoryTreeIds($category_id);
         } else if ($this->logged_user) {
             $conditions['admin_id'] = $this->logged_user['id'];
