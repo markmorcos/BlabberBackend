@@ -20,7 +20,7 @@ class Checkin extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'checkin';
+        return 'checkin_v2';
     }
 
     /**

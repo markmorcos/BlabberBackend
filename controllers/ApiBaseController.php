@@ -737,20 +737,30 @@ class ApiBaseController extends Controller
 
     protected function _calcRating($business_id)
     {
-        $checkins = Checkin::find()->where(['business_id' => $business_id]);
+        $checkins = Checkin::find()
+        ->innerJoin('branch', 'branch.id = checkin_v2.branch_id')
+        ->where(['branch.business_id' => $business_id]);
         $checkin_rating = $checkins->sum('rating');
         $checkin_no = count($checkins->all());
 
-        $reviews = Review::find()->where(['business_id' => $business_id]);
+        $reviews = Review::find()
+        ->innerJoin('branch', 'branch.id = review_v2.branch_id')
+        ->where(['branch.business_id' => $business_id]);
         $review_rating = $reviews->sum('rating');
         $review_no = count($reviews->all());
 
-        $medias = Media::find()->where(['object_type' => 'Business', 'object_id' => $business_id]);
-        $media_rating = $medias->sum('rating');
-        $media_no = count($medias->all());
+        $medias1 = Media::find()->where(['object_type' => 'Business', 'object_id' => $business_id]);
+        $media_rating1 = $medias1->sum('rating');
+        $media_no1 = count($medias1->all());
 
-        $total_rating = $checkin_rating + $review_rating + $media_rating;
-        $total_no = $checkin_no + $review_no + $media_no;
+        $medias2 = Media::find()
+        ->innerJoin('branch', 'branch.id = media.object_id')
+        ->where(['object_type' => 'Branch', 'branch.business_id' => $business_id]);
+        $media_rating2 = $medias2->sum('rating');
+        $media_no2 = count($medias2->all());
+
+        $total_rating = $checkin_rating + $review_rating + $media_rating1 + $media_rating2;
+        $total_no = $checkin_no + $review_no + $media_no1 + $media_no2;
 
         $total_no = ($total_no == 0) ? 1 : $total_no;
 

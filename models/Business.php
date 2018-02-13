@@ -46,11 +46,11 @@ class Business extends \yii\db\ActiveRecord
     {
         return [
             [['name', 'nameAr', 'phone', 'price', 'category_id', 'admin_id'], 'required'],
-            [['category_id', 'admin_id'], 'integer'],
+            [['category_id', 'admin_id', 'rating', 'price'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['name', 'nameAr', 'phone', 'website', 'fb_page'], 'string', 'max' => 255],
             [['description', 'descriptionAr'], 'string', 'max' => 1023],
-            [['rating', 'price', 'featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
+            [['featured', 'verified', 'show_in_home'], 'string', 'max' => 1],
             [['approved'], 'boolean']
         ];
     }

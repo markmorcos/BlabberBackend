@@ -2055,7 +2055,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['review_id']);
 
-        $branch = Business::find()
+        $branch = Branch::find()
             ->where(['id' => $branch_id])
             ->one();
         if ($branch === null) {
@@ -2073,7 +2073,7 @@ class ApiController extends ApiBaseController
         }
 
         $business = $branch->business;
-        $business->rating = $this->_calcRating($business_id);
+        $business->rating = $this->_calcRating($business->id);
 
         if (!$business->save()) {
             throw new HttpException(200, $this->_getErrors($business));
