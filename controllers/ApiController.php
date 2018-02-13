@@ -1536,6 +1536,8 @@ class ApiController extends ApiBaseController
      * @apiName GetBusinessData
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} business_id business's id to get it's details.
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
