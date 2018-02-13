@@ -604,7 +604,7 @@ class ApiBaseController extends Controller
 
             $likes = (int) Reaction::find()
                 ->where([
-                    'user_id' => $review->user_id,
+                    'user_id' => $this->logged_user['id'],
                     'object_id' => $review->id,
                     'object_type' => 'review',
                     'type' => 'like'
@@ -613,7 +613,7 @@ class ApiBaseController extends Controller
 
             $dislikes = (int) Reaction::find()
                 ->where([
-                    'user_id' => $review->user_id,
+                    'user_id' => $this->logged_user['id'],
                     'object_id' => $review->id,
                     'object_type' => 'review',
                     'type' => 'dislike'
@@ -662,7 +662,7 @@ class ApiBaseController extends Controller
 
             $likes = (int) Reaction::find()
                 ->where([
-                    'user_id' => $comment->user_id,
+                    'user_id' => $this->logged_user['id'],
                     'object_id' => $comment->id,
                     'object_type' => 'comment',
                     'type' => 'like'
@@ -671,7 +671,7 @@ class ApiBaseController extends Controller
 
             $dislikes = (int) Reaction::find()
                 ->where([
-                    'user_id' => $comment->user_id,
+                    'user_id' => $this->logged_user['id'],
                     'object_id' => $comment->id,
                     'object_type' => 'comment',
                     'type' => 'dislike'
@@ -811,8 +811,23 @@ class ApiBaseController extends Controller
                 $temp['business'] = $this->_getBusinessMinimalData($business);
             }
 
-            $temp['likes'] = count($value['likes']);
-            $temp['dislikes'] = count($value['dislikes']);
+            $likes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $this->logged_user['id'],
+                    'object_id' => $value->id,
+                    'object_type' => 'media',
+                    'type' => 'like'
+                ])->count();
+            $temp['likes'] = $likes;
+
+            $dislikes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $this->logged_user['id'],
+                    'object_id' => $value->id,
+                    'object_type' => 'media',
+                    'type' => 'dislike'
+                ])->count();
+            $temp['dislikes'] = $dislikes;
 
             $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $value['id'], 'media');
 
