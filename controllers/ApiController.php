@@ -2272,7 +2272,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} reviews reviews details.
      */
-    public function actionGetReviews($branch_id = null, $user_id_to_get = null)
+    public function actionGetReviews($branch_id = null, $reviewer_id = null)
     {
         $this->_addOutputs(['reviews']);
 
@@ -2281,7 +2281,7 @@ class ApiController extends ApiBaseController
             $conditions['branch_id'] = $branch_id;
         }
         if (!empty($user_id_to_get)) {
-            $conditions['user_id'] = $user_id_to_get;
+            $conditions['user_id'] = $reviewer_id;
         }
         $this->output['reviews'] = $this->_getReviews($conditions);
     }

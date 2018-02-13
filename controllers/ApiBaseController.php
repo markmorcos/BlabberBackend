@@ -602,8 +602,23 @@ class ApiBaseController extends Controller
             $temp['user'] = $this->_getUserMinimalData($review->user);
             $temp['branch'] = $this->_getBranchMinimalData($review->branch);
 
-            $temp['likes'] = count($review['likes']);
-            $temp['dislikes'] = count($review['dislikes']);
+            $likes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $review->user_id,
+                    'object_id' => $review->id,
+                    'object_type' => 'review',
+                    'type' => 'like'
+                ])->count();
+            $temp['likes'] = $likes;
+
+            $dislikes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $review->user_id,
+                    'object_id' => $review->id,
+                    'object_type' => 'review',
+                    'type' => 'dislike'
+                ])->count();
+            $temp['dislikes'] = $dislikes;
 
             $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $review['id'], 'review');
 
@@ -645,8 +660,23 @@ class ApiBaseController extends Controller
                 }
             }
 
-            $temp['likes'] = count($comment['likes']);
-            $temp['dislikes'] = count($comment['dislikes']);
+            $likes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $comment->user_id,
+                    'object_id' => $comment->id,
+                    'object_type' => 'comment',
+                    'type' => 'like'
+                ])->count();
+            $temp['likes'] = $likes;
+
+            $dislikes = (int) Reaction::find()
+                ->where([
+                    'user_id' => $comment->user_id,
+                    'object_id' => $comment->id,
+                    'object_type' => 'comment',
+                    'type' => 'dislike'
+                ])->count();
+            $temp['dislikes'] = $dislikes;
 
             $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $comment['id'], 'comment');
 
