@@ -622,6 +622,14 @@ class ApiBaseController extends Controller
 
             $temp['added_reaction'] = $this->_addedReaction($this->logged_user['id'], $review['id'], 'review');
 
+            $temp['mentions'] = array();
+            if (preg_match_all('/(?<!\w)@(\w+)/', $review['text'], $matches)) {
+                $users = User::findAll($matches[1]);
+                foreach ($users as $user) {
+                    $temp['mentions'][] = $this->_getUserMinimalData($user);
+                }
+            }
+
             $reviews[] = $temp;
         }
 

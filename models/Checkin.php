@@ -7,7 +7,7 @@ namespace app\models;
  *
  * @property integer $id
  * @property string $text
- * @property string $rating
+ * @property integer $rating
  * @property integer $user_id
  * @property integer $branch_id
  * @property string $created
@@ -30,10 +30,9 @@ class Checkin extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'branch_id'], 'required'],
-            [['user_id', 'branch_id'], 'integer'],
+            [['user_id', 'branch_id', 'rating'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['text'], 'string', 'max' => 1023],
-            [['rating'], 'string', 'max' => 1],
         ];
     }
 
