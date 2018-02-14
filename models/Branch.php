@@ -154,7 +154,7 @@ class Branch extends \yii\db\ActiveRecord
 
     public function getIsOpen()
     {
-        date_default_timezone_set($this->country->name === 'Egypt' ? 'Africa/Cairo' : 'Asia/Dubai');
+        date_default_timezone_set($this->country_id === 424 ? 'Asia/Dubai' : 'Africa/Cairo');
 
         $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
