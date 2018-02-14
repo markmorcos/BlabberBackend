@@ -154,30 +154,58 @@ class Branch extends \yii\db\ActiveRecord
 
     public function getIsOpen()
     {
-        //TODO: add support to different days & timezones
+        date_default_timezone_set($this->country->name === 'Egypt' ? 'Africa/Cairo' : 'Asia/Dubai');
+
+        $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
         $isOpen = False;
         $operation_hours = $this->operation_hours;
         $operation_hours_array = explode(',', $operation_hours);
 
         foreach ($operation_hours_array as $operation_hour) {
-            if (empty($operation_hour)){
+            if (empty($operation_hour)) {
                 continue;
             }
 
-            if (preg_match_all('/(?:[01][0-9]|2[0-4]):[0-5][0-9] ([ap][m])/', $operation_hour, $matches)) {
-                if (!empty($matches[0]) && count($matches[0]) == 2) {
-                    $from = new \DateTime($matches[0][0]);
-                    $to = new \DateTime($matches[0][1]);
-                    $now = new \DateTime(date('H:i'));
+            $operation_hour = trim($operation_hour);
+            $days = strlen($operation_hour) > 25 ? explode('-', substr($operation_hour, 0, stripos($operation_hour, ':'))) : '';
+            $from = substr($operation_hour, -20, -12);
+            $to = substr($operation_hour, -8);
+            if (empty($days)) {
+                $fromTime = new \DateTime($from);
+                $toTime = new \DateTime($to);
+                $now = new \DateTime(date('h:i a'));
+                if ($toTime->format('U') <= $fromTime->format('U')) {
+                    $toTime->modify('+1 day');
+                }
 
-                    if (strcasecmp(substr($matches[0][1], -2), 'am') === 0) {
-                        $to->modify('+1 day');
+                $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
+            } else if (count($days) === 1 && date('l') === $days[0]) {
+                $fromTime = new \DateTime($from);
+                $toTime = new \DateTime($to);
+                $now = new \DateTime(date('h:i a'));
+                if ($toTime->format('U') <= $fromTime->format('U')) {
+                    $toTime->modify('+1 day');
+                }
+
+                $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
+            } else if (count($days) === 2) {
+                $startIndex = array_search($days[0], $daysOfWeek);
+                $endIndex = array_search($days[1], $daysOfWeek);
+                if ($endIndex < $startIndex) $endIndex += 7;
+                for ($i = $startIndex; $i <= $endIndex; ++$i) {
+                    if (date('l') === $daysOfWeek[$i % 7]) {
+                        $fromTime = new \DateTime($from);
+                        $toTime = new \DateTime($to);
+                        $now = new \DateTime(date('h:i a'));
+                        if ($toTime->format('U') <= $fromTime->format('U')) {
+                            $toTime->modify('+1 day');
+                        }
+
+                        $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
                     }
-
-                    return ($now >= $from && $now <= $to);
                 }
             }
-
         }
 
         return $isOpen;
