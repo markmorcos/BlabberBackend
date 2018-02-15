@@ -193,7 +193,7 @@ class ApiController extends ApiBaseController
         $firebase_token = null,
         $type = 'user',
         $gender = 'male',
-        $birthdate,
+        $birthdate = null,
         $mobile = null,
         $image = null
     ) {
@@ -316,7 +316,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      * @apiSuccess {Boolean} is_new_user Whether the user is a new one or not.
      */
-    public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token)
+    public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token = null)
     {
         $this->_addOutputs(['user_data', 'auth_key', 'is_new_user']);
         $this->output['is_new_user'] = false;
