@@ -166,6 +166,7 @@ class ApiBaseController extends Controller
 
         if (isset($user) && $user->validateAuthKey($request->post('auth_key'))) {
             $this->logged_user = $this->_getUserData($user);
+            $this->logged_user['auth_key'] = $request->post('auth_key');
             return true;
         } else {
             return false;
@@ -236,6 +237,10 @@ class ApiBaseController extends Controller
         $user['birthdate'] = $model->birthdate;
         $user['categories'] = $model['categoryList'.$this->lang];
 
+        $user['no_of_checkin'] = (int) Checkin::find()->where(['user_id' => $user['id']])->count();
+        $user['no_of_reviews'] = (int) Review::find()->where(['user_id' => $user['id']])->count();
+        $user['no_of_favorites'] = (int) SavedBusiness::find()->where(['user_id' => $user['id']])->count();
+
         return $user;
     }
 
@@ -269,10 +274,10 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $query = Category::find()
+        $model = Category::find()
             ->where(['parent_id' => $parent_id])
-            ->orderBy(['order' => SORT_ASC]);
-        $model = $this->_getModelWithPagination($query);
+            ->orderBy(['order' => SORT_ASC])
+            ->all();
 
         $categories = [];
         foreach ($model as $key => $category) {

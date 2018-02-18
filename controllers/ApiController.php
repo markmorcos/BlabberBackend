@@ -302,6 +302,42 @@ class ApiController extends ApiBaseController
     }
 
     /**
+     * @api {post} /api/sign-up-fb Sign in using facebook
+     * @apiName SignUpFb
+     * @apiGroup User
+     *
+     * @apiParam {String} facebook_token User's facebook token.
+     * @apiParam {String} device_IMEI User's device IMEI.
+     * @apiParam {String} firebase_token User's firebase token (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} user_data user details.
+     * @apiSuccess {String} auth_key user auth key to use for other api calls.
+     * @apiSuccess {Boolean} is_new_user Whether the user is a new one or not.
+     */
+    public function actionSignUpFb($name, $email, $facebook_id, $birthdate = null, $gender = null)
+    {
+        $user = new User;
+        $user->name = $name;
+        $user->email = $email;
+        $user->password = Yii::$app->security->generatePasswordHash(uniqid());
+        $user->facebook_id = $facebook_id;
+        $user->approved = 1;
+        if (empty($user->birthdate)) {
+            $user->birthdate = $birthdate;
+        }
+        if (empty($user->gender)) {
+            $user->gender = 'male';
+        }
+        $user->profile_photo = 'https://graph.facebook.com/v2.5/' . $facebook_id . '/picture';
+
+        if (!$user->save()) {
+            throw new HttpException(200, $this->_getErrors($user));
+        }
+    }
+
+    /**
      * @api {post} /api/sign-in-fb Sign in using facebook
      * @apiName SignInFb
      * @apiGroup User
@@ -336,31 +372,10 @@ class ApiController extends ApiBaseController
             $user = User::findByEmail($email);
         }
         if ($user === null) {
-            // sign up
             $this->output['is_new_user'] = true;
-            $user = new User;
+        } else {
+            $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
         }
-        $user->email = $email;
-        $user->facebook_id = $response->id;
-        $user->approved = 1;
-        $user->name = $response->name;
-
-        if (empty($user->password)) {
-            $user->password = uniqid();
-        }
-        if (empty($user->gender)) {
-            $user->gender = 'male';
-        }
-
-        if (!empty($response->picture->data->url)) {
-            $user->profile_photo = $response->picture->data->url;
-        }
-
-        if (!$user->save()) {
-            throw new HttpException(200, $this->_getErrors($user));
-        }
-
-        $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
     }
 
     /**
@@ -516,11 +531,9 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['user_data']);
 
-        print_r($this->logged_user);
-
-        if ($this->logged_user) {
+        if ($this->logged_user['id']) {
             $this->_addOutputs(['auth_key']);
-            $this->output['auth_key'] = $request->post('auth_key');
+            $this->output['auth_key'] = $this->logged_user['auth_key'];
         }
 
         $user = User::findOne($user_id);
@@ -562,6 +575,8 @@ class ApiController extends ApiBaseController
         $is_adult_and_smoker = null,
         $lang = null
     ) {
+        $this->_addOutputs(['user_data', 'auth_key']);
+
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
@@ -602,6 +617,9 @@ class ApiController extends ApiBaseController
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
         }
+
+        $this->output['user_data'] = $this->_getUserData($user);
+        $this->output['auth_key'] = $this->logged_user['auth_key'];
 
         if (!empty($category_ids)) {
             // remove old user categories
@@ -783,6 +801,9 @@ class ApiController extends ApiBaseController
 
         $following = array();
         foreach ($model as $key => $follow) {
+            if (empty($follow->user)) {
+                continue;
+            }
             $following[] = $this->_getUserMinimalData($follow->user);
         }
 
@@ -1467,10 +1488,10 @@ class ApiController extends ApiBaseController
             $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC]);
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
-                ->select(['business_id', 'business_view.id'])
-                ->orderBy(['featured' => SORT_DESC, 'business_view.id' => SORT_DESC])
-                ->joinWith('business')
-                ->andWhere(['business.area_id' => $area_id]);
+                ->select(['id'])
+                ->orderBy(['featured' => SORT_DESC, 'id' => SORT_DESC])
+                ->joinWith('branch')
+                ->groupBy('id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
@@ -1483,8 +1504,24 @@ class ApiController extends ApiBaseController
                 $businesses[] = $this->_getBusinessData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
-        } else if ($search_type === 'recently_viewed') {
-            // TODO
+        } else if ($search_type === 'recently_visited') {
+            $query = Checkin::find()
+                ->select(['branch.business_id', 'checkin.id'])
+                ->orderBy(['featured' => SORT_DESC, 'checkin.id' => SORT_DESC])
+                ->joinWith('branch')
+                ->andWhere(['branch.area_id' => $area_id]);
+            $model = $this->_getModelWithPagination($query);
+
+            $businesses = [];
+            $ids_list = [];
+            foreach ($model as $key => $business_view) {
+                if (in_array($business_view->business_id, $ids_list)) {
+                    continue;
+                }
+                $ids_list[] = $business_view->business_id;
+                $businesses[] = $this->_getBusinessData($business_view->business);
+            }
+            $this->output['businesses'] = $businesses;
         } else {
             throw new HttpException(200, 'not supported search type');
         }
@@ -1537,7 +1574,6 @@ class ApiController extends ApiBaseController
         $user = User::findOne($this->logged_user['id']);
         if ($user) {
             $category_ids = ArrayHelper::map($user->categories, 'id');
-            print_r($category_ids);
             $conditions = ['category_id' => $user->categories];
         }
         $order = ['rating' => SORT_DESC];
