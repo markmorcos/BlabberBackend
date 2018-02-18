@@ -866,7 +866,7 @@ class ApiBaseController extends Controller
         foreach ($model as $key => $value) {
             $temp['id'] = $value['id'];
             $temp['title'] = $value['title'];
-            $temp['image'] = $value['image'];
+            $temp['image'] = Url::base(true) . '/' . $value['image'];
             $temp['content'] = htmlentities($value['content']);
             $temp['created'] = $value['created'];
             $temp['updated'] = $value['updated'];

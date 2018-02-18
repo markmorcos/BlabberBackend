@@ -426,14 +426,20 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
+     * @apiParam {String} old_password User's old password.
      * @apiParam {String} new_password User's new password.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionChangePassword($new_password)
+    public function actionChangePassword($old_password, $new_password)
     {
         $model = User::findOne($this->logged_user['id']);
+        $password = Yii::$app->security->generatePasswordHash($old_password);
+        if ($password !== $model->password) {
+            throw new HttpException(200, 'Incorrect password');
+        }
+
         $model->password = Yii::$app->security->generatePasswordHash($new_password);
         if (!$model->save()) {
             throw new HttpException(200, $this->_getErrors($model));
@@ -499,19 +505,25 @@ class ApiController extends ApiBaseController
      * @apiName GetProfile
      * @apiGroup User
      *
-     * @apiParam {String} user_id User's id of User profile you want to get (optional).
+     * @apiParam {String} auth_key User's auth_key (optional).
+     * @apiParam {String} user_id User's id of User profile you want to get.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} user_data user details.
      */
-    public function actionGetProfile($user_id = null)
+    public function actionGetProfile($user_id)
     {
         $this->_addOutputs(['user_data']);
 
-        if (!empty($user_id)) {
-            $user = User::findOne($user_id);
+        print_r($this->logged_user);
+
+        if ($this->logged_user) {
+            $this->_addOutputs(['auth_key']);
+            $this->output['auth_key'] = $request->post('auth_key');
         }
+
+        $user = User::findOne($user_id);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
         }
@@ -712,6 +724,9 @@ class ApiController extends ApiBaseController
 
         $following = array();
         foreach ($model as $key => $follow) {
+            if (empty($follow->receiver)) {
+                continue;
+            }
             $following[] = $this->_getUserMinimalData($follow->receiver);
         }
 
