@@ -1498,17 +1498,11 @@ class ApiController extends ApiBaseController
             $query = BusinessView::find()
                 ->select(['id'])
                 ->orderBy(['featured' => SORT_DESC, 'id' => SORT_DESC])
-                ->joinWith('branch')
                 ->groupBy('id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
-            $ids_list = [];
             foreach ($model as $key => $business_view) {
-                if (in_array($business_view->business_id, $ids_list)) {
-                    continue;
-                }
-                $ids_list[] = $business_view->business_id;
                 $businesses[] = $this->_getBusinessData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
