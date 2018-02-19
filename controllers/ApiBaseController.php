@@ -408,6 +408,13 @@ class ApiBaseController extends Controller
         if (!empty($model['branches'])) {
             $business['branch'] = $this->_getBranchData($model['branches'][0]);
         }
+
+        $business['no_of_products'] = count($model['products']);
+        $business['no_of_menus'] = count($model['menus']);
+        $business['no_of_branches'] = count($model['branches']);
+        $business['no_of_brochures'] = count($model['brochures']);
+        $business['no_of_cigarettes'] = count($model['cigarettes']);
+
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
