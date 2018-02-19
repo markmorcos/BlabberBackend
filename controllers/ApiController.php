@@ -308,9 +308,12 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} name User's name.
      * @apiParam {String} email User's email.
+     * @apiParam {String} mobile User's mobile.
      * @apiParam {String} facebook_id User's Facebook ID.
      * @apiParam {String} birthdate User's birthdate (optional).
      * @apiParam {String} gender User's gender (male or female) (optional).
+     * @apiParam {String} device_IMEI User's device IMEI.
+     * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -318,11 +321,12 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      * @apiSuccess {Boolean} is_new_user Whether the user is a new one or not.
      */
-    public function actionSignUpFb($name, $email, $facebook_id, $birthdate = null, $gender = null)
+    public function actionSignUpFb($name, $email, $mobile, $facebook_id, $birthdate = null, $gender = null, $device_IMEI, $firebase_token)
     {
         $user = new User;
         $user->name = $name;
         $user->email = $email;
+        $user->mobile = $mobile;
         $user->password = Yii::$app->security->generatePasswordHash(uniqid());
         $user->facebook_id = $facebook_id;
         $user->approved = 1;
@@ -337,6 +341,8 @@ class ApiController extends ApiBaseController
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
         }
+
+        $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
     }
 
     /**
