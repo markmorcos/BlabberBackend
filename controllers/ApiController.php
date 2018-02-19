@@ -302,13 +302,15 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/sign-up-fb Sign in using facebook
+     * @api {post} /api/sign-up-fb Sign up using facebook
      * @apiName SignUpFb
      * @apiGroup User
      *
-     * @apiParam {String} facebook_token User's facebook token.
-     * @apiParam {String} device_IMEI User's device IMEI.
-     * @apiParam {String} firebase_token User's firebase token (optional).
+     * @apiParam {String} name User's name.
+     * @apiParam {String} email User's email.
+     * @apiParam {String} facebook_id User's Facebook ID.
+     * @apiParam {String} birthdate User's birthdate (optional).
+     * @apiParam {String} gender User's gender (male or female) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
