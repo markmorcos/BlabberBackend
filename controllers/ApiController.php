@@ -1383,28 +1383,28 @@ class ApiController extends ApiBaseController
         if (!empty($name)) {
             $tokens = explode(' ', trim($name));
             $names = implode('%', $tokens);
-            $conditions[] = "name like '%$names%'";
-            $conditions[] = "nameAr like '%$names%'";
+            $conditions[] = "business_v2.name like '%$names%'";
+            $conditions[] = "business_v2.nameAr like '%$names%'";
         }
         if (!empty($address)) {
-            $andConditions[] = ['like', 'address', $address];
-            $andConditions[] = ['like', 'addressAr', $address];
+            $andConditions[] = ['like', 'branch.address', $address];
+            $andConditions[] = ['like', 'branch.addressAr', $address];
         }
         if (!empty($city)) {
             $model = City::find()->where(['like', 'name'.$this->lang, $city])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $andConditions[] = ['city_id' => $search_keyword];
+            $andConditions[] = ['branch.city_id' => $search_keyword];
         }
         if (!empty($city_id)) {
-            $andConditions[] = ['city_id' => $city_id];
+            $andConditions[] = ['branch.city_id' => $city_id];
         }
         if (!empty($category)) {
             $model = Category::find()->where(['like', 'name'.$this->lang, $category])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $conditions[] = ['category_id' => $search_keyword];
+            $conditions[] = ['business_v2.category_id' => $search_keyword];
         }
         if (!empty($category_id)) {
-            $conditions[] = ['category_id' => $category_id];
+            $conditions[] = ['business_v2.category_id' => $category_id];
         }
         if (!empty($flag)) {
             $flags = explode(' ', $flag);
@@ -1415,14 +1415,14 @@ class ApiController extends ApiBaseController
             }
             $model = Flag::find()->where($flagsSubCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
-            $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $model = BranchFlag::find()->where(['flag_id' => $search_keyword])->all();
+            $ids = ArrayHelper::getColumn($model, 'branch_id');
+            $conditions[] = ['branch.id' => $ids];
         }
         if (!empty($flag_id)) {
-            $model = BusinessFlag::find()->where(['flag_id' => $flag_id])->all();
-            $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $model = BranchFlag::find()->where(['flag_id' => $flag_id])->all();
+            $ids = ArrayHelper::getColumn($model, 'branch_id');
+            $conditions[] = ['branch.id' => $ids];
         }
         if (!empty($interest)) {
             $interests = explode(' ', $interest);
@@ -1435,12 +1435,12 @@ class ApiController extends ApiBaseController
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $conditions[] = ['business_v2.id' => $ids];
         }
         if (!empty($interest_id)) {
             $model = BusinessInterest::find()->where(['interest_id' => $interest_id])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $conditions[] = ['business_v2.id' => $ids];
         }
 
         if (!empty($filter)) {
@@ -1466,8 +1466,8 @@ class ApiController extends ApiBaseController
         if (empty($businesses)) {
             $tokens = explode('/\s+/', trim($name));
             $first = empty($tokens) ? '' : $tokens[0];
-            $conditions[] = "name like '%$first%'";
-            $conditions[] = "nameAr like '%$first%'";
+            $conditions[] = "business_v2.name like '%$first%'";
+            $conditions[] = "business_v2.nameAr like '%$first%'";
             $businesses = $this->_getBusinesses($conditions, null, $order, $lat_lng, $andConditions);
         }
         $this->output['businesses'] = $businesses;

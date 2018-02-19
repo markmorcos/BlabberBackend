@@ -319,7 +319,6 @@ class ApiBaseController extends Controller
     protected function _getBusinesses($conditions, $area_id = null, $order = null, $lat_lng = null, $andConditions = null)
     {
         $query = Business::find()
-            ->select('business_v2.*, branch.country_id, branch.city_id, branch.area_id')
             ->innerJoin('branch', 'business_v2.id = branch.business_id')
             ->leftJoin('area', 'area.id = branch.area_id')
             ->leftJoin('city', 'city.id = branch.city_id')
