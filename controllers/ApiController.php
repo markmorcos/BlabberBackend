@@ -2436,6 +2436,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} business_id Business's id (optional).
+     * @apiParam {String} branch_id Branch's id (optional).
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
