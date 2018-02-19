@@ -2021,7 +2021,7 @@ class ApiController extends ApiBaseController
         }
 
         $business = $branch->business;
-        $busines->rating = $this->_calcRating($business->id);
+        $business->rating = $this->_calcRating($business->id);
         if (!$business->save()) {
             throw new HttpException(200, $this->_getErrors($business));
         }
