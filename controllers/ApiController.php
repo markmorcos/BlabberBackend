@@ -2483,7 +2483,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMediaById($id)
+    public function actionGetMediaByIds($id)
     {
         $this->_addOutputs(['media']);
 
