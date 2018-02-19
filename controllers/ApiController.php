@@ -1511,16 +1511,12 @@ class ApiController extends ApiBaseController
                 ->select(['branch.business_id', 'checkin.id'])
                 ->orderBy(['featured' => SORT_DESC, 'checkin.id' => SORT_DESC])
                 ->joinWith('branch')
-                ->andWhere(['branch.area_id' => $area_id]);
+                ->andWhere(['branch.area_id' => $area_id])
+                ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
-            $ids_list = [];
             foreach ($model as $key => $business_view) {
-                if (in_array($business_view->business_id, $ids_list)) {
-                    continue;
-                }
-                $ids_list[] = $business_view->business_id;
                 $businesses[] = $this->_getBusinessData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
