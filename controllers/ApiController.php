@@ -1509,15 +1509,15 @@ class ApiController extends ApiBaseController
         } else if ($search_type === 'recently_visited') {
             $query = Checkin::find()
                 ->select(['branch.business_id', 'checkin_v2.id'])
-                ->orderBy(['featured' => SORT_DESC, 'checkin_v2.id' => SORT_DESC])
+                ->orderBy(['checkin_v2.id' => SORT_DESC])
                 ->joinWith('branch')
                 ->andWhere(['branch.area_id' => $area_id])
                 ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
-            foreach ($model as $key => $business_view) {
-                $businesses[] = $this->_getBusinessData($business_view->business);
+            foreach ($model as $key => $checkin) {
+                $businesses[] = $this->_getBusinessData($checkin->branch->business);
             }
             $this->output['businesses'] = $businesses;
         } else {
