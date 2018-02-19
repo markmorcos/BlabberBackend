@@ -1508,8 +1508,8 @@ class ApiController extends ApiBaseController
             $this->output['businesses'] = $businesses;
         } else if ($search_type === 'recently_visited') {
             $query = Checkin::find()
-                ->select(['branch.business_id', 'checkin.id'])
-                ->orderBy(['featured' => SORT_DESC, 'checkin.id' => SORT_DESC])
+                ->select(['branch.business_id', 'checkin_v2.id'])
+                ->orderBy(['featured' => SORT_DESC, 'checkin_v2.id' => SORT_DESC])
                 ->joinWith('branch')
                 ->andWhere(['branch.area_id' => $area_id])
                 ->groupBy('business_id');
