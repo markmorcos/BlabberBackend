@@ -2354,7 +2354,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $branch_id, $type, $caption = null, $rating = null)
+    public function actionAddMedia($business_id = null, $branch_id = null, $type, $caption = null, $rating = null)
     {
         // TODO add media to business or branch
         if (empty($_FILES['Media'])) {
