@@ -1526,7 +1526,7 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-exclusive-businesses Get featured businesses
+     * @api {post} /api/get-exclusive-businesses Get exclusive businesses
      * @apiName GetExclusiveBusinesses
      * @apiGroup Business
      *
