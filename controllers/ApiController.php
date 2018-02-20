@@ -1526,8 +1526,8 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-featured-businesses Get featured businesses
-     * @apiName GetFeaturedBusinesses
+     * @api {post} /api/get-exclusive-businesses Get featured businesses
+     * @apiName GetExclusiveBusinesses
      * @apiGroup Business
      *
      * @apiParam {String} area_id area_id Area ID.
@@ -1538,7 +1538,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetFeaturedBusinesses($area_id)
+    public function actionGetExclusiveBusinesses($area_id)
     {
         $this->_addOutputs(['businesses']);
 
