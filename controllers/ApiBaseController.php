@@ -787,7 +787,7 @@ class ApiBaseController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    protected function _getMedia($conditions, $area_id = null, $no_per_page = 10)
+    protected function _getMedia($conditions, $no_per_page = 10, $area_id = null)
     {
         $query = Media::find()
             ->where($conditions)
