@@ -2472,7 +2472,7 @@ class ApiController extends ApiBaseController
             $conditions .= "type != 'business_image' AND ";
             $conditions .= "type = '$type'";
         } else if (!empty($branch_id)) {
-            $conditions .= "object_id = '" . $business_id . "' AND ";
+            $conditions .= "object_id = '" . $branch_id . "' AND ";
             $conditions .= "object_type = 'Branch'";
         } else if (!empty($user_id_to_get)) {
             $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
