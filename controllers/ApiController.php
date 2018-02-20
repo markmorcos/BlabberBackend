@@ -1305,7 +1305,7 @@ class ApiController extends ApiBaseController
         }
 
         if ($business->admin_id != $this->logged_user['id']) {
-            throw new HttpException(200, 'you are not allowed to edit this business');
+            throw new HttpException(200, 'you are not allowed to delete this business');
         }
 
         $business->approved = false;
@@ -1489,7 +1489,7 @@ class ApiController extends ApiBaseController
      */
     public function actionSearchBusinessesByType($area_id, $type)
     {
-        $this->_addOutputs(['businesses']);
+        $this->_addOutputs(['businesses'])
 
         $search_type = $type;
         if ($search_type === 'recently_added') {
