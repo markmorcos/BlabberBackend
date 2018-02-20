@@ -1570,7 +1570,7 @@ class ApiController extends ApiBaseController
         $conditions = [];
 
         $user = User::findOne($this->logged_user['id']);
-        if ($user) {
+        if ($user !== null && !empty($user->categories)) {
             $category_ids = ArrayHelper::map($user->categories, 'id');
             $conditions = ['category_id' => $user->categories];
         }
