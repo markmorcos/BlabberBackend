@@ -2344,7 +2344,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} business_id business's id to add media to.
+     * @apiParam {String} business_id Business's id to add media to (optional).
+     * @apiParam {String} branch_id Branch's id to add media to (optional).
      * @apiParam {String} type Media's type (image, menu, product or brochure).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
@@ -2353,24 +2354,38 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $type, $caption = null, $rating = null)
+    public function actionAddMedia($business_id, $branch_id, $type, $caption = null, $rating = null)
     {
         // TODO add media to business or branch
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
 
-        $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);
+        if (!in_array($type, ['image', 'product', 'menu', 'brochure'])) {
+            throw new HttpException(200, 'Invalid media type');
+        }
 
-        $business = Business::find()
+        if ($type === 'image') {
+            $branch = Branch::find()
+            ->where(['id' => $branch_id])
+            ->one();
+            if ($branch === null) {
+                throw new HttpException(200, 'no branch with this id');
+            }
+            $business = $branch->business;
+            $media = $this->_uploadFile($branch_id, 'Branch', $type, null, null, null, $caption, $rating);            
+        } else {
+            $business = Business::find()
             ->where(['id' => $business_id])
             ->one();
-        if ($business === null) {
-            throw new HttpException(200, 'no business with this id');
+            if ($business === null) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);            
         }
 
         if (!empty($rating)) {
-            $business->rating = $this->_calcRating($business_id);
+            $business->rating = $this->_calcRating($business->id);
             if (!$business->save()) {
                 throw new HttpException(200, $this->_getErrors($business));
             }
@@ -2387,7 +2402,7 @@ class ApiController extends ApiBaseController
                 'payload' => [
                     'media_id' => $media->id,
                     'user_id' => $media->user_id,
-                    'business_id' => $media->business_id,
+                    'business_id' => $business->id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2454,7 +2469,7 @@ class ApiController extends ApiBaseController
         if (!empty($business_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
             $conditions .= "object_type = 'Business' AND ";
-            $conditions .= "type != 'business_image' AND";
+            $conditions .= "type != 'business_image' AND ";
             $conditions .= "type = '$type'";
         } else if (!empty($branch_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
