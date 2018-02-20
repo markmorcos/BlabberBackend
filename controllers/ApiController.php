@@ -1489,7 +1489,7 @@ class ApiController extends ApiBaseController
      */
     public function actionSearchBusinessesByType($area_id, $type)
     {
-        $this->_addOutputs(['businesses'])
+        $this->_addOutputs(['businesses']);
 
         $search_type = $type;
         if ($search_type === 'recently_added') {
