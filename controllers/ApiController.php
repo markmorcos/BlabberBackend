@@ -1497,8 +1497,8 @@ class ApiController extends ApiBaseController
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
                 ->select(['id'])
-                ->orderBy(['featured' => SORT_DESC, 'id' => SORT_DESC])
-                ->groupBy('id');
+                ->orderBy(['id' => SORT_DESC])
+                ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
@@ -2452,13 +2452,14 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} filter Filter by section, title or caption (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} no_per_page Number of items per page (optional, default: 10).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $filter = null)
+    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $filter = null, $no_per_page = 10)
     {
         $this->_addOutputs(['media']);
 
@@ -2484,7 +2485,7 @@ class ApiController extends ApiBaseController
             $conditions .= " AND (section like '%$filter%' OR title like '%$filter%' OR caption like '%$filter%')";
         }
 
-        $this->output['media'] = $this->_getMedia($conditions);
+        $this->output['media'] = $this->_getMedia($conditions, $no_per_page);
     }
 
     /**
