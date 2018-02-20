@@ -2431,6 +2431,7 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {String} type Media type (image, product, menu or brochure).
      * @apiParam {String} business_id Business's id (optional).
      * @apiParam {String} branch_id Branch's id (optional).
      * @apiParam {String} user_id User's id (optional).
@@ -2441,15 +2442,20 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($business_id = null, $branch_id = null, $user_id_to_get = null)
+    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $filter = null)
     {
         $this->_addOutputs(['media']);
+
+        if (!empty($type) && !in_array($type, ['product', 'menu', 'brochure'])) {
+            throw new HttpException(200, 'Invalid media type');
+        }
 
         $conditions = '';
         if (!empty($business_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
             $conditions .= "object_type = 'Business' AND ";
-            $conditions .= "type != 'business_image'";
+            $conditions .= "type != 'business_image' AND";
+            $conditions .= "type = '$type'";
         } else if (!empty($branch_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
             $conditions .= "object_type = 'Branch'";
@@ -2457,6 +2463,11 @@ class ApiController extends ApiBaseController
             $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
             $conditions .= "type != 'profile_photo'";
         }
+
+        if (!empty($filter)) {
+            $conditions .= " AND (section like '%$filter%' OR title like '%$filter%' OR caption like '%$filter%')";
+        }
+
         $this->output['media'] = $this->_getMedia($conditions);
     }
 

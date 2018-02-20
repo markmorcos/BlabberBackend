@@ -816,14 +816,10 @@ class ApiBaseController extends Controller
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
             if ($value['type'] === 'product' || $value['type'] === 'menu') {
-                $temp['section'] = $value['section'];
-                $temp['sectionAr'] = $value['sectionAr'];
-                $temp['title'] = $value['title'];
-                $temp['titleAr'] = $value['titleAr'];
-                $temp['caption'] = $value['caption'];
-                $temp['captionAr'] = $value['captionAr'];
-                $temp['currency'] = $value['currency'];
-                $temp['currencyAr'] = $value['currencyAr'];
+                $temp['section'] = $value['section'.$this->lang];
+                $temp['title'] = $value['title'.$this->lang];
+                $temp['caption'] = $value['caption'.$this->lang];
+                $temp['currency'] = $value['currency'.$this->lang];
                 $temp['price'] = $value['price'];
                 $temp['discount'] = $value['discount'];
             }
