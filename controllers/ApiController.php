@@ -2449,7 +2449,8 @@ class ApiController extends ApiBaseController
      * @apiParam {String} type Media type (image, product, menu or brochure).
      * @apiParam {String} business_id Business's id (optional).
      * @apiParam {String} branch_id Branch's id (optional).
-     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} filter Filter by section, title or caption (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
