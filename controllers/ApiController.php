@@ -2462,7 +2462,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['media']);
 
-        if (!empty($type) && !in_array($type, ['product', 'menu', 'brochure'])) {
+        if (!empty($type) && !in_array($type, ['image', 'product', 'menu', 'brochure'])) {
             throw new HttpException(200, 'Invalid media type');
         }
 
