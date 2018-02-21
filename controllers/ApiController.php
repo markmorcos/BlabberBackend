@@ -1299,7 +1299,7 @@ class ApiController extends ApiBaseController
         }
 
         if ($business->admin_id != $this->logged_user['id']) {
-            throw new HttpException(200, 'you are not allowed to edit this business');
+            throw new HttpException(200, 'you are not allowed to delete this business');
         }
 
         $business->approved = false;
@@ -1377,28 +1377,28 @@ class ApiController extends ApiBaseController
         if (!empty($name)) {
             $tokens = explode(' ', trim($name));
             $names = implode('%', $tokens);
-            $conditions[] = "name like '%$names%'";
-            $conditions[] = "nameAr like '%$names%'";
+            $conditions[] = "business_v2.name like '%$names%'";
+            $conditions[] = "business_v2.nameAr like '%$names%'";
         }
         if (!empty($address)) {
-            $andConditions[] = ['like', 'address', $address];
-            $andConditions[] = ['like', 'addressAr', $address];
+            $andConditions[] = ['like', 'branch.address', $address];
+            $andConditions[] = ['like', 'branch.addressAr', $address];
         }
         if (!empty($city)) {
             $model = City::find()->where(['like', 'name'.$this->lang, $city])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $andConditions[] = ['city_id' => $search_keyword];
+            $andConditions[] = ['branch.city_id' => $search_keyword];
         }
         if (!empty($city_id)) {
-            $andConditions[] = ['city_id' => $city_id];
+            $andConditions[] = ['branch.city_id' => $city_id];
         }
         if (!empty($category)) {
             $model = Category::find()->where(['like', 'name'.$this->lang, $category])->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $conditions[] = ['category_id' => $search_keyword];
+            $conditions[] = ['business_v2.category_id' => $search_keyword];
         }
         if (!empty($category_id)) {
-            $conditions[] = ['category_id' => $category_id];
+            $conditions[] = ['business_v2.category_id' => $category_id];
         }
         if (!empty($flag)) {
             $flags = explode(' ', $flag);
@@ -1409,14 +1409,14 @@ class ApiController extends ApiBaseController
             }
             $model = Flag::find()->where($flagsSubCondition)->all();
             $search_keyword = ArrayHelper::getColumn($model, 'id');
-            $model = BusinessFlag::find()->where(['flag_id' => $search_keyword])->all();
-            $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $model = BranchFlag::find()->where(['flag_id' => $search_keyword])->all();
+            $ids = ArrayHelper::getColumn($model, 'branch_id');
+            $conditions[] = ['branch.id' => $ids];
         }
         if (!empty($flag_id)) {
-            $model = BusinessFlag::find()->where(['flag_id' => $flag_id])->all();
-            $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $model = BranchFlag::find()->where(['flag_id' => $flag_id])->all();
+            $ids = ArrayHelper::getColumn($model, 'branch_id');
+            $conditions[] = ['branch.id' => $ids];
         }
         if (!empty($interest)) {
             $interests = explode(' ', $interest);
@@ -1429,12 +1429,12 @@ class ApiController extends ApiBaseController
             $search_keyword = ArrayHelper::getColumn($model, 'id');
             $model = BusinessInterest::find()->where(['interest_id' => $search_keyword])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $conditions[] = ['business_v2.id' => $ids];
         }
         if (!empty($interest_id)) {
             $model = BusinessInterest::find()->where(['interest_id' => $interest_id])->all();
             $ids = ArrayHelper::getColumn($model, 'business_id');
-            $conditions[] = ['id' => $ids];
+            $conditions[] = ['business_v2.id' => $ids];
         }
 
         if (!empty($filter)) {
@@ -1460,8 +1460,8 @@ class ApiController extends ApiBaseController
         if (empty($businesses)) {
             $tokens = explode('/\s+/', trim($name));
             $first = empty($tokens) ? '' : $tokens[0];
-            $conditions[] = "name like '%$first%'";
-            $conditions[] = "nameAr like '%$first%'";
+            $conditions[] = "business_v2.name like '%$first%'";
+            $conditions[] = "business_v2.nameAr like '%$first%'";
             $businesses = $this->_getBusinesses($conditions, null, $order, $lat_lng, $andConditions);
         }
         $this->output['businesses'] = $businesses;
@@ -1491,37 +1491,27 @@ class ApiController extends ApiBaseController
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
                 ->select(['id'])
-                ->orderBy(['featured' => SORT_DESC, 'id' => SORT_DESC])
-                ->joinWith('branch')
-                ->groupBy('id');
+                ->orderBy(['id' => SORT_DESC])
+                ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
-            $ids_list = [];
             foreach ($model as $key => $business_view) {
-                if (in_array($business_view->business_id, $ids_list)) {
-                    continue;
-                }
-                $ids_list[] = $business_view->business_id;
                 $businesses[] = $this->_getBusinessData($business_view->business);
             }
             $this->output['businesses'] = $businesses;
         } else if ($search_type === 'recently_visited') {
             $query = Checkin::find()
-                ->select(['branch.business_id', 'checkin.id'])
-                ->orderBy(['featured' => SORT_DESC, 'checkin.id' => SORT_DESC])
+                ->select(['branch.business_id', 'checkin_v2.id'])
+                ->orderBy(['checkin_v2.id' => SORT_DESC])
                 ->joinWith('branch')
-                ->andWhere(['branch.area_id' => $area_id]);
+                ->andWhere(['branch.area_id' => $area_id])
+                ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
 
             $businesses = [];
-            $ids_list = [];
-            foreach ($model as $key => $business_view) {
-                if (in_array($business_view->business_id, $ids_list)) {
-                    continue;
-                }
-                $ids_list[] = $business_view->business_id;
-                $businesses[] = $this->_getBusinessData($business_view->business);
+            foreach ($model as $key => $checkin) {
+                $businesses[] = $this->_getBusinessData($checkin->branch->business);
             }
             $this->output['businesses'] = $businesses;
         } else {
@@ -1530,8 +1520,8 @@ class ApiController extends ApiBaseController
     }
 
     /**
-     * @api {post} /api/get-featured-businesses Get featured businesses
-     * @apiName GetFeaturedBusinesses
+     * @api {post} /api/get-exclusive-businesses Get exclusive businesses
+     * @apiName GetExclusiveBusinesses
      * @apiGroup Business
      *
      * @apiParam {String} area_id area_id Area ID.
@@ -1542,7 +1532,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetFeaturedBusinesses($area_id)
+    public function actionGetExclusiveBusinesses($area_id)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1574,7 +1564,7 @@ class ApiController extends ApiBaseController
         $conditions = [];
 
         $user = User::findOne($this->logged_user['id']);
-        if ($user) {
+        if ($user !== null && !empty($user->categories)) {
             $category_ids = ArrayHelper::map($user->categories, 'id');
             $conditions = ['category_id' => $user->categories];
         }
@@ -2015,7 +2005,7 @@ class ApiController extends ApiBaseController
         }
 
         $business = $branch->business;
-        $busines->rating = $this->_calcRating($business->id);
+        $business->rating = $this->_calcRating($business->id);
         if (!$business->save()) {
             throw new HttpException(200, $this->_getErrors($business));
         }
@@ -2348,7 +2338,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} business_id business's id to add media to.
+     * @apiParam {String} business_id Business's id to add media to (optional).
+     * @apiParam {String} branch_id Branch's id to add media to (optional).
      * @apiParam {String} type Media's type (image, menu, product or brochure).
      * @apiParam {File} Media[file] Business's new file (optional).
      * @apiParam {String} caption Media's caption (optional).
@@ -2357,24 +2348,38 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      */
-    public function actionAddMedia($business_id, $type, $caption = null, $rating = null)
+    public function actionAddMedia($business_id = null, $branch_id = null, $type, $caption = null, $rating = null)
     {
         // TODO add media to business or branch
         if (empty($_FILES['Media'])) {
             throw new HttpException(200, 'no file input');
         }
 
-        $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);
+        if (!in_array($type, ['image', 'product', 'menu', 'brochure'])) {
+            throw new HttpException(200, 'Invalid media type');
+        }
 
-        $business = Business::find()
+        if ($type === 'image') {
+            $branch = Branch::find()
+            ->where(['id' => $branch_id])
+            ->one();
+            if ($branch === null) {
+                throw new HttpException(200, 'no branch with this id');
+            }
+            $business = $branch->business;
+            $media = $this->_uploadFile($branch_id, 'Branch', $type, null, null, null, $caption, $rating);            
+        } else {
+            $business = Business::find()
             ->where(['id' => $business_id])
             ->one();
-        if ($business === null) {
-            throw new HttpException(200, 'no business with this id');
+            if ($business === null) {
+                throw new HttpException(200, 'no business with this id');
+            }
+            $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);            
         }
 
         if (!empty($rating)) {
-            $business->rating = $this->_calcRating($business_id);
+            $business->rating = $this->_calcRating($business->id);
             if (!$business->save()) {
                 throw new HttpException(200, $this->_getErrors($business));
             }
@@ -2391,7 +2396,7 @@ class ApiController extends ApiBaseController
                 'payload' => [
                     'media_id' => $media->id,
                     'user_id' => $media->user_id,
-                    'business_id' => $media->business_id,
+                    'business_id' => $business->id,
                 ]
             ];
             $this->_addNotification($user->id, $type, $title, $body, $data);
@@ -2435,32 +2440,46 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {String} type Media type (image, product, menu or brochure).
      * @apiParam {String} business_id Business's id (optional).
-     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} branch_id Branch's id (optional).
+     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} filter Filter by section, title or caption (optional).
      * @apiParam {String} page Page number (optional).
+     * @apiParam {String} no_per_page Number of items per page (optional, default: 10).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($business_id = null, $branch_id = null, $user_id_to_get = null)
+    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $filter = null, $no_per_page = 10)
     {
         $this->_addOutputs(['media']);
+
+        if (!empty($type) && !in_array($type, ['image', 'product', 'menu', 'brochure'])) {
+            throw new HttpException(200, 'Invalid media type');
+        }
 
         $conditions = '';
         if (!empty($business_id)) {
             $conditions .= "object_id = '" . $business_id . "' AND ";
             $conditions .= "object_type = 'Business' AND ";
-            $conditions .= "type != 'business_image'";
+            $conditions .= "type != 'business_image' AND ";
+            $conditions .= "type = '$type'";
         } else if (!empty($branch_id)) {
-            $conditions .= "object_id = '" . $business_id . "' AND ";
+            $conditions .= "object_id = '" . $branch_id . "' AND ";
             $conditions .= "object_type = 'Branch'";
         } else if (!empty($user_id_to_get)) {
             $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
             $conditions .= "type != 'profile_photo'";
         }
-        $this->output['media'] = $this->_getMedia($conditions);
+
+        if (!empty($filter)) {
+            $conditions .= " AND (section like '%$filter%' OR title like '%$filter%' OR caption like '%$filter%')";
+        }
+
+        $this->output['media'] = $this->_getMedia($conditions, $no_per_page);
     }
 
     /**
@@ -2477,7 +2496,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMediaById($id)
+    public function actionGetMediaByIds($id)
     {
         $this->_addOutputs(['media']);
 

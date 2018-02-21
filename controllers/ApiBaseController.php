@@ -192,7 +192,7 @@ class ApiBaseController extends Controller
         $this->output['auth_key'] = $user->auth_key;
     }
 
-    protected function _getModelWithPagination($query)
+    protected function _getModelWithPagination($query, $no_per_page = 10)
     {
         if ($this->pagination['page_no'] === null) {
             $this->pagination['page_no'] = 1;
@@ -201,7 +201,7 @@ class ApiBaseController extends Controller
         $provider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
-                'pageSize' => $this->pagination['no_per_page'],
+                'pageSize' => $no_per_page,
                 'page' => $this->pagination['page_no'] - 1,
             ],
         ]);
@@ -408,6 +408,13 @@ class ApiBaseController extends Controller
         if (!empty($model['branches'])) {
             $business['branch'] = $this->_getBranchData($model['branches'][0]);
         }
+
+        $business['no_of_products'] = count($model['products']);
+        $business['no_of_menus'] = count($model['menus']);
+        $business['no_of_branches'] = count($model['branches']);
+        $business['no_of_brochures'] = count($model['brochures']);
+        $business['no_of_cigarettes'] = count($model['cigarettes']);
+
         $business['created'] = $model['created'];
         $business['updated'] = $model['updated'];
 
@@ -780,7 +787,7 @@ class ApiBaseController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    protected function _getMedia($conditions, $area_id = null)
+    protected function _getMedia($conditions, $no_per_page = 10, $area_id = null)
     {
         $query = Media::find()
             ->where($conditions)
@@ -795,7 +802,7 @@ class ApiBaseController extends Controller
                 ->groupBy('branch.business_id');
         }
 
-        $model = $this->_getModelWithPagination($query);
+        $model = $this->_getModelWithPagination($query, $no_per_page);
 
         $media = [];
         foreach ($model as $key => $value) {

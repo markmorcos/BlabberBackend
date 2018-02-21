@@ -237,14 +237,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         if( empty($this->id) ) return null;
         
         $user_categories = UserCategory::find()->where('user_id = '.$this->id)->all();
-        $categories_list = '';
+        $categories_list = [];
         $count = count($user_categories);
         for ($i=0; $i < $count; $i++) { 
             if (empty($user_categories[$i]->category)) {
                 continue;
             }
             
-            $categories_list .= $user_categories[$i]->category->name . ($i==$count-1?'':',');
+            $categories_list[] = $user_categories[$i]->category['name'.$this->lang];
         }
         
         return $categories_list;
