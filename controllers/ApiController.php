@@ -432,7 +432,7 @@ class ApiController extends ApiBaseController
         }
 
         $result = Yii::$app->mailer->compose()
-            ->setFrom(x['support@myblabber.com' => 'MyBlabber Support'])
+            ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
             ->setTo($email)
             ->setSubject('MyBlabber Password Recovery')
             ->setTextBody('your password changed to: ' . $new_password)
