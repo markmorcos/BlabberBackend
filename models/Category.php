@@ -6,6 +6,7 @@ namespace app\models;
  * This is the model class for table "category".
  *
  * @property integer $id
+ * @property string $identifier
  * @property string $name
  * @property string $nameAr
  * @property string $description
@@ -35,7 +36,8 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'nameAr'], 'required'],
+            [['identifier', 'name', 'nameAr'], 'required'],
+            [['identifier'], 'unique'],
             [['parent_id', 'order'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['color'], 'string', 'max' => 9],
@@ -51,6 +53,7 @@ class Category extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'identifier' => 'Identifier',
             'name' => 'Name',
             'nameAr' => 'Name Ar',
             'description' => 'Description',

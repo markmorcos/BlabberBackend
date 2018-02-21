@@ -308,9 +308,12 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} name User's name.
      * @apiParam {String} email User's email.
+     * @apiParam {String} mobile User's mobile.
      * @apiParam {String} facebook_id User's Facebook ID.
      * @apiParam {String} birthdate User's birthdate (optional).
      * @apiParam {String} gender User's gender (male or female) (optional).
+     * @apiParam {String} device_IMEI User's device IMEI.
+     * @apiParam {String} firebase_token User's firebase token (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -318,18 +321,19 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} auth_key user auth key to use for other api calls.
      * @apiSuccess {Boolean} is_new_user Whether the user is a new one or not.
      */
-    public function actionSignUpFb($name, $email, $facebook_id, $birthdate = null, $gender = null)
+    public function actionSignUpFb($name, $email, $mobile, $facebook_id, $birthdate = null, $gender = null, $device_IMEI, $firebase_token = null)
     {
         $user = new User;
         $user->name = $name;
         $user->email = $email;
+        $user->mobile = $mobile;
         $user->password = Yii::$app->security->generatePasswordHash(uniqid());
         $user->facebook_id = $facebook_id;
         $user->approved = 1;
-        if (empty($user->birthdate)) {
+        if (!empty($birthdate)) {
             $user->birthdate = $birthdate;
         }
-        if (empty($user->gender)) {
+        if (!empty($gender)) {
             $user->gender = 'male';
         }
         $user->profile_photo = 'https://graph.facebook.com/v2.5/' . $facebook_id . '/picture';
@@ -337,6 +341,8 @@ class ApiController extends ApiBaseController
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
         }
+
+        $this->_login($email, '', $device_IMEI, $firebase_token, true);
     }
 
     /**
@@ -426,7 +432,7 @@ class ApiController extends ApiBaseController
         }
 
         $result = Yii::$app->mailer->compose()
-            ->setFrom(['support@myblabber.com' => 'MyBlabber Support'])
+            ->setFrom(x['support@myblabber.com' => 'MyBlabber Support'])
             ->setTo($email)
             ->setSubject('MyBlabber Password Recovery')
             ->setTextBody('your password changed to: ' . $new_password)
@@ -557,7 +563,6 @@ class ApiController extends ApiBaseController
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
-     * @apiParam {String} device_IMEI user device_IMEI (optional).
      * @apiParam {String} firebase_token user firebase_token (optional).
      * @apiParam {Array} category_ids array of category ids to add to user, ex. 2,5,7 (optional).
      * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null (string)).
@@ -571,7 +576,6 @@ class ApiController extends ApiBaseController
         $mobile = null,
         $gender = null,
         $birthdate = null,
-        $device_IMEI = null,
         $firebase_token = null,
         $category_ids = null,
         $is_adult_and_smoker = null,
@@ -598,10 +602,6 @@ class ApiController extends ApiBaseController
 
         if (!empty($birthdate)) {
             $user->birthdate = $birthdate;
-        }
-
-        if (!empty($device_IMEI)) {
-            $user->device_IMEI = $device_IMEI;
         }
 
         if (!empty($firebase_token)) {
@@ -660,7 +660,7 @@ class ApiController extends ApiBaseController
         $this->_addOutputs(['users']);
 
         $query = User::find()
-            ->where(['like', 'name', $name.'%', false])
+            ->where(['like', 'name', '%'.$name.'%', false])
             ->andWhere(['!=', 'id', $this->logged_user['id']])
             ->orderBy(['id' => SORT_DESC]);
         $model = $this->_getModelWithPagination($query);

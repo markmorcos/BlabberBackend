@@ -13,6 +13,8 @@ use kartik\color\ColorInput;
 
     <?php $form = ActiveForm::begin(); ?>
 
+    <?= $form->field($model, 'identifier')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'nameAr')->textInput(['maxlength' => true]) ?>

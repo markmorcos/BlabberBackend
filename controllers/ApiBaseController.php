@@ -293,8 +293,8 @@ class ApiBaseController extends Controller
         $temp['name'] = $category['name'.$this->lang];
         $temp['description'] = $category['description'.$this->lang];
         $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
-        $temp['icon'] = Url::base(true) . '/' . $category['icon'];
-        $temp['badge'] = Url::base(true) . '/' . $category['badge'];
+        // $temp['icon'] = Url::base(true) . '/' . $category['icon'];
+        // $temp['badge'] = Url::base(true) . '/' . $category['badge'];
         $temp['color'] = $category['color'];
         $temp['business_count'] = (int) Business::find()
         ->innerJoin('category', 'category_id = category.id')
@@ -809,14 +809,10 @@ class ApiBaseController extends Controller
             $temp['object_id'] = $value['object_id'];
             $temp['object_type'] = $value['object_type'];
             if ($value['type'] === 'product' || $value['type'] === 'menu') {
-                $temp['section'] = $value['section'];
-                $temp['sectionAr'] = $value['sectionAr'];
-                $temp['title'] = $value['title'];
-                $temp['titleAr'] = $value['titleAr'];
-                $temp['caption'] = $value['caption'];
-                $temp['captionAr'] = $value['captionAr'];
-                $temp['currency'] = $value['currency'];
-                $temp['currencyAr'] = $value['currencyAr'];
+                $temp['section'] = $value['section'.$this->lang];
+                $temp['title'] = $value['title'.$this->lang];
+                $temp['caption'] = $value['caption'.$this->lang];
+                $temp['currency'] = $value['currency'.$this->lang];
                 $temp['price'] = $value['price'];
                 $temp['discount'] = $value['discount'];
             }
