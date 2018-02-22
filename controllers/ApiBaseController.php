@@ -443,8 +443,7 @@ class ApiBaseController extends Controller
             $lng = $lat_lng[1];
 
             $query
-                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance'])
-                ->having('distance < 5');
+                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
             $order += ['distance' => SORT_ASC];
         }
 
@@ -485,6 +484,7 @@ class ApiBaseController extends Controller
         } else {
             $branch['area'] = null;
         }
+        $branch['distance'] = $model['distance'] ? $model['distance'] : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['lat'] = $model['lat'];
