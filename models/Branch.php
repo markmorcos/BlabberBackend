@@ -109,7 +109,10 @@ class Branch extends \yii\db\ActiveRecord
         $flag_list = [];
         for ($i=0; $i < $count; $i++) { 
 
-            $flag_list[] = $branch_flags[$i]->flag->name;
+            $flag_list[] = [
+                'icon' => Url::base(true) . '/' . $branch_flags[$i]->flag->icon,
+                'name' => $branch_flags[$i]->flag->name
+            ];
         }
         
         return $flag_list;
@@ -127,7 +130,10 @@ class Branch extends \yii\db\ActiveRecord
                 continue;
             }
 
-            $flag_list[] = $branch_flags[$i]->flag->nameAr;
+            $flag_list[] = [
+                'icon' => Url::base(true) . '/' . $branch_flags[$i]->flag->icon,
+                'name' => $branch_flags[$i]->flag->nameAr
+            ];
         }
         
         return $flag_list;
