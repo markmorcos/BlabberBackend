@@ -659,15 +659,23 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['users']);
 
-        $query = User::find()
-            ->where(['like', 'name', '%'.$name.'%', false])
-            ->andWhere(['!=', 'id', $this->logged_user['id']])
-            ->orderBy(['id' => SORT_DESC]);
-        $model = $this->_getModelWithPagination($query);
+        $model = Yii::$app->db->createCommand("
+            SELECT `u`.*, rank from (
+            SELECT 1 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . "') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 2 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . " %') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 3 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . "') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 4 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . " %') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 5 as `rank`, `user`.* FROM `user` WHERE (`name` LIKE '%" . $name . "%') AND (id != " . $this->logged_user['id'] . ")
+            ) u group by u.id order by u.rank
+        ")->queryAll();
 
         $users = array();
         foreach ($model as $key => $user) {
-            $users[] = $this->_getUserData($user);
+            $users[] = $this->_getUserData(User::findOne($user['id']));
         }
 
         $this->output['users'] = $users;
