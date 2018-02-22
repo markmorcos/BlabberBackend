@@ -2024,7 +2024,7 @@ class ApiController extends ApiBaseController
         if (!empty($user) && $user->role === 'business') {
             $type = 'checkin';
             $title = '{new_checkin_title}';
-            $body = $checkin->user->name . ' {new_checkin_body} ' . $checkin->business->name;
+            $body = $checkin->user->name . ' {new_checkin_body} ' . $checkin->branch->business->name;
             $data = [
                 'type' => $type,
                 'payload' => [
