@@ -3198,7 +3198,7 @@ class ApiController extends ApiBaseController
             ->orderBy(['id' => SORT_DESC])
             ->all();
         foreach ($unseen_notifications as $key => $notification) {
-            $notifications['seen'][] = $notification;
+            $notifications['seen'][] = $this->_getNotificationData($notification);
         }
 
         $query = Notification::find()
