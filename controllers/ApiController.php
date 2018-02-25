@@ -2536,9 +2536,19 @@ class ApiController extends ApiBaseController
             $conditions .= " AND (section like '%$filter%' OR title like '%$filter%' OR caption like '%$filter%')";
         }
 
-        $media = $this->_getMedia($conditions, $no_per_page);
+        $media = $this->_getMedia($conditions, $no_per_page, ['section' => SORT_ASC]);
 
-        // TODO group media into sections
+        $result = [];
+
+        $prev = null;
+        foreach ($media as $key => $medium) {
+            if ($medium['section'] !== $prev) {
+                $result[] = [];
+                $result[count($result) - 1][] = $medium;
+                $prev = $medium['section'];
+            }
+            $result[count($result) - 1][] = $medium;
+        }
 
         $this->output['media'] = $media;
     }

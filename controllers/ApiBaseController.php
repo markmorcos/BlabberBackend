@@ -821,20 +821,15 @@ class ApiBaseController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    protected function _getMedia($conditions, $no_per_page = 10, $area_id = null)
+    protected function _getMedia($conditions, $no_per_page = 10, $order = null)
     {
-        $query = Media::find()
-            ->where($conditions)
-            ->orderBy(['id' => SORT_DESC])
-            ->with('user');
-
-        if ($area_id !== null) {
-            $query
-                ->leftJoin('branch', '`branch`.`id` = `media`.`object_id`')
-                ->andWhere(['media.object_type' => 'Branch'])
-                ->andWhere(['branch.area_id' => $area_id])
-                ->groupBy('branch.business_id');
+        $query = Media::find()->where($conditions);
+        if ($order) {
+            $query->orderBy($order);
+        } else {
+            $query->orderBy(['id' => SORT_DESC]);
         }
+        $query->with('user');
 
         $model = $this->_getModelWithPagination($query, $no_per_page);
 
