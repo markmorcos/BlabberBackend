@@ -3198,7 +3198,7 @@ class ApiController extends ApiBaseController
             ->orderBy(['id' => SORT_DESC])
             ->all();
         foreach ($unseen_notifications as $key => $notification) {
-            $notifications['seen'][] = $this->_getNotificationData($notification);
+            $notifications['unseen'][] = $this->_getNotificationData($notification);
         }
 
         $query = Notification::find()
@@ -3207,7 +3207,7 @@ class ApiController extends ApiBaseController
         $notifications_model = $this->_getModelWithPagination($query);
 
         foreach ($notifications_model as $key => $notification) {
-            $notifications['unseen'][] = $this->_getNotificationData($notification);
+            $notifications['seen'][] = $this->_getNotificationData($notification);
         }
 
         $this->output['notifications'] = $notifications;
