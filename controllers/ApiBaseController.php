@@ -372,7 +372,7 @@ class ApiBaseController extends Controller
         return $businesses;
     }
 
-    protected function _getBusinessData($model)
+    protected function _getBusinessData($model, $branch = null)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -384,7 +384,6 @@ class ApiBaseController extends Controller
         $business['fb_page'] = $model['fb_page'];
         $business['description'] = $model['description'.$this->lang];
         $business['featured'] = $model['featured'];
-        $business['verified'] = $model['verified'];
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
@@ -407,7 +406,7 @@ class ApiBaseController extends Controller
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
         if (!empty($model['branches'])) {
-            $business['branch'] = $this->_getBranchData($model['branches'][0]);
+            $business['branch'] = $this->_getBranchData($branch ? $branch : $model['branches'][0]);
         }
 
         $business['no_of_products'] = count($model['products']);
@@ -1043,5 +1042,20 @@ class ApiBaseController extends Controller
         foreach ($user->tokens as $token) {
             \app\components\Notification::sendNotification($token, $title, $body, $data);
         }
+    }
+
+    protected function _getNotificationData($model) {
+            $notification['notification_id'] = $model['id'];
+            $notification['data'] = json_decode($model['data']);
+            if(!empty($notification['data']->payload->user_id)) {
+                $notification->payload->user_data = $this->_getUserMinimalData(User::findOne($notification['data']->payload->user_id));
+            }
+            if(!empty($notification['data']->payload->business_id)) {
+                $notification['data']->payload->business_data = $this->_getBusinessMinimalData(Business::findOne($temp['data']->payload->business_id));
+            }
+            $notification['seen'] = $model['seen'];
+            $notification['created'] = $model['created'];
+
+            return $notification;
     }
 }
