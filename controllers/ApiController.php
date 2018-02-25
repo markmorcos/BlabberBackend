@@ -1933,7 +1933,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id Business's id of Business you want to get the saved businesses for (optional).
-     * @apiParam {String} user_id User's id of User you want to get the saved businesses for (optional).
+     * @apiParam {String} user_id_to_get User's id of User you want to get the saved businesses for (optional).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -3136,7 +3136,10 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = [];
+        $notifications = [
+            'unseen' => [],
+            'seen' => []
+        ];
 
         $query = Notification::find()
             ->where(['user_id' => $this->logged_user['id']])
@@ -3157,10 +3160,16 @@ class ApiController extends ApiBaseController
             $temp['seen'] = $notification['seen'];
             $temp['created'] = $notification['created'];
 
-            $notifications[] = $temp;
+            if ($notification['unseen']) {
+                $notifications['unseen'][] = $temp;
+            } else {
+                $notifications['seen'][] = $temp;
+            }
         }
 
         $this->output['notifications'] = $notifications;
+
+        Notification::updateAll(['seen' => 1], ['user_id' => $this->logged_user['id']]);
     }
 
     /***************************************/

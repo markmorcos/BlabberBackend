@@ -290,6 +290,7 @@ class ApiBaseController extends Controller
     protected function _getCategoryData($category)
     {
         $temp['id'] = $category['id'];
+        $temp['identifier'] = $category['identifier'];
         $temp['name'] = $category['name'.$this->lang];
         $temp['description'] = $category['description'.$this->lang];
         $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
@@ -484,7 +485,7 @@ class ApiBaseController extends Controller
         } else {
             $branch['area'] = null;
         }
-        $branch['distance'] = $model['distance'] ? $model['distance'] : null;
+        $branch['distance'] = $model['distance'] ? round($model['distance']) + 'km' : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['lat'] = $model['lat'];
@@ -496,6 +497,15 @@ class ApiBaseController extends Controller
         $branch['no_of_reviews'] = count($model['reviews']);
         $branch['created'] = $model['created'];
         $branch['updated'] = $model['updated'];
+
+        $branch['no_of_checkins'] = (int) Checkin::find()->where(['branch_id' => $branch['id']])->count();
+        $last_checkin = Checkin::find()->orderBy(['id' => SORT_DESC])->one();
+        if ($last_checkin) {
+            $last_user = User::findOne($last_checkin->user_id);
+            $branch['last_checkin_user'] = $this->_getUserMinimalData($last_user);
+        }
+        $branch['rating'] = $this->_calcBranchRating($branch['id']);
+
         return $branch;
     }
 
@@ -781,6 +791,31 @@ class ApiBaseController extends Controller
 
         $total_rating = $checkin_rating + $review_rating + $media_rating1 + $media_rating2;
         $total_no = $checkin_no + $review_no + $media_no1 + $media_no2;
+
+        $total_no = ($total_no == 0) ? 1 : $total_no;
+
+        return strval(round($total_rating / $total_no));
+    }
+
+    protected function _calcBranchRating($branch_id)
+    {
+        $checkins = Checkin::find()
+        ->where(['branch_id' => $branch_id]);
+        $checkin_rating = $checkins->sum('rating');
+        $checkin_no = count($checkins->all());
+
+        $reviews = Review::find()
+        ->where(['branch_id' => $branch_id]);
+        $review_rating = $reviews->sum('rating');
+        $review_no = count($reviews->all());
+
+        $medias = Media::find()
+        ->where(['object_type' => 'Branch', 'object_id' => $branch_id]);
+        $media_rating = $medias->sum('rating');
+        $media_no = count($medias->all());
+
+        $total_rating = $checkin_rating + $review_rating + $media_rating;
+        $total_no = $checkin_no + $review_no + $media_no;
 
         $total_no = ($total_no == 0) ? 1 : $total_no;
 
