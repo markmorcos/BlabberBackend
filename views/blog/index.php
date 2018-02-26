@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'business_id',
                 'format' => 'raw',
                 'value' => function ($data) {
-                    return Html::a($data->business->name, ['business/view', 'id' => $data->business_id]);
+                    return $data->business_id !== null ? Html::a($data->business->name, ['business/view', 'id' => $data->business_id]) : null;
                 },
             ), 
             'title',

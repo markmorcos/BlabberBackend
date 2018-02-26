@@ -376,7 +376,7 @@ class ApiController extends ApiBaseController
      */
     public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token = null)
     {
-        $this->_addOutputs(['user_data', 'auth_key', 'is_new_user']);
+        $this->_addOutputs(['is_new_user']);
         $this->output['is_new_user'] = false;
 
         // verify facebook token & facebook id
@@ -396,6 +396,7 @@ class ApiController extends ApiBaseController
         if ($user === null) {
             $this->output['is_new_user'] = true;
         } else {
+            $this->_addOutputs(['user_data', 'auth_key']);
             $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
         }
     }

@@ -158,13 +158,16 @@ class Branch extends \yii\db\ActiveRecord
             ->orderBy(['id' => SORT_DESC]);
     }
 
-    public function getIsOpen()
+    public function getOpeningStatus()
     {
         date_default_timezone_set($this->country_id === 424 ? 'Asia/Dubai' : 'Africa/Cairo');
 
         $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        $dayOfWeek = date('l');
 
-        $isOpen = False;
+        $isOpen = false;
+        $openingHours = null;
+
         $operation_hours = $this->operation_hours;
         $operation_hours_array = explode(',', $operation_hours);
 
@@ -185,8 +188,11 @@ class Branch extends \yii\db\ActiveRecord
                     $toTime->modify('+1 day');
                 }
 
-                $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
-            } else if (count($days) === 1 && date('l') === $days[0]) {
+                if ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U')) {
+                    $isOpen = true;
+                    $openingHours = $operation_hour;
+                }
+            } else if (count($days) === 1 && $dayOfWeek === $days[0]) {
                 $fromTime = new \DateTime($from);
                 $toTime = new \DateTime($to);
                 $now = new \DateTime(date('h:i a'));
@@ -194,13 +200,16 @@ class Branch extends \yii\db\ActiveRecord
                     $toTime->modify('+1 day');
                 }
 
-                $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
+                if ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U')) {
+                    $isOpen = true;
+                    $openingHours = $operation_hour;
+                }
             } else if (count($days) === 2) {
                 $startIndex = array_search($days[0], $daysOfWeek);
                 $endIndex = array_search($days[1], $daysOfWeek);
                 if ($endIndex < $startIndex) $endIndex += 7;
                 for ($i = $startIndex; $i <= $endIndex; ++$i) {
-                    if (date('l') === $daysOfWeek[$i % 7]) {
+                    if ($dayOfWeek === $daysOfWeek[$i % 7]) {
                         $fromTime = new \DateTime($from);
                         $toTime = new \DateTime($to);
                         $now = new \DateTime(date('h:i a'));
@@ -208,12 +217,18 @@ class Branch extends \yii\db\ActiveRecord
                             $toTime->modify('+1 day');
                         }
 
-                        $isOpen = $isOpen || ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U'));
+                        if ($now->format('U') >= $fromTime->format('U') && $now->format('U') <= $toTime->format('U')) {
+                            $isOpen = true;
+                            $openingHours = $operation_hour;
+                        }
                     }
                 }
             }
         }
 
-        return $isOpen;
+        return [
+            'isOpen' => $isOpen,
+            'openingHours' => $openingHours
+        ];
     }
 }

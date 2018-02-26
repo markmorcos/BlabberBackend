@@ -492,12 +492,13 @@ class ApiBaseController extends Controller
         $branch['distance'] = $model['distance'] ? round($model['distance']) + 'km' : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
+        $branch['is_open'] = $model['openingStatus']['isOpen'];
+        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
         $branch['approved'] = $model['approved'];
         $branch['is_reservable'] = $model['is_reservable'];
         $branch['flags'] = $model['flagList'.$this->lang];
-        $branch['is_open'] = $model['isOpen'];
         $branch['no_of_reviews'] = count($model['reviews']);
         $branch['created'] = $model['created'];
         $branch['updated'] = $model['updated'];
@@ -541,7 +542,8 @@ class ApiBaseController extends Controller
         $branch['phone'] = $model['phone'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
-        $branch['is_open'] = $model['isOpen'];
+        $branch['is_open'] = $model['openingStatus']['isOpen'];
+        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
 
         return $branch;
     }
