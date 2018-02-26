@@ -395,7 +395,7 @@ class ApiController extends ApiBaseController
         $user = new User;
         $user->name = $name;
         $user->email = $email;
-        $user->password = Yii::$app->security->generatePasswordHash($password);
+        $user->password = $password ? Yii::$app->security->generatePasswordHash($password) : $password;
         $user->role = $type;
         if (!empty($gender)) {
             $user->gender = $gender;
@@ -511,9 +511,13 @@ class ApiController extends ApiBaseController
         if (!empty($birthdate)) {
             $user->birthdate = $birthdate;
         }
-        if (!empty($gender)) {
-            $user->gender = 'male';
+        if (empty($facebook_id)) {
+            throw new HttpException(200, 'Facebook ID is required');
         }
+        if (empty($gender)) {
+            $gender = 'male';
+        }
+        $user->gender = $gender;
         $user->profile_photo = 'https://graph.facebook.com/v2.5/' . $facebook_id . '/picture';
 
         if (!$user->save()) {
