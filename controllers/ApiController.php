@@ -312,6 +312,8 @@ class ApiController extends ApiBaseController
      * @apiParam {String} facebook_id User's Facebook ID.
      * @apiParam {String} birthdate User's birthdate (optional).
      * @apiParam {String} gender User's gender (male or female) (optional).
+     * @apiParam {String} image User's new image url (optional).
+     * @apiParam {File} Media[file] User's new image file (optional).
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      *
@@ -340,6 +342,18 @@ class ApiController extends ApiBaseController
 
         if (!$user->save()) {
             throw new HttpException(200, $this->_getErrors($user));
+        }
+
+        // save url if image coming from external source like Facebook
+        if (!empty($image)) {
+            $user->profile_photo = $image;
+            if (!$user->save()) {
+                throw new HttpException(200, $this->_getErrors($user));
+            }
+
+            // upload image then save it
+        } else if (!empty($_FILES['Media'])) {
+            $this->_uploadFile($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
         }
 
         $this->_login($email, '', $device_IMEI, $firebase_token, true);
