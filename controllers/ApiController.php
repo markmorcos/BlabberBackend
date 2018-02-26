@@ -1731,6 +1731,8 @@ class ApiController extends ApiBaseController
      * @apiName GetExclusiveBusinesses
      * @apiGroup Business
      *
+     * @apiParam {String} user_id User's id.
+     * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} area_id area_id Area ID.
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1789,6 +1791,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
      * @apiParam {String} business_id business's id to get it's details.
+     * @apiParam {String} branch_id branch's id (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -2857,9 +2860,13 @@ class ApiController extends ApiBaseController
             }
 
             // Send notification to admin
-            $businessObject = $object_type === 'media'
-            ? Business::findOne($object->object_id)
-            : $object->business;
+            $businessObject = $object_type === 'media' && $object->object_type === 'Branch' || $object_type === 'blog'
+            ? Branch::findOne($object->object_id)->business
+            : (
+                $object_type === 'media' && $object->object_type === 'Business'
+                ? Business::findOne($object->object_id)
+                : $object->branch->business
+            );
             if ($object->user_id != $businessObject->admin_id) {
                 $type = 'comment';
                 $title = '{new_comment_title}';

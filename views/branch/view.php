@@ -234,7 +234,6 @@ span.flag img {
             ),
             'created',
             'updated',
-            'isOpen',
             array(
                 'attribute' => 'approved',
                 'format' => 'raw',

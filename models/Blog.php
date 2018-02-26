@@ -30,7 +30,7 @@ class Blog extends \yii\db\ActiveRecord
     {
         return [
             [['business_id'], 'integer'],
-            [['title', 'content'], 'required'],
+            [['business_id', 'title', 'content'], 'required'],
             [['created', 'updated'], 'safe'],
             [['title'], 'string', 'max' => 255],
         ];

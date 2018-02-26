@@ -489,7 +489,7 @@ class ApiBaseController extends Controller
         } else {
             $branch['area'] = null;
         }
-        $branch['distance'] = $model['distance'] ? round($model['distance']) + 'km' : null;
+        $branch['distance'] = $model['distance'] ? round($model['distance']) . ' km' : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
         $branch['is_open'] = $model['openingStatus']['isOpen'];
@@ -909,6 +909,11 @@ class ApiBaseController extends Controller
         $blogs = [];
         foreach ($model as $key => $value) {
             $temp['id'] = $value['id'];
+            if ($value->business) {
+                $temp['business'] = $this->_getBusinessMinimalData($value->business);
+            } else {
+                $temp['business'] = null;
+            }
             $temp['title'] = $value['title'];
             $temp['image'] = Url::base(true) . '/' . $value['image'];
             $temp['content'] = htmlentities($value['content']);
