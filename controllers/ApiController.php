@@ -488,6 +488,8 @@ class ApiController extends ApiBaseController
      * @apiParam {String} facebook_id User's Facebook ID.
      * @apiParam {String} birthdate User's birthdate (optional).
      * @apiParam {String} gender User's gender (male or female) (optional).
+     * @apiParam {String} image User's new image url (optional).
+     * @apiParam {File} Media[file] User's new image file (optional).
      * @apiParam {String} device_IMEI User's device IMEI.
      * @apiParam {String} firebase_token User's firebase token (optional).
      *
@@ -518,6 +520,18 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($user));
         }
 
+        // save url if image coming from external source like Facebook
+        if (!empty($image)) {
+            $user->profile_photo = $image;
+            if (!$user->save()) {
+                throw new HttpException(200, $this->_getErrors($user));
+            }
+
+            // upload image then save it
+        } else if (!empty($_FILES['Media'])) {
+            $this->_uploadFile($user->id, 'User', 'profile_photo', $user, 'profile_photo', $user->id);
+        }
+
         $this->_login($email, '', $device_IMEI, $firebase_token, true);
     }
 
@@ -538,7 +552,7 @@ class ApiController extends ApiBaseController
      */
     public function actionSignInFb($facebook_token, $device_IMEI, $firebase_token = null)
     {
-        $this->_addOutputs(['user_data', 'auth_key', 'is_new_user']);
+        $this->_addOutputs(['is_new_user']);
         $this->output['is_new_user'] = false;
 
         // verify facebook token & facebook id
@@ -558,6 +572,7 @@ class ApiController extends ApiBaseController
         if ($user === null) {
             $this->output['is_new_user'] = true;
         } else {
+            $this->_addOutputs(['user_data', 'auth_key']);
             $this->_login($user->email, '', $device_IMEI, $firebase_token, true);
         }
     }
@@ -694,9 +709,7 @@ class ApiController extends ApiBaseController
      */
     public function actionLogout($device_IMEI)
     {
-        if (UserToken::deleteAll(['user_id' => $this->logged_user['id'], 'device_IMEI' => $device_IMEI]) === 0) {
-            throw new HttpException(200, 'logout problem');
-        }
+        UserToken::deleteAll(['user_id' => $this->logged_user['id'], 'device_IMEI' => $device_IMEI]);
     }
 
     /**
@@ -736,6 +749,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name user name (optional).
+     * @apiParam {String} email user email (optional).
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
@@ -749,6 +763,7 @@ class ApiController extends ApiBaseController
      */
     public function actionEditProfile(
         $name = null,
+        $email = null,
         $mobile = null,
         $gender = null,
         $birthdate = null,
@@ -762,6 +777,10 @@ class ApiController extends ApiBaseController
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
+        }
+
+        if (!empty($email)) {
+            $user->email = $email;
         }
 
         if (!empty($name)) {
@@ -835,15 +854,23 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['users']);
 
-        $query = User::find()
-            ->where(['like', 'name', '%'.$name.'%', false])
-            ->andWhere(['!=', 'id', $this->logged_user['id']])
-            ->orderBy(['id' => SORT_DESC]);
-        $model = $this->_getModelWithPagination($query);
+        $model = Yii::$app->db->createCommand("
+            SELECT `u`.*, rank from (
+            SELECT 1 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . "') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 2 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . " %') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 3 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . "') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 4 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . " %') AND (id != " . $this->logged_user['id'] . ")
+            UNION
+            SELECT 5 as `rank`, `user`.* FROM `user` WHERE (`name` LIKE '%" . $name . "%') AND (id != " . $this->logged_user['id'] . ")
+            ) u group by u.id order by u.rank
+        ")->queryAll();
 
         $users = array();
         foreach ($model as $key => $user) {
-            $users[] = $this->_getUserData($user);
+            $users[] = $this->_getUserData(User::findOne($user['id']));
         }
 
         $this->output['users'] = $users;
@@ -1768,7 +1795,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} business_data business details.
      */
-    public function actionGetBusinessData($business_id)
+    public function actionGetBusinessData($business_id, $branch_id = null)
     {
         $this->_addOutputs(['business_data']);
 
@@ -1786,7 +1813,15 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $result);
         }
 
-        $this->output['business_data'] = $this->_getBusinessData($model);
+        $branch = null;
+        if ($branch_id) {
+            $branch_model = Branch::findOne($branch_id);
+            if ($branch_model) {
+                $branch = $this->_getBranchData($branch_model);
+            }
+        }
+
+        $this->output['business_data'] = $this->_getBusinessData($model, $branch);
     }
 
     /**
@@ -2105,7 +2140,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} business_id Business's id of Business you want to get the saved businesses for (optional).
-     * @apiParam {String} user_id User's id of User you want to get the saved businesses for (optional).
+     * @apiParam {String} user_id_to_get User's id of User you want to get the saved businesses for (optional).
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
@@ -2196,7 +2231,7 @@ class ApiController extends ApiBaseController
         if (!empty($user) && $user->role === 'business') {
             $type = 'checkin';
             $title = '{new_checkin_title}';
-            $body = $checkin->user->name . ' {new_checkin_body} ' . $checkin->business->name;
+            $body = $checkin->user->name . ' {new_checkin_body} ' . $checkin->branch->business->name;
             $data = [
                 'type' => $type,
                 'payload' => [
@@ -2620,9 +2655,52 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id (optional).
      * @apiParam {String} auth_key User's auth key (optional).
-     * @apiParam {String} type Media type (image, product, menu or brochure).
+     * @apiParam {String} type Media type (image or brochure).
      * @apiParam {String} business_id Business's id (optional).
      * @apiParam {String} branch_id Branch's id (optional).
+     * @apiParam {String} user_id_to_get User's id (optional).
+     * @apiParam {String} page Page number (optional).
+     * @apiParam {String} no_per_page Number of items per page (optional, default: 10).
+     * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
+     *
+     * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+     * @apiSuccess {String} errors errors details if status = 1.
+     * @apiSuccess {Array} media media details.
+     */
+    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $no_per_page = 10)
+    {
+        $this->_addOutputs(['media']);
+
+        if (!empty($type) && !in_array($type, ['image', 'brochure'])) {
+            throw new HttpException(200, 'Invalid media type');
+        }
+
+        $conditions = '';
+        if (!empty($business_id)) {
+            $conditions .= "object_id = '" . $business_id . "' AND ";
+            $conditions .= "object_type = 'Business' AND ";
+            $conditions .= "type != 'business_image' AND ";
+            $conditions .= "type = '$type'";
+        } else if (!empty($branch_id)) {
+            $conditions .= "object_id = '" . $branch_id . "' AND ";
+            $conditions .= "object_type = 'Branch'";
+        } else if (!empty($user_id_to_get)) {
+            $conditions .= "user_id = '" . $user_id_to_get . "' AND ";
+            $conditions .= "type != 'profile_photo'";
+        }
+
+        $this->output['media'] = $this->_getMedia($conditions, $no_per_page);
+    }
+
+    /**
+     * @api {post} /api/get-products Get all products or menus for user or business
+     * @apiName GetProducts
+     * @apiGroup Business
+     *
+     * @apiParam {String} user_id User's id (optional).
+     * @apiParam {String} auth_key User's auth key (optional).
+     * @apiParam {String} type Media type (product or menu).
+     * @apiParam {String} business_id Business's id (optional).
      * @apiParam {String} user_id_to_get User's id (optional).
      * @apiParam {String} filter Filter by section, title or caption (optional).
      * @apiParam {String} page Page number (optional).
@@ -2633,11 +2711,11 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} media media details.
      */
-    public function actionGetMedia($type = null, $business_id = null, $branch_id = null, $user_id_to_get = null, $filter = null, $no_per_page = 10)
+    public function actionGetProducts($type = null, $business_id = null, $user_id_to_get = null, $filter = null, $no_per_page = 10)
     {
         $this->_addOutputs(['media']);
 
-        if (!empty($type) && !in_array($type, ['image', 'product', 'menu', 'brochure'])) {
+        if (!empty($type) && !in_array($type, ['image', 'brochure'])) {
             throw new HttpException(200, 'Invalid media type');
         }
 
@@ -2659,7 +2737,21 @@ class ApiController extends ApiBaseController
             $conditions .= " AND (section like '%$filter%' OR title like '%$filter%' OR caption like '%$filter%')";
         }
 
-        $this->output['media'] = $this->_getMedia($conditions, $no_per_page);
+        $media = $this->_getMedia($conditions, $no_per_page, ['section' => SORT_ASC]);
+
+        $result = [];
+
+        $prev = null;
+        foreach ($media as $key => $medium) {
+            if ($medium['section'] !== $prev) {
+                $result[] = [];
+                $result[count($result) - 1][] = $medium;
+                $prev = $medium['section'];
+            }
+            $result[count($result) - 1][] = $medium;
+        }
+
+        $this->output['media'] = $media;
     }
 
     /**
@@ -3013,6 +3105,24 @@ class ApiController extends ApiBaseController
         if (!$reaction->save()) {
             throw new HttpException(200, $this->_getErrors($reaction));
         }
+
+        if ($reaction->user_id != $this->logged_user['id']) {
+            $type = 'reaction';
+            $title = '{new_reaction_title}';
+            $body = $commenter_name . ' {new_reaction_body} ' . $object_type;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'reaction_id' => $reaction->id,
+                    'object_id' => $reaction->object_id,
+                    'object_type' => $reaction->object_type,
+                    'user_id' => $reaction->user_id,
+                ]
+            ];
+            $this->_addNotification($reaction->user_id, $type, $title, $body, $data);
+            $this->_sendNotification($reaction->user, $title, $body, $data);
+        }
+
         $this->output['reaction_id'] = $reaction->id;
     }
 
@@ -3297,42 +3407,41 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} format Output format (group or list)
      * @apiParam {String} page Page number (optional).
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} notifications List of Notifications.
      */
-    public function actionGetNotifications($format = 'group')
+    public function actionGetNotifications()
     {
         $this->_addOutputs(['notifications']);
 
-        $notifications = [];
+        $notifications = [
+            'unseen' => [],
+            'seen' => []
+        ];
+
+        $unseen_notifications = Notification::find()
+            ->where(['user_id' => $this->logged_user['id'], 'seen' => 0])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+        foreach ($unseen_notifications as $key => $notification) {
+            $notifications['unseen'][] = $this->_getNotificationData($notification);
+        }
 
         $query = Notification::find()
-            ->where(['user_id' => $this->logged_user['id']])
+            ->where(['user_id' => $this->logged_user['id'], 'seen' => 1])
             ->orderBy(['id' => SORT_DESC]);
         $notifications_model = $this->_getModelWithPagination($query);
 
         foreach ($notifications_model as $key => $notification) {
-            $temp['notification_id'] = $notification['id'];
-            // $temp['title'] = Translation::get($this->lang, $notification['title']);
-            // $temp['body'] = Translation::get($this->lang, $notification['body']);
-            $temp['data'] = json_decode($notification['data']);
-            if(!empty($temp['data']->payload->user_id)) {
-                $temp->payload->user_data = $this->_getUserMinimalData(User::findOne($temp['data']->payload->user_id));
-            }
-            if(!empty($temp['data']->payload->business_id)) {
-                $temp['data']->payload->business_data = $this->_getBusinessMinimalData(Business::findOne($temp['data']->payload->business_id));
-            }
-            $temp['seen'] = $notification['seen'];
-            $temp['created'] = $notification['created'];
-
-            $notifications[] = $temp;
+            $notifications['seen'][] = $this->_getNotificationData($notification);
         }
 
         $this->output['notifications'] = $notifications;
+
+        Notification::updateAll(['seen' => 1], ['user_id' => $this->logged_user['id']]);
     }
 
     /***************************************/

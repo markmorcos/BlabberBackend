@@ -192,9 +192,9 @@ class ApiBaseController extends Controller
         $this->output['auth_key'] = $user->auth_key;
     }
 
-    protected function _getModelWithPagination($query, $no_per_page = 10)
+    protected function _getModelWithPagination($query, $no_per_page = 10, $auto = true)
     {
-        if ($this->pagination['page_no'] === null) {
+        if ($auto && $this->pagination['page_no'] === null) {
             $this->pagination['page_no'] = 1;
         }
 
@@ -250,6 +250,9 @@ class ApiBaseController extends Controller
         $user['name'] = $model->name;
         $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
 
+        $user['no_of_reviews'] = (int) Review::find()->where(['user_id' => $user['id']])->count();
+        $user['no_of_followers'] = (int) Follow::find()->where(['receiver_id' => $user['id']])->count();
+
         return $user;
     }
 
@@ -274,10 +277,11 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $model = Category::find()
+        $query = Category::find()
             ->where(['parent_id' => $parent_id])
-            ->orderBy(['order' => SORT_ASC])
-            ->all();
+            ->orderBy(['order' => SORT_ASC]);
+
+        $model = $this->_getModelWithPagination($query, null, false);
 
         $categories = [];
         foreach ($model as $key => $category) {
@@ -290,15 +294,17 @@ class ApiBaseController extends Controller
     protected function _getCategoryData($category)
     {
         $temp['id'] = $category['id'];
+        $temp['identifier'] = $category['identifier'];
         $temp['name'] = $category['name'.$this->lang];
         $temp['description'] = $category['description'.$this->lang];
         $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
-        // $temp['icon'] = Url::base(true) . '/' . $category['icon'];
-        // $temp['badge'] = Url::base(true) . '/' . $category['badge'];
         $temp['color'] = $category['color'];
         $temp['business_count'] = (int) Business::find()
         ->innerJoin('category', 'category_id = category.id')
         ->where('category.id = ' . $category['id'] . ' or category.parent_id = ' . $category['id'])
+        ->count();
+        $temp['subcategory_count'] = (int) Category::find()
+        ->where('parent_id = ' . $category['id'])
         ->count();
         return $temp;
     }
@@ -371,7 +377,7 @@ class ApiBaseController extends Controller
         return $businesses;
     }
 
-    protected function _getBusinessData($model)
+    protected function _getBusinessData($model, $branch = null)
     {
         $business['id'] = $model['id'];
         $business['name'] = $model['name'.$this->lang];
@@ -383,7 +389,6 @@ class ApiBaseController extends Controller
         $business['fb_page'] = $model['fb_page'];
         $business['description'] = $model['description'.$this->lang];
         $business['featured'] = $model['featured'];
-        $business['verified'] = $model['verified'];
         $business['show_in_home'] = $model['show_in_home'];
         $business['category_id'] = $model['category_id'];
         if (isset($model['category'])) {
@@ -406,7 +411,7 @@ class ApiBaseController extends Controller
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
         if (!empty($model['branches'])) {
-            $business['branch'] = $this->_getBranchData($model['branches'][0]);
+            $business['branch'] = $this->_getBranchData($branch ? $branch : $model['branches'][0]);
         }
 
         $business['no_of_products'] = count($model['products']);
@@ -443,8 +448,7 @@ class ApiBaseController extends Controller
             $lng = $lat_lng[1];
 
             $query
-                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance'])
-                ->having('distance < 5');
+                ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
             $order += ['distance' => SORT_ASC];
         }
 
@@ -485,17 +489,28 @@ class ApiBaseController extends Controller
         } else {
             $branch['area'] = null;
         }
+        $branch['distance'] = $model['distance'] ? round($model['distance']) + 'km' : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = $model['operation_hours'];
+        $branch['is_open'] = $model['openingStatus']['isOpen'];
+        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
         $branch['approved'] = $model['approved'];
         $branch['is_reservable'] = $model['is_reservable'];
         $branch['flags'] = $model['flagList'.$this->lang];
-        $branch['is_open'] = $model['isOpen'];
         $branch['no_of_reviews'] = count($model['reviews']);
         $branch['created'] = $model['created'];
         $branch['updated'] = $model['updated'];
+
+        $branch['no_of_checkins'] = (int) Checkin::find()->where(['branch_id' => $branch['id']])->count();
+        $last_checkin = Checkin::find()->orderBy(['id' => SORT_DESC])->one();
+        if ($last_checkin) {
+            $last_user = User::findOne($last_checkin->user_id);
+            $branch['last_checkin_user'] = $this->_getUserMinimalData($last_user);
+        }
+        $branch['rating'] = $this->_calcBranchRating($branch['id']);
+
         return $branch;
     }
 
@@ -527,7 +542,8 @@ class ApiBaseController extends Controller
         $branch['phone'] = $model['phone'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
-        $branch['is_open'] = $model['isOpen'];
+        $branch['is_open'] = $model['openingStatus']['isOpen'];
+        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
 
         return $branch;
     }
@@ -787,20 +803,40 @@ class ApiBaseController extends Controller
         return strval(round($total_rating / $total_no));
     }
 
-    protected function _getMedia($conditions, $no_per_page = 10, $area_id = null)
+    protected function _calcBranchRating($branch_id)
     {
-        $query = Media::find()
-            ->where($conditions)
-            ->orderBy(['id' => SORT_DESC])
-            ->with('user');
+        $checkins = Checkin::find()
+        ->where(['branch_id' => $branch_id]);
+        $checkin_rating = $checkins->sum('rating');
+        $checkin_no = count($checkins->all());
 
-        if ($area_id !== null) {
-            $query
-                ->leftJoin('branch', '`branch`.`id` = `media`.`object_id`')
-                ->andWhere(['media.object_type' => 'Branch'])
-                ->andWhere(['branch.area_id' => $area_id])
-                ->groupBy('branch.business_id');
+        $reviews = Review::find()
+        ->where(['branch_id' => $branch_id]);
+        $review_rating = $reviews->sum('rating');
+        $review_no = count($reviews->all());
+
+        $medias = Media::find()
+        ->where(['object_type' => 'Branch', 'object_id' => $branch_id]);
+        $media_rating = $medias->sum('rating');
+        $media_no = count($medias->all());
+
+        $total_rating = $checkin_rating + $review_rating + $media_rating;
+        $total_no = $checkin_no + $review_no + $media_no;
+
+        $total_no = ($total_no == 0) ? 1 : $total_no;
+
+        return strval(round($total_rating / $total_no));
+    }
+
+    protected function _getMedia($conditions, $no_per_page = 10, $order = null)
+    {
+        $query = Media::find()->where($conditions);
+        if ($order) {
+            $query->orderBy($order);
+        } else {
+            $query->orderBy(['id' => SORT_DESC]);
         }
+        $query->with('user');
 
         $model = $this->_getModelWithPagination($query, $no_per_page);
 
@@ -1008,5 +1044,20 @@ class ApiBaseController extends Controller
         foreach ($user->tokens as $token) {
             \app\components\Notification::sendNotification($token, $title, $body, $data);
         }
+    }
+
+    protected function _getNotificationData($model) {
+            $notification['notification_id'] = $model['id'];
+            $notification['data'] = json_decode($model['data']);
+            if(!empty($notification['data']->payload->user_id)) {
+                $notification->payload->user_data = $this->_getUserMinimalData(User::findOne($notification['data']->payload->user_id));
+            }
+            if(!empty($notification['data']->payload->business_id)) {
+                $notification['data']->payload->business_data = $this->_getBusinessMinimalData(Business::findOne($notification['data']->payload->business_id));
+            }
+            $notification['seen'] = $model['seen'];
+            $notification['created'] = $model['created'];
+
+            return $notification;
     }
 }
