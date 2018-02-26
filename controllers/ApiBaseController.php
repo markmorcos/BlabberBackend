@@ -77,7 +77,7 @@ class ApiBaseController extends Controller
         $this->enableCsrfValidation = false;
 
         $guest_actions = [
-            'error', 'sign-up', 'validate-email', 'validate-mobile', 'sign-in-fb', 'sign-in', 'recover-password',
+            'error', 'sign-up', 'sign-up-fb', 'validate-email', 'validate-mobile', 'sign-in-fb', 'sign-in', 'recover-password',
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-areas', 'get-location', 'get-flags',
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
@@ -491,9 +491,9 @@ class ApiBaseController extends Controller
         }
         $branch['distance'] = $model['distance'] ? round($model['distance']) . ' km' : null;
         $branch['phone'] = $model['phone'];
-        $branch['operation_hours'] = $model['operation_hours'];
+        $branch['operation_hours'] = explode(',', $model['operation_hours']);
         $branch['is_open'] = $model['openingStatus']['isOpen'];
-        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
+        $branch['current_hours'] = $model['openingStatus']['openingHours'];
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
         $branch['approved'] = $model['approved'];
@@ -543,7 +543,7 @@ class ApiBaseController extends Controller
         $branch['lat'] = $model['lat'];
         $branch['lng'] = $model['lng'];
         $branch['is_open'] = $model['openingStatus']['isOpen'];
-        $branch['opening_hours'] = $model['openingStatus']['openingHours'];
+        $branch['current_hours'] = $model['openingStatus']['openingHours'];
 
         return $branch;
     }
