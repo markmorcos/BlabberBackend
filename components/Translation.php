@@ -7,6 +7,15 @@ class Translation {
     const SUPPORTED_LANGUAGES = ['Ar'];
 
     const TERMS = [
+        'new_reaction_title' => [
+            'En' => 'New Reaction',
+            'Ar' => 'تفاعل جدجي',
+        ],
+        'new_reaction_body' => [
+            'En' => 'added a reaction on your',
+            'Ar' => 'قام بإضافة تفاعل على',
+        ],
+
         'new_follow_title' => [
             'En' => 'New Follower',
             'Ar' => 'متابع جدجي',

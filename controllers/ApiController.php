@@ -2924,6 +2924,24 @@ class ApiController extends ApiBaseController
         if (!$reaction->save()) {
             throw new HttpException(200, $this->_getErrors($reaction));
         }
+
+        if ($reaction->user_id != $this->logged_user['id']) {
+            $type = 'reaction';
+            $title = '{new_reaction_title}';
+            $body = $commenter_name . ' {new_reaction_body} ' . $object_type;
+            $data = [
+                'type' => $type,
+                'payload' => [
+                    'reaction_id' => $reaction->id,
+                    'object_id' => $reaction->object_id,
+                    'object_type' => $reaction->object_type,
+                    'user_id' => $reaction->user_id,
+                ]
+            ];
+            $this->_addNotification($reaction->user_id, $type, $title, $body, $data);
+            $this->_sendNotification($reaction->user, $title, $body, $data);
+        }
+
         $this->output['reaction_id'] = $reaction->id;
     }
 
