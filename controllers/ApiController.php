@@ -34,6 +34,7 @@ use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\HttpException;
+use yii\data\ActiveDataProvider;
 
 use app\models\Branch;
 use app\models\BranchFlag;
@@ -1665,7 +1666,7 @@ class ApiController extends ApiBaseController
             $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC]);
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
-                ->select(['id'])
+                ->select(['id' , 'business_id'])
                 ->orderBy(['id' => SORT_DESC])
                 ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
@@ -1673,20 +1674,24 @@ class ApiController extends ApiBaseController
             $businesses = [];
             foreach ($model as $key => $business_view) {
                 $businesses[] = $this->_getBusinessData($business_view->business);
+
             }
             $this->output['businesses'] = $businesses;
         } else if ($search_type === 'recently_visited') {
             $query = Checkin::find()
-                ->select(['branch.business_id', 'checkin_v2.id'])
+                ->select(['branch.business_id', 'checkin_v2.id' ,'checkin_v2.branch_id' ])
                 ->orderBy(['checkin_v2.id' => SORT_DESC])
                 ->joinWith('branch')
                 ->andWhere(['branch.area_id' => $area_id])
                 ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
-
             $businesses = [];
+
             foreach ($model as $key => $checkin) {
-                $businesses[] = $this->_getBusinessData($checkin->branch->business);
+              $branch = Branch::findOne($checkin['branch_id']);
+             var_dump($checkin->branch);
+              $businesses[] = $this->_getBusinessData($checkin->branch->business);
+
             }
             $this->output['businesses'] = $businesses;
         } else {
