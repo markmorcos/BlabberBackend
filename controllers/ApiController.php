@@ -34,6 +34,7 @@ use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\HttpException;
+use yii\data\ActiveDataProvider;
 
 use app\models\Branch;
 use app\models\BranchFlag;
@@ -41,10 +42,171 @@ use app\models\BusinessV2;
 
 class ApiController extends ApiBaseController
 {
+  /**
+   * @api {get} /api/migrate
+   * @apiName MigrateBusinessTable
+   * @apiGroup User
+   *
+   * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+   * @apiSuccess {String} errors errors details if status = 1.
+   */
+
     public function actionMigrate()
+    {  // set_time_limit(0);
+
+      $businesses = Business::find()->Where('id < 6' )->all();
+
+      foreach ($businesses as $business) {
+          // $name = array_values(array_filter(preg_split('/[–#-] +/', $business->name)));
+          // $business_name = $name[0] . (count($name) >= 3 ? ' #' . $name[2] : '');
+          // $branch_name = count($name) >= 2 ? $name[1] : '';
+          // $name_ar = array_values(array_filter(preg_split('/[–#-]+/', $business->nameAr)));
+          $name = $business->name;
+          $dash_index = strripos($business->name, '-');
+          $hash_index = strripos($business->name, '#');
+          $branch_number = substr($name, $hash_index ? $hash_index : strlen($name));
+          $business_name = trim(substr($name, 0, $dash_index ? $dash_index : ($hash_index ? $hash_index : strlen($name)))) . ($branch_number ? ' ' . $branch_number : '');
+          $branch_name = $dash_index ? trim(substr($name, $dash_index + 1, $branch_number ? -strlen($branch_number) : strlen($name))) : '';
+          print_r($business_name . '___' . $branch_name); echo '<br>';
+
+          $name_ar = $business->nameAr;
+          $dash_index_ar = strripos($business->nameAr, '-');
+          $hash_index_ar = strripos($business->nameAr, '#');
+          $branch_number_ar = substr($name_ar, $hash_index_ar ? $hash_index_ar : strlen($name_ar));
+          $business_name_ar = trim(substr($name_ar, 0, $dash_index_ar ? $dash_index_ar : ($hash_index_ar ? $hash_index_ar : strlen($name_ar)))) . ($branch_number_ar ? ' ' . $branch_number_ar : '');
+          $branch_name_ar = $dash_index_ar ? trim(substr($name_ar, $dash_index_ar + 1, $branch_number_ar ? -strlen($branch_number_ar) : strlen($name_ar))) : '';
+          print_r($business_name_ar . '___' . $branch_name_ar); echo '<br>';
+          $business_v2 = BusinessV2::findOne(['name' => $business_name]);
+          if (!$business_v2) {
+              $business_v2 = new BusinessV2;
+              $business_v2->name = $business_name;
+              $business_v2->nameAr = $business_name_ar;
+              $business_v2->phone = $business->phone;
+              $business_v2->main_image = $business->main_image;
+              $business_v2->rating = $business->rating;
+              $business_v2->price = $business->price;
+              $business_v2->website = $business->website;
+              $business_v2->fb_page = $business->fb_page;
+              $business_v2->description = $business->description;
+              $business_v2->descriptionAr = $business->descriptionAr;
+              $business_v2->featured = $business->featured;
+            //*  $business_v2->verified = $business->verified;
+              $business_v2->show_in_home = $business->show_in_home;
+              $business_v2->category_id = $business->category_id;
+            //*   $business_v2->admin_id = $business->admin_id;
+              $business_v2->approved = $business->approved;
+              $business_v2->created = $business->created;
+              $business_v2->updated = $business->updated;
+              if (!$business_v2->save()) {
+                  echo '<pre>Bussines_v2';
+                 print_r($business_v2);
+                   echo '</pre>';
+
+              }
+          }
+          $branch = Branch::findOne($business->id);
+          if (!$branch) {
+              $branch = new Branch;
+              $branch->id = $business->id;
+              $branch->business_id = $business_v2->id;
+              if ($branch_name) {
+                  $area = Area::findOne(['name' => $branch_name]);
+                  if (!$area) {
+
+                      $area = new Area;
+                      $area->name = $branch_name;
+                      $area->nameAr = $branch_name_ar;
+                      $area->city_id = $business->city_id;
+                      $area->lat = $business->lat;
+                      $area->lng = $business->lng;
+                      $area->save();
+                      if (!$area->save()) {
+                          echo '<pre>';
+                         print_r($area->errors);
+                         echo '</pre>';
+
+                      }
+                      else{
+                      echo '<pre>Bussines_v2';
+                     print_r($area->save());
+                       echo '</pre>';
+                     }
+
+                  }
+                  $branch->area_id = $area->id;
+              }
+              $branch->city_id = $business->city_id;
+              $branch->country_id = $business->country_id;
+              $branch->address = $business->address;
+              $branch->addressAr = $business->addressAr;
+              $branch->phone = $business->phone;
+              $branch->operation_hours = $business->operation_hours;
+              $branch->lat = $business->lat;
+              $branch->lng = $business->lng;
+          //    $branch->admin_id = $business->admin_id;
+              $branch->approved = $business->approved;
+              $branch->created = $business->created;
+              $branch->updated = $business->updated;
+              if (!$branch->save()) {
+                  echo '<pre>';
+                 print_r($branch->errors);
+
+              }
+              var_dump($branch->save());
+          }
+          //till this
+          $media = Media::find()->where(['object_id' => $business->id, 'object_type' => 'Business', 'version' => 0])->all();
+          foreach($media as $medium) {
+              if (in_array($medium->type, ['menu', 'product', 'brochure', 'business_image'])) {
+                  $medium->object_id = $business_v2->id;
+                  $medium->version = 1;
+                  $medium->save();
+              } else if (in_array($medium->type, ['image'])) {
+                  $medium->object_type = 'Branch';
+                  // ask Mark
+                  $medium->object_id = $branch->id;
+                  //end
+                  $medium->version = 1;
+                  $medium->save();
+              }
+          }
+          $saved_businesses = SavedBusiness::find()->where(['business_id' => $business->id, 'version' => 0])->all();
+          foreach($saved_businesses as $saved_business) {
+              $saved_business->business_id = $business_v2->id;
+              $saved_business->version = 2;
+              $saved_business->save();
+          }
+          $business_interests = BusinessInterest::find()->where(['business_id' => $business->id, 'version' => 0])->all();
+          foreach($business_interests as $business_interest) {
+              $business_interest->business_id = $business_v2->id;
+              $business_interest->version = 2;
+              $business_interest->save();
+          }
+          $business_views = BusinessView::find()->where(['business_id' => $business->id, 'version' => 0])->all();
+          foreach($business_views as $business_view) {
+              $business_view->business_id = $business_v2->id;
+              $business_view->version = 2;
+              $business_view->save();
+          }
+      }
+
+  }
+
+  /**
+   * @api {get} /api/migrate
+   * @apiName MigrateTable
+   * @apiGroup User
+   *
+   *
+   * @apiSuccess {String} status status code: 0 for OK, 1 for error.
+   * @apiSuccess {String} errors errors details if status = 1.
+   */
+
+    public function actionMigrate2()
     {
         // set_time_limit(0);
-        $businesses = Business::find()->all();
+        $businesses = Business::find()->Where('id < 10' )->all();
+
         foreach ($businesses as $business) {
             // $name = array_values(array_filter(preg_split('/[–#-] +/', $business->name)));
             // $business_name = $name[0] . (count($name) >= 3 ? ' #' . $name[2] : '');
@@ -88,23 +250,35 @@ class ApiController extends ApiBaseController
                 $business_v2->updated = $business->updated;
                 if (!$business_v2->save()) {
                     echo '<pre>';
-                    print_r($business_v2);
-                    die();
+                  //  print_r($business_v2);
+
                 }
             }
             $branch = Branch::findOne($business->id);
+             var_dump($branch_name);
             if (!$branch) {
                 $branch = new Branch;
                 $branch->id = $business->id;
                 $branch->business_id = $business_v2->id;
                 if ($branch_name) {
+                  var_dump('hey');
                     $area = Area::findOne(['name' => $branch_name]);
+          var_dump($area);
                     if (!$area) {
+                      var_dump('woho');
+                      var_dump($branch_name);
+                      var_dump($business->lat);
+
+                      var_dump($business->lng);
+
                         $area = new Area;
                         $area->name = $branch_name;
                         $area->nameAr = $branch_name_ar;
                         $area->city_id = $business->city_id;
+                        $area->lat = $business->lat;
+                        $area->lng = $business->lng;
                         $area->save();
+                        var_dump($area->errors);
                     }
                     $branch->area_id = $area->id;
                 }
@@ -116,15 +290,16 @@ class ApiController extends ApiBaseController
                 $branch->operation_hours = $business->operation_hours;
                 $branch->lat = $business->lat;
                 $branch->lng = $business->lng;
-                $branch->admin_id = $business->admin_id;
+            //    $branch->admin_id = $business->admin_id;
                 $branch->approved = $business->approved;
                 $branch->created = $business->created;
                 $branch->updated = $business->updated;
                 if (!$branch->save()) {
                     echo '<pre>';
-                    print_r($branch);
-                    die();
+                   print_r($branch->errors);
+
                 }
+                var_dump($branch->save());
             }
             $media = Media::find()->where(['object_id' => $business->id, 'object_type' => 'Business', 'version' => 0])->all();
             foreach($media as $medium) {
@@ -157,6 +332,7 @@ class ApiController extends ApiBaseController
                 $business_view->save();
             }
         }
+
     }
 
     /***************************************/
@@ -1517,7 +1693,7 @@ class ApiController extends ApiBaseController
             $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC]);
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
-                ->select(['id'])
+                ->select(['id' , 'business_id'])
                 ->orderBy(['id' => SORT_DESC])
                 ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
@@ -1525,20 +1701,24 @@ class ApiController extends ApiBaseController
             $businesses = [];
             foreach ($model as $key => $business_view) {
                 $businesses[] = $this->_getBusinessData($business_view->business);
+
             }
             $this->output['businesses'] = $businesses;
         } else if ($search_type === 'recently_visited') {
             $query = Checkin::find()
-                ->select(['branch.business_id', 'checkin_v2.id'])
+                ->select(['branch.business_id', 'checkin_v2.id' ,'checkin_v2.branch_id' ])
                 ->orderBy(['checkin_v2.id' => SORT_DESC])
                 ->joinWith('branch')
                 ->andWhere(['branch.area_id' => $area_id])
                 ->groupBy('business_id');
             $model = $this->_getModelWithPagination($query);
-
             $businesses = [];
+
             foreach ($model as $key => $checkin) {
-                $businesses[] = $this->_getBusinessData($checkin->branch->business);
+              $branch = Branch::findOne($checkin['branch_id']);
+             var_dump($checkin->branch);
+              $businesses[] = $this->_getBusinessData($checkin->branch->business);
+
             }
             $this->output['businesses'] = $businesses;
         } else {
@@ -1749,7 +1929,7 @@ class ApiController extends ApiBaseController
         $branch = Branch::find()
             ->where(['id' => $branch_id])
             ->one();
-        
+
         if ($branch === null) {
             throw new HttpException(200, 'no branch with this id');
         }
@@ -2402,7 +2582,7 @@ class ApiController extends ApiBaseController
                 throw new HttpException(200, 'no branch with this id');
             }
             $business = $branch->business;
-            $media = $this->_uploadFile($branch_id, 'Branch', $type, null, null, null, $caption, $rating);            
+            $media = $this->_uploadFile($branch_id, 'Branch', $type, null, null, null, $caption, $rating);
         } else {
             $business = Business::find()
             ->where(['id' => $business_id])
@@ -2410,7 +2590,7 @@ class ApiController extends ApiBaseController
             if ($business === null) {
                 throw new HttpException(200, 'no business with this id');
             }
-            $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);            
+            $media = $this->_uploadFile($business_id, 'Business', $type, null, null, null, $caption, $rating);
         }
 
         if (!empty($rating)) {

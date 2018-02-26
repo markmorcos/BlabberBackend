@@ -103,29 +103,29 @@ class Branch extends \yii\db\ActiveRecord
     public function getFlagList()
     {
         if( empty($this->id) ) return null;
-        
+
         $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
         $count = count($branch_flags);
         $flag_list = [];
-        for ($i=0; $i < $count; $i++) { 
+        for ($i=0; $i < $count; $i++) {
 
             $flag_list[] = [
                 'icon' => Url::base(true) . '/' . $branch_flags[$i]->flag->icon,
                 'name' => $branch_flags[$i]->flag->name
             ];
         }
-        
+
         return $flag_list;
     }
 
     public function getFlagListAr()
     {
         if( empty($this->id) ) return null;
-        
+
         $branch_flags = BranchFlag::find()->where('branch_id = '.$this->id)->all();
         $count = count($branch_flags);
         $flag_list = [];
-        for ($i=0; $i < $count; $i++) { 
+        for ($i=0; $i < $count; $i++) {
             if (empty($branch_flags[$i]->flag)) {
                 continue;
             }
@@ -135,7 +135,7 @@ class Branch extends \yii\db\ActiveRecord
                 'name' => $branch_flags[$i]->flag->nameAr
             ];
         }
-        
+
         return $flag_list;
     }
 
