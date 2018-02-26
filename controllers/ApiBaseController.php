@@ -303,6 +303,9 @@ class ApiBaseController extends Controller
         ->innerJoin('category', 'category_id = category.id')
         ->where('category.id = ' . $category['id'] . ' or category.parent_id = ' . $category['id'])
         ->count();
+        $temp['subcategory_count'] = (int) Category::find()
+        ->where('parent_id = ' . $category['id'])
+        ->count();
         return $temp;
     }
 
