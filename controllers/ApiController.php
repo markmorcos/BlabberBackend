@@ -572,6 +572,7 @@ class ApiController extends ApiBaseController
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
      * @apiParam {String} name user name (optional).
+     * @apiParam {String} email user email (optional).
      * @apiParam {String} mobile user mobile (optional).
      * @apiParam {String} gender user gender (optional).
      * @apiParam {String} birthdate user birthdate (optional).
@@ -585,6 +586,7 @@ class ApiController extends ApiBaseController
      */
     public function actionEditProfile(
         $name = null,
+        $email = null,
         $mobile = null,
         $gender = null,
         $birthdate = null,
@@ -598,6 +600,10 @@ class ApiController extends ApiBaseController
         $user = User::findOne($this->logged_user['id']);
         if ($user === null) {
             throw new HttpException(200, 'no user with this id');
+        }
+
+        if (!empty($email)) {
+            $user->email = $email;
         }
 
         if (!empty($name)) {

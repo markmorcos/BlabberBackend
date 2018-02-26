@@ -192,9 +192,9 @@ class ApiBaseController extends Controller
         $this->output['auth_key'] = $user->auth_key;
     }
 
-    protected function _getModelWithPagination($query, $no_per_page = 10)
+    protected function _getModelWithPagination($query, $no_per_page = 10, $auto = true)
     {
-        if ($this->pagination['page_no'] === null) {
+        if ($auto && $this->pagination['page_no'] === null) {
             $this->pagination['page_no'] = 1;
         }
 
@@ -250,6 +250,9 @@ class ApiBaseController extends Controller
         $user['name'] = $model->name;
         $user['profile_photo'] = $this->_getUserPhotoUrl($model->profile_photo);
 
+        $user['no_of_reviews'] = (int) Review::find()->where(['user_id' => $user['id']])->count();
+        $user['no_of_followers'] = (int) Follow::find()->where(['receiver_id' => $user['id']])->count();
+
         return $user;
     }
 
@@ -274,10 +277,11 @@ class ApiBaseController extends Controller
 
     protected function _getCategories($parent_id = null)
     {
-        $model = Category::find()
+        $query = Category::find()
             ->where(['parent_id' => $parent_id])
-            ->orderBy(['order' => SORT_ASC])
-            ->all();
+            ->orderBy(['order' => SORT_ASC]);
+
+        $model = $this->_getModelWithPagination($query, null, false);
 
         $categories = [];
         foreach ($model as $key => $category) {
@@ -294,8 +298,6 @@ class ApiBaseController extends Controller
         $temp['name'] = $category['name'.$this->lang];
         $temp['description'] = $category['description'.$this->lang];
         $temp['main_image'] = Url::base(true) . '/' . $category['main_image'];
-        // $temp['icon'] = Url::base(true) . '/' . $category['icon'];
-        // $temp['badge'] = Url::base(true) . '/' . $category['badge'];
         $temp['color'] = $category['color'];
         $temp['business_count'] = (int) Business::find()
         ->innerJoin('category', 'category_id = category.id')
