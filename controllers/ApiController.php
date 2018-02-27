@@ -2764,7 +2764,9 @@ class ApiController extends ApiBaseController
                 $result[count($result) - 1][] = $medium;
                 $prev = $medium['section'];
             }
-            $result[count($result) - 1][] = $medium;
+            else {
+                $result[count($result) - 1][] = $medium;
+            }
         }
 
         $this->output['media'] = $result;
