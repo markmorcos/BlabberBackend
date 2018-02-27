@@ -493,7 +493,7 @@ class ApiBaseController extends Controller
         }
         $branch['distance'] = $model['distance']
         ?
-            $model['distance'] >= 1000
+            $model['distance'] >= 1
             ? round($model['distance']) . 'km'
             : round($model['distance'] * 1000) . 'm'
         : null;
