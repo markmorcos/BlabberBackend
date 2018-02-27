@@ -81,7 +81,7 @@ class ApiBaseController extends Controller
             'get-profile', 'get-categories', 'get-sub-categories', 'get-countries', 'get-cities', 'get-areas', 'get-location', 'get-flags',
             'get-interests', 'get-homescreen-businesses', 'get-businesses', 'get-branches', 'search-businesses',
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
-            'get-media', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
+            'get-media', 'get-products', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
             'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate', 'get-featured-business',
             'get-recommended-businesses'
         ];
