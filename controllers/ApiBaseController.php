@@ -1075,7 +1075,7 @@ class ApiBaseController extends Controller
             $notification['notification_id'] = $model['id'];
             $notification['data'] = json_decode($model['data']);
             if(!empty($notification['data']->payload->user_id)) {
-                $notification->payload->user_data = $this->_getUserMinimalData(User::findOne($notification['data']->payload->user_id));
+                $notification['data']->payload->user_data = $this->_getUserMinimalData(User::findOne($notification['data']->payload->user_id));
             }
             if(!empty($notification['data']->payload->business_id)) {
                 $notification['data']->payload->business_data = $this->_getBusinessMinimalData(Business::findOne($notification['data']->payload->business_id));
