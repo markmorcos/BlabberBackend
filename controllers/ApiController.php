@@ -2767,7 +2767,7 @@ class ApiController extends ApiBaseController
             $result[count($result) - 1][] = $medium;
         }
 
-        $this->output['media'] = $media;
+        $this->output['media'] = $result;
     }
 
     /**
