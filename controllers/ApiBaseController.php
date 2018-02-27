@@ -491,7 +491,12 @@ class ApiBaseController extends Controller
         } else {
             $branch['area'] = null;
         }
-        $branch['distance'] = $model['distance'] ? round($model['distance']) . ' km' : null;
+        $branch['distance'] = $model['distance']
+        ?
+            $model['distance'] >= 1000
+            ? round($model['distance']) . 'km'
+            : round($model['distance'] * 1000) . 'm'
+        : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = explode(',', $model['operation_hours']);
         $branch['is_open'] = $model['openingStatus']['isOpen'];
