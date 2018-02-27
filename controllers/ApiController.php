@@ -1719,8 +1719,7 @@ class ApiController extends ApiBaseController
             $businesses = [];
 
             foreach ($model as $key => $checkin) {
-              $branch = Branch::findOne($checkin['branch_id']);
-             var_dump($checkin->branch);
+            
               $businesses[] = $this->_getBusinessData($checkin->branch->business);
 
             }
