@@ -858,8 +858,8 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['users']);
 
-        if (empty($name)) {
-            throw new HttpException(200, 'Name is required');
+        if (empty($name) || strlen($name) < 3) {
+            throw new HttpException(200, 'Name should be at least 3 characters');
         }
 
         $model = Yii::$app->db->createCommand("
