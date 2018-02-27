@@ -2108,9 +2108,13 @@ class ApiController extends ApiBaseController
         $saved_business = SavedBusiness::findOne(['user_id' => $this->logged_user['id'], 'business_id' => $business_id]);
 
         if ($saved_business) {
+            $saved_business_id = $saved_business->id;
+
             if (!$saved_business->delete()) {
                 throw new HttpException(200, $this->_getErrors($saved_business));
             }
+
+            Notification::deleteAll("data like '%\"saved_business_id\":$saved_business_id%' and type = 'favorite'");
         } else {
             $savedBusiness = new SavedBusiness;
             $savedBusiness->user_id = $this->logged_user['id'];
@@ -2656,6 +2660,8 @@ class ApiController extends ApiBaseController
         if (!unlink($media->url) || !$media->delete()) {
             throw new HttpException(200, $this->_getErrors($media));
         }
+
+        Notification::deleteAll("data like '%\"media_id\":$media_id%' and type = 'media'");
     }
 
     /**
@@ -2725,7 +2731,7 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['media']);
 
-        if (!empty($type) && !in_array($type, ['image', 'brochure'])) {
+        if (!empty($type) && !in_array($type, ['product', 'menu'])) {
             throw new HttpException(200, 'Invalid media type');
         }
 
@@ -3171,6 +3177,8 @@ class ApiController extends ApiBaseController
         if (!$reaction->delete()) {
             throw new HttpException(200, $this->_getErrors($reaction));
         }
+
+        Notification::deleteAll("data like '%\"reaction_id\":$reaction_id%' and type = 'reaction'");
     }
 
     /**
