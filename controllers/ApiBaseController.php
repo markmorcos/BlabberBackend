@@ -494,8 +494,8 @@ class ApiBaseController extends Controller
         $branch['distance'] = $model['distance']
         ?
             $model['distance'] >= 1
-            ? round($model['distance']) . 'km'
-            : round($model['distance'] * 1000) . 'm'
+            ? round($model['distance']) . ' km'
+            : round($model['distance'] * 1000) . ' m'
         : null;
         $branch['phone'] = $model['phone'];
         $branch['operation_hours'] = explode(',', $model['operation_hours']);
