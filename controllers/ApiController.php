@@ -858,17 +858,17 @@ class ApiController extends ApiBaseController
     {
         $this->_addOutputs(['users']);
 
+        if (empty($name)) {
+            throw new HttpException(200, 'Name is required');
+        }
+
         $model = Yii::$app->db->createCommand("
             SELECT `u`.*, rank from (
             SELECT 1 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . "') AND (id != " . $this->logged_user['id'] . ")
             UNION
-            SELECT 2 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . " %') AND (id != " . $this->logged_user['id'] . ")
+            SELECT 2 as `rank`, `user`.* FROM `user` WHERE (name like '" . $name . " %' or name like '% " . $name . "' or name like '% " . $name . " %') AND (id != " . $this->logged_user['id'] . ")
             UNION
-            SELECT 3 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . "') AND (id != " . $this->logged_user['id'] . ")
-            UNION
-            SELECT 4 as `rank`, `user`.* FROM `user` WHERE (name like '% " . $name . " %') AND (id != " . $this->logged_user['id'] . ")
-            UNION
-            SELECT 5 as `rank`, `user`.* FROM `user` WHERE (`name` LIKE '%" . $name . "%') AND (id != " . $this->logged_user['id'] . ")
+            SELECT 3 as `rank`, `user`.* FROM `user` WHERE (`name` LIKE '%" . $name . "%') AND (id != " . $this->logged_user['id'] . ")
             ) u group by u.id order by u.rank
         ")->queryAll();
 
@@ -2440,6 +2440,8 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, $this->_getErrors($business));
         }
 
+        Notification::deleteAll("data like '%\"review_id\":$review_id%' and (type = 'review' or type = 'review_tag')");
+ 
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $review->text, $matches)) {
             $users = $matches[1];
@@ -2493,6 +2495,8 @@ class ApiController extends ApiBaseController
         if (!$review->delete()) {
             throw new HttpException(200, $this->_getErrors($review));
         }
+
+        Notification::deleteAll("data like '%\"review_id\":$review_id%' and (type = 'review' or type = 'review_tag')");
     }
 
     /**
@@ -2967,6 +2971,8 @@ class ApiController extends ApiBaseController
             $commenter_name = $business->name;
         }
 
+        Notification::deleteAll("data like '%\"comment_id\":$comment_id%' and (type = 'comment' or type = 'comment_tag')");
+
         // send notifications
         if (preg_match_all('/(?<!\w)@(\w+)/', $comment->text, $matches)) {
             $users = $matches[1];
@@ -3021,6 +3027,8 @@ class ApiController extends ApiBaseController
         if (!$comment->delete()) {
             throw new HttpException(200, $this->_getErrors($comment));
         }
+
+        Notification::deleteAll("data like '%\"comment_id\":$comment_id%' and (type = 'comment' or type = 'comment_tag')");
     }
 
     /**
@@ -3451,8 +3459,6 @@ class ApiController extends ApiBaseController
         }
 
         $this->output['notifications'] = $notifications;
-
-        Notification::updateAll(['seen' => 1], ['user_id' => $this->logged_user['id']]);
     }
 
     /***************************************/

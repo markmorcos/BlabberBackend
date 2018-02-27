@@ -441,7 +441,7 @@ class ApiBaseController extends Controller
         $query = Branch::find()
             ->where($conditions);
 
-        $order = ['name' => SORT_ASC];
+        $order = [];
 
         if (!empty($lat_lng)) {
             $lat = $lat_lng[0];
@@ -451,6 +451,8 @@ class ApiBaseController extends Controller
                 ->select(['*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( lat ) ) ) ) AS distance']);
             $order += ['distance' => SORT_ASC];
         }
+
+        $order += ['name' => SORT_ASC];
 
         $query->orderBy($order);
         $model = $this->_getModelWithPagination($query);
@@ -504,10 +506,12 @@ class ApiBaseController extends Controller
         $branch['updated'] = $model['updated'];
 
         $branch['no_of_checkins'] = (int) Checkin::find()->where(['branch_id' => $branch['id']])->count();
-        $last_checkin = Checkin::find()->orderBy(['id' => SORT_DESC])->one();
+        $last_checkin = Checkin::find()->where(['branch_id' => $branch['id']])->orderBy(['id' => SORT_DESC])->one();
         if ($last_checkin) {
             $last_user = User::findOne($last_checkin->user_id);
-            $branch['last_checkin_user'] = $this->_getUserMinimalData($last_user);
+            if ($last_user) {
+                $branch['last_checkin_user'] = $this->_getUserMinimalData($last_user);
+            }
         }
         $branch['rating'] = $this->_calcBranchRating($branch['id']);
 
