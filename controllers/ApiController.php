@@ -761,6 +761,9 @@ class ApiController extends ApiBaseController
      * @apiParam {Array} category_ids array of category ids to add to user, ex. 2,5,7 (optional).
      * @apiParam {String} is_adult_and_smoker whether the user is allowed to see cigarettes tab (1, 0, null (string)).
      * @apiParam {String} lang User language (En, Ar).
+     * @apiParam {String} lat Latitude.
+     * @apiParam {String} lng Longitude.
+     * @apiParam {String} area_id Area ID.
      *
      * @apiSuccess {String} status status code: 0 for OK, 1 for error.
      * @apiSuccess {String} errors errors details if status = 1.
@@ -774,7 +777,10 @@ class ApiController extends ApiBaseController
         $firebase_token = null,
         $category_ids = null,
         $is_adult_and_smoker = null,
-        $lang = null
+        $lang = null,
+        $lat = null,
+        $lng = null,
+        $area_id = null
     ) {
         $this->_addOutputs(['user_data', 'auth_key']);
 
@@ -813,6 +819,18 @@ class ApiController extends ApiBaseController
 
         if (isset($lang)) {
             $user->lang = $lang === 'Ar' ? 'Ar' : '';
+        }
+
+        if (isset($lat)) {
+            $user->lat = $lat;
+        }
+
+        if (isset($lng)) {
+            $user->lng = $lng;
+        }
+
+        if (isset($area_id)) {
+            $user->area_id = $area_id;
         }
 
         if (!$user->save()) {

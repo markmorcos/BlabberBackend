@@ -36,7 +36,6 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'password',
             'role',
             'email:email',
-            'username',
             'mobile',
             'gender',
             'birthdate',
@@ -79,6 +78,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => ($model->private === 0) ? "No" : "Yes"
             ),
             'lang',
+            'lat',
+            'lng',
+            array(
+                'attribute' => 'area_id',
+                'format' => 'raw',
+                'value' =>  ($model->area_id!=null)?Html::a($model->area->name, ['area/view', 'id' => $model->area_id]):null
+            ), 
             'created',
             'updated',
         ],

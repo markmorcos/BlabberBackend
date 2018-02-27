@@ -3,6 +3,8 @@
 namespace app\controllers;
 
 use Yii;
+use app\models\Area;
+use yii\helpers\ArrayHelper;
 use app\models\User;
 use app\models\UserSearch;
 use yii\web\NotFoundHttpException;
@@ -54,8 +56,10 @@ class UserController extends AdminController
 
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
+            $areas_for_dropdown = ArrayHelper::map(Area::find()->all(), 'id', 'name');
             return $this->render('create', [
                 'model' => $model,
+                'areas_for_dropdown' => $areas_for_dropdown,
             ]);
         }
     }
@@ -77,8 +81,10 @@ class UserController extends AdminController
 
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
+            $areas_for_dropdown = ArrayHelper::map(Area::find()->all(), 'id', 'name');
             return $this->render('update', [
                 'model' => $model,
+                'areas_for_dropdown' => $areas_for_dropdown,
             ]);
         }
     }

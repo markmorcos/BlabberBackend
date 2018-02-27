@@ -22,6 +22,9 @@ namespace app\models;
  * @property integer $private
  * @property string $lang
  * @property string $is_adult_and_smoker
+ * @property string $lat
+ * @property string $lng
+ * @property string $area_id
  * @property string $created
  * @property string $updated
  */
@@ -83,6 +86,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'private' => 'Private',
             'lang' => 'Lang',
             'is_adult_and_smoker' => 'Is Adult and Smoker',
+            'lat' => 'Latitude',
+            'lng' => 'Longitude',
+            'area_id' => 'Area',
             'created' => 'Created',
             'updated' => 'Updated',
         ];

@@ -16,6 +16,7 @@ $this->params['breadcrumbs'][] = 'Update';
 
     <?= $this->render('_form', [
         'model' => $model,
+        'areas_for_dropdown' => $areas_for_dropdown,
     ]) ?>
 
 </div>

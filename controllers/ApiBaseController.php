@@ -237,6 +237,17 @@ class ApiBaseController extends Controller
         $user['birthdate'] = $model->birthdate;
         $user['categories'] = $model['categoryList'.$this->lang];
 
+        $user['lat'] = $model->lat;
+        $user['lng'] = $model->lng;
+        if (!empty($user['area'])) {
+            $user['area']['id'] = $model['area']['id'];
+            $user['area']['name'] = $model['area']['name'.$this->lang];
+            $user['area']['lat'] = $model['area']['lat'];
+            $user['area']['lng'] = $model['area']['lng'];
+        } else {
+            $user['area'] = null;
+        }
+
         $user['no_of_checkin'] = (int) Checkin::find()->where(['user_id' => $user['id']])->count();
         $user['no_of_reviews'] = (int) Review::find()->where(['user_id' => $user['id']])->count();
         $user['no_of_favorites'] = (int) SavedBusiness::find()->where(['user_id' => $user['id']])->count();

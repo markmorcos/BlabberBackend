@@ -21,8 +21,6 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
-
     <?= $form->field($model, 'mobile')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'gender')->dropDownList([ 'male' => 'Male', 'female' => 'Female']) ?>
@@ -37,6 +35,10 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'profile_photo')->fileInput() ?>
 
     <?= $form->field($model, 'lang')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'lat')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'lng')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'area_id')->dropDownList($areas_for_dropdown) ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
