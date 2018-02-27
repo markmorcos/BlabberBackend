@@ -993,7 +993,7 @@ class ApiController extends ApiBaseController
     public function actionUnfollowUser($receiver_id)
     {
         $follow = Follow::find()
-            ->where(['user_id' => $this->logged_user['id'], 'receiver_id' => $receiver_id])
+            ->where(['user_id' => $this->logged_user['id'], 'receiver_id' => $receiver_id, 'status' => 1])
             ->one();
 
         if (empty($follow)) {
