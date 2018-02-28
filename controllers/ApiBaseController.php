@@ -343,7 +343,7 @@ class ApiBaseController extends Controller
             ->where($conditions)
             ->groupBy('business_v2.id');
 
-        if ($area_id) {
+        if ($area_id && !$lat_lng) {
             $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
             $area = Area::findOne($area_id);
             if ($area) {
@@ -360,7 +360,7 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if ($lat_lng) {
+        if (!$area_id && $lat_lng) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 

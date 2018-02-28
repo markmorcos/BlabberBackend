@@ -1539,8 +1539,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} area_id Area's id.
      * @apiParam {String} category_id Category's id to get businesses inside (optional).
+     * @apiParam {String} area_id Area's id.
      * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1697,6 +1697,7 @@ class ApiController extends ApiBaseController
      * @apiGroup Business
      *
      * @apiParam {String} area_id Area's id.
+     * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} type Search by (recently_added, recently_viewed, recently_visited).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
@@ -1705,13 +1706,14 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionSearchBusinessesByType($area_id, $type)
+    public function actionSearchBusinessesByType($area_id = null, $nearby = null, $type)
     {
         $this->_addOutputs(['businesses']);
 
         $search_type = $type;
         if ($search_type === 'recently_added') {
-            $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC]);
+            $lat_lng = $nearby ? explode(',', $nearby) : null;
+            $this->output['businesses'] = $this->_getBusinesses(null, $area_id, ['created' => SORT_DESC], $lat_lng);
         } else if ($search_type === 'recently_viewed') {
             $query = BusinessView::find()
                 ->select(['id' , 'business_id'])
@@ -1761,12 +1763,13 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetExclusiveBusinesses($area_id)
+    public function actionGetExclusiveBusinesses($area_id = null, $nearby = null)
     {
         $this->_addOutputs(['businesses']);
 
         $nameVar = 'name'.$this->lang;
-        $businesses = $this->_getBusinesses(['featured' => 1], $area_id, ["$nameVar" => SORT_ASC], null, null);
+        $lat_lng = $nearby ? explode(',', $nearby) : null;
+        $businesses = $this->_getBusinesses(['featured' => 1], $area_id, ["$nameVar" => SORT_ASC], $lat_lng, null);
 
         $this->output['businesses'] = $businesses;
     }
@@ -1778,7 +1781,8 @@ class ApiController extends ApiBaseController
      *
      * @apiParam {String} user_id User's id.
      * @apiParam {String} auth_key User's auth key.
-     * @apiParam {String} area_id area_id Area ID.
+     * @apiParam {String} area_id Area's id.
+     * @apiParam {String} nearby the search coordinates for nearby business, value lat,lng, ex. 32.22,37.11 (optional).
      * @apiParam {String} page Page number (optional).
      * @apiParam {String} lang Text language ('En' for English (default), 'Ar' for arabic) (optional).
      *
@@ -1786,7 +1790,7 @@ class ApiController extends ApiBaseController
      * @apiSuccess {String} errors errors details if status = 1.
      * @apiSuccess {Array} businesses businesses details.
      */
-    public function actionGetRecommendedBusinesses($area_id)
+    public function actionGetRecommendedBusinesses($area_id = null, $nearby = null)
     {
         $this->_addOutputs(['businesses']);
 
@@ -1798,7 +1802,8 @@ class ApiController extends ApiBaseController
             $conditions = ['category_id' => $user->categories];
         }
         $order = ['rating' => SORT_DESC];
-        $businesses = $this->_getBusinesses($conditions, $area_id, $order, null, null);
+        $lat_lng = $nearby ? explode(',', $nearby) : null;
+        $businesses = $this->_getBusinesses($conditions, $area_id, $order, $lat_lng, null);
 
         $this->output['businesses'] = $businesses;
     }
