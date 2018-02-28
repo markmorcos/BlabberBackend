@@ -56,7 +56,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['approved', 'blocked', 'private'], 'boolean'],
             [['name', 'password', 'email', 'profile_photo', 'cover_photo', 'facebook_id'], 'string', 'max' => 255],
             [['mobile'], 'string', 'max' => 20],
-            [['email', 'mobile', 'facebook_id'], 'unique', 'message' => "{attribute} has already been taken."],
+            [['email', 'mobile'], 'unique', 'message' => "{attribute} has already been taken."],
             [['email'], 'email'],
             [['lang'], 'string', 'max' => 2],
             ['password_confirmation', 'compare', 'compareAttribute'=>'password', 'skipOnEmpty' => false, 'on' => ['create', 'update'], 'message'=>"Passwords don't match"],
@@ -236,6 +236,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function getCategories()
     {
         return $this->hasMany(UserCategory::className(), ['user_id' => 'id']);
+    }
+
+    public function getArea()
+    {
+        return $this->hasOne(Area::className(), ['id' => 'area_id']);
     }
 
     public function getCategoryList()

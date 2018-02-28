@@ -239,7 +239,7 @@ class ApiBaseController extends Controller
 
         $user['lat'] = $model->lat;
         $user['lng'] = $model->lng;
-        if (!empty($user['area'])) {
+        if (!empty($model['area'])) {
             $user['area']['id'] = $model['area']['id'];
             $user['area']['name'] = $model['area']['name'.$this->lang];
             $user['area']['lat'] = $model['area']['lat'];
