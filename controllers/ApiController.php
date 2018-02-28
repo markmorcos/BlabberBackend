@@ -567,12 +567,7 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, 'invalid facebook token');
         }
 
-        $email = isset($response->email) ? $response->email : $response->id . '@facebook.com';
-
-        $user = User::findByEmail($response->id . '@facebook.com');
-        if (!$user) {
-            $user = User::findByEmail($email);
-        }
+        $user = User::find()->where(['facebook_id' => $response->id])->one();
         if ($user === null) {
             $this->output['is_new_user'] = true;
         } else {
@@ -821,15 +816,13 @@ class ApiController extends ApiBaseController
             $user->lang = $lang === 'Ar' ? 'Ar' : '';
         }
 
-        if (isset($lat)) {
+        if (isset($lat) && isset($lng)) {
             $user->lat = $lat;
-        }
-
-        if (isset($lng)) {
             $user->lng = $lng;
-        }
-
-        if (isset($area_id)) {
+            $user->area_id = null;
+        } else if (isset($area_id)) {
+            $user->lat = null;
+            $user->lng = null;
             $user->area_id = $area_id;
         }
 
@@ -939,10 +932,12 @@ class ApiController extends ApiBaseController
         $data = [
             'type' => $type,
             'payload' => [
-                'request_id' => $model->id,
+                'follow_id' => $model->id,
                 'user_id' => $model->user_id,
             ]
         ];
+
+        $this->_addNotification($model->receiver_id, $type, $title, $body, $data);
         $this->_sendNotification($model->receiver, $title, $body, $data);
     }
 
@@ -1000,9 +995,13 @@ class ApiController extends ApiBaseController
             throw new HttpException(200, "You are not following this user");
         }
 
+        $follow_id = $follow->id;
+
         if (!$follow->delete()) {
             throw new HttpException(200, $this->_getErrors($follow));
         }
+
+        Notification::deleteAll("data like '%\"follow_id\":$follow_id%' and type = 'new_follow'");
     }
 
     /**

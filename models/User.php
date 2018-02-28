@@ -56,7 +56,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['approved', 'blocked', 'private'], 'boolean'],
             [['name', 'password', 'email', 'profile_photo', 'cover_photo', 'facebook_id'], 'string', 'max' => 255],
             [['mobile'], 'string', 'max' => 20],
-            [['email', 'mobile'], 'unique', 'message' => "{attribute} has already been taken."],
+            [['email', 'mobile', 'facebook_id'], 'unique', 'message' => "{attribute} has already been taken."],
             [['email'], 'email'],
             [['lang'], 'string', 'max' => 2],
             ['password_confirmation', 'compare', 'compareAttribute'=>'password', 'skipOnEmpty' => false, 'on' => ['create', 'update'], 'message'=>"Passwords don't match"],

@@ -83,7 +83,7 @@ class ApiBaseController extends Controller
             'search-businesses-by-type', 'get-business-data', 'get-branch-data', 'get-checkins', 'get-reviews', 'get-homescreen-reviews',
             'get-media', 'get-products', 'get-media-by-ids', 'get-homescreen-images', 'get-review', 'get-comments', 'get-reactions',
             'get-sponsors', 'get-blogs', 'get-blog', 'get-polls', 'migrate', 'get-featured-business',
-            'get-recommended-businesses'
+            'get-recommended-businesses', 'get-exclusive-businesses'
         ];
 
         if (!$this->_verifyUserAndSetID() && !in_array($action->id, $guest_actions)) {
@@ -1067,7 +1067,7 @@ class ApiBaseController extends Controller
         $title = Translation::get($user->lang, $title);
         $body = Translation::get($user->lang, $body);
         foreach ($user->tokens as $token) {
-            \app\components\Notification::sendNotification($token, $title, $body, $data);
+            \app\components\Notification::sendNotification($token->firebase_token, $title, $body, $data);
         }
     }
 
