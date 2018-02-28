@@ -347,7 +347,7 @@ class ApiBaseController extends Controller
             // $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
             $area = Area::findOne($area_id);
             if ($area) {
-                $lat_lng = [$area->lat, $area->lng];
+                $lat_lng = explode(',', $area->lat . ',' .$area->lng);
                 // $areaQuery .= ' or branch.city_id is not null and branch.city_id = ' . $area->city_id;
                 // $city = City::findOne($area->city_id);
                 // if ($city) {
