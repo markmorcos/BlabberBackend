@@ -354,7 +354,7 @@ class ApiBaseController extends Controller
                 //     $areaQuery .= ' or branch.country_id is not null and branch.country_id = ' . $city->country_id;
                 // }
             }
-            $query->andWhere($areaQuery);
+            // $query->andWhere($areaQuery);
         }
 
         if ($order !== null) {
