@@ -337,9 +337,9 @@ class ApiBaseController extends Controller
     {
         $query = Business::find()
             ->innerJoin('branch', 'business_v2.id = branch.business_id')
-            ->leftJoin('area', 'area.id = branch.area_id')
-            ->leftJoin('city', 'city.id = branch.city_id')
-            ->leftJoin('country', 'country.id = branch.country_id')
+            // ->leftJoin('area', 'area.id = branch.area_id')
+            // ->leftJoin('city', 'city.id = branch.city_id')
+            // ->leftJoin('country', 'country.id = branch.country_id')
             ->where($conditions)
             ->groupBy('business_v2.id');
 
@@ -347,7 +347,7 @@ class ApiBaseController extends Controller
             // $areaQuery = 'branch.area_id is not null and branch.area_id = ' . $area_id;
             $area = Area::findOne($area_id);
             if ($area) {
-                $lat_lng = explode(',', $area->lat . ',' .$area->lng);
+                $lat_lng = explode(',', $area->lat . ',' . $area->lng);
                 // $areaQuery .= ' or branch.city_id is not null and branch.city_id = ' . $area->city_id;
                 // $city = City::findOne($area->city_id);
                 // if ($city) {
@@ -363,13 +363,12 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if ($lat_lng) {
+        if (!empty($lat_lng)) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 
             $query
-                ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance'])
-                ->having('distance < 5');
+                ->select(['business_v2.*', '( 6371 * acos( cos( radians(' . $lat . ') ) * cos( radians( branch.lat ) ) * cos( radians( branch.lng ) - radians(' . $lng . ') ) + sin( radians(' . $lat . ') ) * sin( radians( branch.lat ) ) ) ) AS distance']);
             $order += ['distance' => SORT_ASC];
         }
 
@@ -424,8 +423,13 @@ class ApiBaseController extends Controller
         $business['no_of_views'] = count($model['views']);
         $business['is_favorite'] = $this->_isSavedBusiness($this->logged_user['id'], $business['id']);
         $business['correct_votes_percentage'] = $this->_correctVotesPercentage($business['id']);
-        if (!empty($model['branches'])) {
-            $business['branch'] = $this->_getBranchData($branch ? $branch : $model['branches'][0]);
+        if (empty($branch) && !empty($model['branches'])) {
+            $branch = $model['branches'][0];
+            $branch['distance'] = $model['distance'];
+        }
+        if (!empty($branch)) {
+            $branch['distance'] = $model['distance'];
+            $business['branch'] = $this->_getBranchData($branch);
         }
 
         $business['no_of_products'] = count($model['products']);
