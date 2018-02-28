@@ -1798,8 +1798,11 @@ class ApiController extends ApiBaseController
 
         $user = User::findOne($this->logged_user['id']);
         if ($user !== null && !empty($user->categories)) {
-            $category_ids = ArrayHelper::map($user->categories, 'id');
-            $conditions = ['category_id' => $user->categories];
+            $category_ids = [];
+            foreach ($user->categories as $key => $category) {
+                $category_ids[] = $category->id;
+            }
+            $conditions = ['category_id' => $category_ids];
         }
         $order = ['rating' => SORT_DESC];
         $lat_lng = $nearby ? explode(',', $nearby) : null;
