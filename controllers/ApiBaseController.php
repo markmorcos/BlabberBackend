@@ -360,7 +360,7 @@ class ApiBaseController extends Controller
             $order = ['featured' => SORT_DESC];
         }
 
-        if (!$area_id && $lat_lng) {
+        if ($lat_lng) {
             $lat = $lat_lng[0];
             $lng = $lat_lng[1];
 
